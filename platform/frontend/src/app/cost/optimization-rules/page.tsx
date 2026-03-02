@@ -87,7 +87,7 @@ function DeleteRuleConfirmation({
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <PermissionButton
-          permissions={{ limit: ["delete"] }}
+          permissions={{ llmTokenLimit: ["delete"] }}
           variant="ghost"
           size="sm"
           className="text-destructive hover:text-destructive"
@@ -250,7 +250,7 @@ export default function OptimizationRulesPage() {
           </div>
           <div className="flex items-center gap-2">
             <PermissionButton
-              permissions={{ limit: ["create"] }}
+              permissions={{ llmTokenLimit: ["create"] }}
               onClick={() => {
                 if (editingRuleId !== null) {
                   setEditingRuleId(null);
@@ -401,7 +401,7 @@ export default function OptimizationRulesPage() {
                       ) : (
                         <>
                           <PermissionButton
-                            permissions={{ limit: ["update"] }}
+                            permissions={{ llmTokenLimit: ["update"] }}
                             variant="ghost"
                             size="sm"
                             onClick={() => {

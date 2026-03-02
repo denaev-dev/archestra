@@ -26237,7 +26237,7 @@ export type GetLimitsData = {
     query?: {
         entityType?: 'organization' | 'team' | 'agent';
         entityId?: string;
-        limitType?: 'token_cost' | 'mcp_server_calls' | 'tool_calls';
+        limitType?: 'token_cost';
     };
     url: '/api/limits';
 };
@@ -26309,10 +26309,11 @@ export type GetLimitsResponses = {
         id: string;
         entityType: 'organization' | 'team' | 'agent';
         entityId: string;
-        limitType: 'token_cost' | 'mcp_server_calls' | 'tool_calls';
+        limitType: 'token_cost';
         limitValue: number;
         mcpServerName: string | null;
         toolName: string | null;
+        windowSeconds: number | null;
         model?: Array<string> | null;
         lastCleanup: string | null;
         createdAt: string;
@@ -26332,10 +26333,11 @@ export type CreateLimitData = {
     body: {
         entityType: 'organization' | 'team' | 'agent';
         entityId: string;
-        limitType: 'token_cost' | 'mcp_server_calls' | 'tool_calls';
+        limitType: 'token_cost';
         limitValue: number;
         mcpServerName?: string | null;
         toolName?: string | null;
+        windowSeconds?: number | null;
         model?: Array<string> | null;
         lastCleanup?: unknown;
     };
@@ -26411,10 +26413,11 @@ export type CreateLimitResponses = {
         id: string;
         entityType: 'organization' | 'team' | 'agent';
         entityId: string;
-        limitType: 'token_cost' | 'mcp_server_calls' | 'tool_calls';
+        limitType: 'token_cost';
         limitValue: number;
         mcpServerName: string | null;
         toolName: string | null;
+        windowSeconds: number | null;
         model?: Array<string> | null;
         lastCleanup: string | null;
         createdAt: string;
@@ -26579,10 +26582,11 @@ export type GetLimitResponses = {
         id: string;
         entityType: 'organization' | 'team' | 'agent';
         entityId: string;
-        limitType: 'token_cost' | 'mcp_server_calls' | 'tool_calls';
+        limitType: 'token_cost';
         limitValue: number;
         mcpServerName: string | null;
         toolName: string | null;
+        windowSeconds: number | null;
         model?: Array<string> | null;
         lastCleanup: string | null;
         createdAt: string;
@@ -26596,10 +26600,11 @@ export type UpdateLimitData = {
     body?: {
         entityType?: 'organization' | 'team' | 'agent';
         entityId?: string;
-        limitType?: 'token_cost' | 'mcp_server_calls' | 'tool_calls';
+        limitType?: 'token_cost';
         limitValue?: number;
         mcpServerName?: string | null;
         toolName?: string | null;
+        windowSeconds?: number | null;
         model?: Array<string> | null;
         lastCleanup?: unknown;
     };
@@ -26677,10 +26682,11 @@ export type UpdateLimitResponses = {
         id: string;
         entityType: 'organization' | 'team' | 'agent';
         entityId: string;
-        limitType: 'token_cost' | 'mcp_server_calls' | 'tool_calls';
+        limitType: 'token_cost';
         limitValue: number;
         mcpServerName: string | null;
         toolName: string | null;
+        windowSeconds: number | null;
         model?: Array<string> | null;
         lastCleanup: string | null;
         createdAt: string;
@@ -26752,6 +26758,446 @@ export type PostV1McpByProfileIdResponses = {
      */
     200: unknown;
 };
+
+export type GetMcpRateLimitsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        agentId?: string;
+        limitType?: 'mcp_server_calls' | 'tool_calls';
+    };
+    url: '/api/mcp-rate-limits';
+};
+
+export type GetMcpRateLimitsErrors = {
+    /**
+     * Default Response
+     */
+    400: {
+        error: {
+            message: string;
+            type: 'api_validation_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    401: {
+        error: {
+            message: string;
+            type: 'api_authentication_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    403: {
+        error: {
+            message: string;
+            type: 'api_authorization_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    404: {
+        error: {
+            message: string;
+            type: 'api_not_found_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    409: {
+        error: {
+            message: string;
+            type: 'api_conflict_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: {
+            message: string;
+            type: 'api_internal_server_error';
+        };
+    };
+};
+
+export type GetMcpRateLimitsError = GetMcpRateLimitsErrors[keyof GetMcpRateLimitsErrors];
+
+export type GetMcpRateLimitsResponses = {
+    /**
+     * Default Response
+     */
+    200: Array<{
+        id: string;
+        agentId: string;
+        limitType: 'mcp_server_calls' | 'tool_calls';
+        mcpServerName: string;
+        toolName: string | null;
+        maxCalls: number;
+        windowSeconds: number;
+        createdAt: string;
+        updatedAt: string;
+        mcpUsage?: number;
+    }>;
+};
+
+export type GetMcpRateLimitsResponse = GetMcpRateLimitsResponses[keyof GetMcpRateLimitsResponses];
+
+export type CreateMcpRateLimitData = {
+    body: {
+        agentId: string;
+        limitType: 'mcp_server_calls' | 'tool_calls';
+        mcpServerName: string;
+        toolName?: string | null;
+        maxCalls: number;
+        windowSeconds: number;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/mcp-rate-limits';
+};
+
+export type CreateMcpRateLimitErrors = {
+    /**
+     * Default Response
+     */
+    400: {
+        error: {
+            message: string;
+            type: 'api_validation_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    401: {
+        error: {
+            message: string;
+            type: 'api_authentication_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    403: {
+        error: {
+            message: string;
+            type: 'api_authorization_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    404: {
+        error: {
+            message: string;
+            type: 'api_not_found_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    409: {
+        error: {
+            message: string;
+            type: 'api_conflict_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: {
+            message: string;
+            type: 'api_internal_server_error';
+        };
+    };
+};
+
+export type CreateMcpRateLimitError = CreateMcpRateLimitErrors[keyof CreateMcpRateLimitErrors];
+
+export type CreateMcpRateLimitResponses = {
+    /**
+     * Default Response
+     */
+    200: {
+        id: string;
+        agentId: string;
+        limitType: 'mcp_server_calls' | 'tool_calls';
+        mcpServerName: string;
+        toolName: string | null;
+        maxCalls: number;
+        windowSeconds: number;
+        createdAt: string;
+        updatedAt: string;
+    };
+};
+
+export type CreateMcpRateLimitResponse = CreateMcpRateLimitResponses[keyof CreateMcpRateLimitResponses];
+
+export type DeleteMcpRateLimitData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/mcp-rate-limits/{id}';
+};
+
+export type DeleteMcpRateLimitErrors = {
+    /**
+     * Default Response
+     */
+    400: {
+        error: {
+            message: string;
+            type: 'api_validation_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    401: {
+        error: {
+            message: string;
+            type: 'api_authentication_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    403: {
+        error: {
+            message: string;
+            type: 'api_authorization_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    404: {
+        error: {
+            message: string;
+            type: 'api_not_found_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    409: {
+        error: {
+            message: string;
+            type: 'api_conflict_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: {
+            message: string;
+            type: 'api_internal_server_error';
+        };
+    };
+};
+
+export type DeleteMcpRateLimitError = DeleteMcpRateLimitErrors[keyof DeleteMcpRateLimitErrors];
+
+export type DeleteMcpRateLimitResponses = {
+    /**
+     * Default Response
+     */
+    200: {
+        success: boolean;
+    };
+};
+
+export type DeleteMcpRateLimitResponse = DeleteMcpRateLimitResponses[keyof DeleteMcpRateLimitResponses];
+
+export type GetMcpRateLimitData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/mcp-rate-limits/{id}';
+};
+
+export type GetMcpRateLimitErrors = {
+    /**
+     * Default Response
+     */
+    400: {
+        error: {
+            message: string;
+            type: 'api_validation_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    401: {
+        error: {
+            message: string;
+            type: 'api_authentication_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    403: {
+        error: {
+            message: string;
+            type: 'api_authorization_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    404: {
+        error: {
+            message: string;
+            type: 'api_not_found_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    409: {
+        error: {
+            message: string;
+            type: 'api_conflict_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: {
+            message: string;
+            type: 'api_internal_server_error';
+        };
+    };
+};
+
+export type GetMcpRateLimitError = GetMcpRateLimitErrors[keyof GetMcpRateLimitErrors];
+
+export type GetMcpRateLimitResponses = {
+    /**
+     * Default Response
+     */
+    200: {
+        id: string;
+        agentId: string;
+        limitType: 'mcp_server_calls' | 'tool_calls';
+        mcpServerName: string;
+        toolName: string | null;
+        maxCalls: number;
+        windowSeconds: number;
+        createdAt: string;
+        updatedAt: string;
+    };
+};
+
+export type GetMcpRateLimitResponse = GetMcpRateLimitResponses[keyof GetMcpRateLimitResponses];
+
+export type UpdateMcpRateLimitData = {
+    body?: {
+        limitType?: 'mcp_server_calls' | 'tool_calls';
+        mcpServerName?: string;
+        toolName?: string | null;
+        maxCalls?: number;
+        windowSeconds?: number;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/mcp-rate-limits/{id}';
+};
+
+export type UpdateMcpRateLimitErrors = {
+    /**
+     * Default Response
+     */
+    400: {
+        error: {
+            message: string;
+            type: 'api_validation_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    401: {
+        error: {
+            message: string;
+            type: 'api_authentication_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    403: {
+        error: {
+            message: string;
+            type: 'api_authorization_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    404: {
+        error: {
+            message: string;
+            type: 'api_not_found_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    409: {
+        error: {
+            message: string;
+            type: 'api_conflict_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: {
+            message: string;
+            type: 'api_internal_server_error';
+        };
+    };
+};
+
+export type UpdateMcpRateLimitError = UpdateMcpRateLimitErrors[keyof UpdateMcpRateLimitErrors];
+
+export type UpdateMcpRateLimitResponses = {
+    /**
+     * Default Response
+     */
+    200: {
+        id: string;
+        agentId: string;
+        limitType: 'mcp_server_calls' | 'tool_calls';
+        mcpServerName: string;
+        toolName: string | null;
+        maxCalls: number;
+        windowSeconds: number;
+        createdAt: string;
+        updatedAt: string;
+    };
+};
+
+export type UpdateMcpRateLimitResponse = UpdateMcpRateLimitResponses[keyof UpdateMcpRateLimitResponses];
 
 export type GetMcpServerInstallationRequestsData = {
     body?: never;

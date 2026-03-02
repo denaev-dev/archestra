@@ -570,30 +570,6 @@ export async function executeArchestraTool(
         };
       }
 
-      if (limitType === "mcp_server_calls" && !mcpServerName) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: "Error: mcp_server_name is required for mcp_server_calls limits.",
-            },
-          ],
-          isError: true,
-        };
-      }
-
-      if (limitType === "tool_calls" && (!mcpServerName || !toolName)) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: "Error: mcp_server_name and tool_name are required for tool_calls limits.",
-            },
-          ],
-          isError: true,
-        };
-      }
-
       // Create the limit
       const limit = await LimitModel.create({
         entityType,
@@ -2049,7 +2025,7 @@ export function getArchestraMcpTools(): Tool[] {
       name: TOOL_CREATE_LIMIT_FULL_NAME,
       title: "Create Limit",
       description:
-        "Create a new cost or usage limit for an organization, team, agent, LLM proxy, or MCP gateway. Supports token_cost, mcp_server_calls, and tool_calls limit types.",
+        "Create a new token cost limit for an organization, team, agent, LLM proxy, or MCP gateway.",
       inputSchema: {
         type: "object",
         properties: {
@@ -2084,11 +2060,12 @@ export function getArchestraMcpTools(): Tool[] {
           mcp_server_name: {
             type: "string",
             description:
-              "MCP server name (required for mcp_server_calls and tool_calls limits)",
+              "MCP server name (deprecated, use MCP rate limits API instead)",
           },
           tool_name: {
             type: "string",
-            description: "Tool name (required for tool_calls limits)",
+            description:
+              "Tool name (deprecated, use MCP rate limits API instead)",
           },
         },
         required: ["entity_type", "entity_id", "limit_type", "limit_value"],

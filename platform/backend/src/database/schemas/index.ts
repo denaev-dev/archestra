@@ -28,6 +28,7 @@ export { default as limitsTable } from "./limit";
 export { default as limitModelUsageTable } from "./limit-model-usage";
 export { default as mcpCatalogLabelsTable } from "./mcp-catalog-label";
 export { default as mcpHttpSessionsTable } from "./mcp-http-session";
+export { default as mcpRateLimitsTable } from "./mcp-rate-limit";
 export { default as mcpServersTable } from "./mcp-server";
 export { default as mcpServerInstallationRequestsTable } from "./mcp-server-installation-request";
 export { default as mcpServerUsersTable } from "./mcp-server-user";

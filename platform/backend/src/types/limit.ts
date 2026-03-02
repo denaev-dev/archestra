@@ -16,11 +16,7 @@ export type LimitEntityType = z.infer<typeof LimitEntityTypeSchema>;
 /**
  * Types of limits that can be applied
  */
-export const LimitTypeSchema = z.enum([
-  "token_cost",
-  "mcp_server_calls",
-  "tool_calls",
-]);
+export const LimitTypeSchema = z.enum(["token_cost"]);
 export type LimitType = z.infer<typeof LimitTypeSchema>;
 
 /**
@@ -55,24 +51,6 @@ export const CreateLimitSchema = InsertLimitSchema.omit({
   updatedAt: true,
 }).refine(
   (data) => {
-    // Validation: mcp_server_calls requires mcpServerName and should not have model
-    if (data.limitType === "mcp_server_calls") {
-      if (!data.mcpServerName) {
-        return false;
-      }
-      if (data.model) {
-        return false;
-      }
-    }
-    // Validation: tool_calls requires both mcpServerName and toolName and should not have model
-    if (data.limitType === "tool_calls") {
-      if (!data.mcpServerName || !data.toolName) {
-        return false;
-      }
-      if (data.model) {
-        return false;
-      }
-    }
     // Validation: token_cost requires non-empty model array and should not have mcp or tool specificity
     if (data.limitType === "token_cost") {
       if (

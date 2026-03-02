@@ -268,6 +268,13 @@ export const RouteId = {
   UpdateLimit: "updateLimit",
   DeleteLimit: "deleteLimit",
 
+  // MCP Rate Limit Routes
+  GetMcpRateLimits: "getMcpRateLimits",
+  CreateMcpRateLimit: "createMcpRateLimit",
+  GetMcpRateLimit: "getMcpRateLimit",
+  UpdateMcpRateLimit: "updateMcpRateLimit",
+  DeleteMcpRateLimit: "deleteMcpRateLimit",
+
   // Organization Routes
   GetOrganization: "getOrganization",
   UpdateOrganization: "updateOrganization",

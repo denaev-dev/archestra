@@ -38,7 +38,8 @@ export const resources = [
   "mcpToolCall",
   "team",
   "conversation",
-  "limit",
+  "llmTokenLimit",
+  "mcpRateLimit",
   "llmModels",
   "chatSettings",
   /**
@@ -72,7 +73,8 @@ export const resourceLabels: Record<Resource, string> = {
   team: "Teams",
   ac: "Access Control",
   conversation: "Conversations",
-  limit: "Limits",
+  llmTokenLimit: "LLM Token Limits",
+  mcpRateLimit: "MCP Rate Limits",
   llmModels: "LLM Models",
   chatSettings: "Chat Settings",
 };

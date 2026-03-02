@@ -458,7 +458,7 @@ export function Rule({
   return (
     <div className={cn(className, "flex flex-row gap-2 items-center text-sm")}>
       <WithPermissions
-        permissions={{ limit: ["update"] }}
+        permissions={{ llmTokenLimit: ["update"] }}
         noPermissionHandle="tooltip"
       >
         {({ hasPermission }) => (

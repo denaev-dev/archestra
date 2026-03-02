@@ -8,7 +8,7 @@ const { getLimits, createLimit, getLimit, updateLimit, deleteLimit } =
 export function useLimits(params?: {
   entityType?: "team" | "organization" | "agent";
   entityId?: string;
-  limitType?: "token_cost" | "mcp_server_calls" | "tool_calls";
+  limitType?: "token_cost";
 }) {
   return useQuery({
     queryKey: ["limits", params],

@@ -79,3 +79,7 @@ Archestra's MCP Gateways support three authentication methods:
 - **External Identity Provider (JWKS)** — For MCP clients that authenticate with an external IdP (Keycloak, Okta, Entra ID, Auth0, etc.). The gateway validates JWT bearer tokens directly against the IdP's JWKS endpoint, allowing external users to access MCP tools without an Archestra account. Configure in **Settings → Identity Providers**, then select in the MCP Gateway's **Identity Provider (JWKS Auth)** dropdown.
 
 See [MCP Authentication](/docs/mcp-authentication) for more details.
+
+## MCP Rate Limits
+
+See [Rate Limits](/docs/platform-mcp-rate-limits) for per-server and per-tool rate limiting configuration.

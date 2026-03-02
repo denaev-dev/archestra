@@ -34,7 +34,8 @@ export const allAvailableActions: Record<Resource, Action[]> = {
   team: ["create", "read", "update", "delete", "admin"],
   mcpToolCall: ["read"],
   conversation: ["create", "read", "update", "delete"],
-  limit: ["create", "read", "update", "delete"],
+  llmTokenLimit: ["create", "read", "update", "delete"],
+  mcpRateLimit: ["create", "read", "update", "delete"],
   llmModels: ["create", "read", "update", "delete"],
   chatSettings: ["create", "read", "update", "delete"],
   /**
@@ -63,7 +64,8 @@ export const editorPermissions: Record<Resource, Action[]> = {
   team: ["read"],
   mcpToolCall: ["read"],
   conversation: ["create", "read", "update", "delete"],
-  limit: ["create", "read", "update", "delete"],
+  llmTokenLimit: ["create", "read", "update", "delete"],
+  mcpRateLimit: ["create", "read", "update", "delete"],
   llmModels: ["create", "read", "update", "delete"],
   chatSettings: ["create", "read", "update", "delete"],
   // Empty arrays required for Record<Resource, Action[]> type compatibility
@@ -89,7 +91,8 @@ export const memberPermissions: Record<Resource, Action[]> = {
   team: ["read"],
   mcpToolCall: ["read"],
   conversation: ["create", "read", "update", "delete"],
-  limit: ["read"],
+  llmTokenLimit: ["read"],
+  mcpRateLimit: ["read"],
   llmModels: ["read"],
   chatSettings: ["read"],
   // Empty arrays required for Record<Resource, Action[]> type compatibility
@@ -518,19 +521,34 @@ export const requiredEndpointPermissionsMap: Partial<
   [RouteId.DeleteAgentDelegation]: {},
   [RouteId.GetAllDelegationConnections]: {},
   [RouteId.GetLimits]: {
-    limit: ["read"],
+    llmTokenLimit: ["read"],
   },
   [RouteId.CreateLimit]: {
-    limit: ["create"],
+    llmTokenLimit: ["create"],
   },
   [RouteId.GetLimit]: {
-    limit: ["read"],
+    llmTokenLimit: ["read"],
   },
   [RouteId.UpdateLimit]: {
-    limit: ["update"],
+    llmTokenLimit: ["update"],
   },
   [RouteId.DeleteLimit]: {
-    limit: ["delete"],
+    llmTokenLimit: ["delete"],
+  },
+  [RouteId.GetMcpRateLimits]: {
+    mcpRateLimit: ["read"],
+  },
+  [RouteId.CreateMcpRateLimit]: {
+    mcpRateLimit: ["create"],
+  },
+  [RouteId.GetMcpRateLimit]: {
+    mcpRateLimit: ["read"],
+  },
+  [RouteId.UpdateMcpRateLimit]: {
+    mcpRateLimit: ["update"],
+  },
+  [RouteId.DeleteMcpRateLimit]: {
+    mcpRateLimit: ["delete"],
   },
   [RouteId.GetOrganization]: {
     organization: ["read"],
@@ -703,6 +721,10 @@ export const requiredPagePermissionsMap: Record<string, Permissions> = {
     policy: ["read"],
   },
 
+  "/mcp-rate-limits": {
+    mcpRateLimit: ["read"],
+  },
+
   "/mcp-catalog": {
     internalMcpCatalog: ["read"],
   },
@@ -771,7 +793,7 @@ export const requiredPagePermissionsMap: Record<string, Permissions> = {
     interaction: ["read"],
   },
   "/cost/limits": {
-    limit: ["read"],
+    llmTokenLimit: ["read"],
   },
   "/cost/optimization-rules": {
     llmProxy: ["read"],

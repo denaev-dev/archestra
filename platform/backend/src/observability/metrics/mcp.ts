@@ -17,6 +17,7 @@ let mcpToolCallDuration: client.Histogram<string>;
 let mcpToolCallsTotal: client.Counter<string>;
 let mcpRequestSizeBytes: client.Histogram<string>;
 let mcpResponseSizeBytes: client.Histogram<string>;
+let mcpRateLimitRejectionsTotal: client.Counter<string>;
 
 // Deployment status gauge — one series per (server_name, state) combination.
 // Each server has exactly one active state at a time (value=1), with all other
@@ -41,7 +42,8 @@ export function initializeMcpMetrics(labelKeys: string[]): void {
     mcpToolCallDuration &&
     mcpToolCallsTotal &&
     mcpRequestSizeBytes &&
-    mcpResponseSizeBytes
+    mcpResponseSizeBytes &&
+    mcpRateLimitRejectionsTotal
   ) {
     return;
   }
@@ -61,6 +63,9 @@ export function initializeMcpMetrics(labelKeys: string[]): void {
     }
     if (mcpResponseSizeBytes) {
       client.register.removeSingleMetric("mcp_response_size_bytes");
+    }
+    if (mcpRateLimitRejectionsTotal) {
+      client.register.removeSingleMetric("mcp_rate_limit_rejections_total");
     }
   } catch (_error) {
     // Ignore errors if metrics don't exist
@@ -104,6 +109,19 @@ export function initializeMcpMetrics(labelKeys: string[]): void {
     labelNames: [...baseLabelNames, ...nextLabelKeys],
     buckets: [100, 500, 1000, 5000, 10000, 50000, 100000, 500000],
     enableExemplars: true,
+  });
+
+  mcpRateLimitRejectionsTotal = new client.Counter({
+    name: "mcp_rate_limit_rejections_total",
+    help: "Total MCP tool call rate limit rejections",
+    labelNames: [
+      "agent_id",
+      "agent_name",
+      "mcp_server_name",
+      "tool_name",
+      "limit_type",
+      "entity_type",
+    ],
   });
 
   logger.info(
@@ -197,6 +215,34 @@ export function reportMcpToolCall(params: {
       exemplarLabels,
     });
   }
+}
+
+/**
+ * Reports an MCP rate limit rejection
+ */
+export function reportMcpRateLimitRejection(params: {
+  agentId: string;
+  agentName: string;
+  mcpServerName: string;
+  toolName: string;
+  limitType: string;
+  entityType: string;
+}): void {
+  if (!mcpRateLimitRejectionsTotal) {
+    logger.warn(
+      "MCP metrics not initialized, skipping rate limit rejection reporting",
+    );
+    return;
+  }
+
+  mcpRateLimitRejectionsTotal.inc({
+    agent_id: params.agentId,
+    agent_name: params.agentName,
+    mcp_server_name: params.mcpServerName,
+    tool_name: params.toolName,
+    limit_type: params.limitType,
+    entity_type: params.entityType,
+  });
 }
 
 /**

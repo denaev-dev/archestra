@@ -127,6 +127,12 @@ const contentNavGroups: NavGroup[] = [
             customIsActive: (pathname: string) =>
               pathname.startsWith("/tool-policies"),
           },
+          {
+            title: "Rate Limits",
+            url: "/mcp-rate-limits",
+            customIsActive: (pathname: string) =>
+              pathname.startsWith("/mcp-rate-limits"),
+          },
         ],
       },
     ],

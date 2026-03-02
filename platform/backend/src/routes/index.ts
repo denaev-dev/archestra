@@ -36,6 +36,7 @@ export { default as internalMcpCatalogRoutes } from "./internal-mcp-catalog";
 export { default as invitationRoutes } from "./invitation";
 export { default as limitsRoutes } from "./limits";
 export { mcpGatewayRoutes } from "./mcp-gateway";
+export { default as mcpRateLimitsRoutes } from "./mcp-rate-limits";
 export { default as mcpServerRoutes } from "./mcp-server";
 export { default as mcpServerInstallationRequestRoutes } from "./mcp-server-installation-requests";
 export { default as mcpToolCallRoutes } from "./mcp-tool-call";
