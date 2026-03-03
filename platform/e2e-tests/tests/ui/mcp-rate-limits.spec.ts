@@ -50,7 +50,7 @@ test.describe("MCP Rate Limits", () => {
     goToPage,
   }) => {
     test.setTimeout(60_000);
-    await goToPage(page, "/mcp-rate-limits");
+    await goToPage(page, "/mcp/rate-limits");
     await page.waitForLoadState("domcontentloaded");
 
     await expect(page.getByText("No MCP rate limits configured")).toBeVisible({
@@ -64,7 +64,7 @@ test.describe("MCP Rate Limits", () => {
     extractCookieHeaders,
   }) => {
     test.setTimeout(120_000);
-    await goToPage(page, "/mcp-rate-limits");
+    await goToPage(page, "/mcp/rate-limits");
     await page.waitForLoadState("domcontentloaded");
 
     // Click "Add Rate Limit"
@@ -139,7 +139,7 @@ test.describe("MCP Rate Limits", () => {
     extractCookieHeaders,
   }) => {
     test.setTimeout(120_000);
-    await goToPage(page, "/mcp-rate-limits");
+    await goToPage(page, "/mcp/rate-limits");
     await page.waitForLoadState("domcontentloaded");
 
     // Click "Add Rate Limit"
@@ -242,7 +242,7 @@ test.describe("MCP Rate Limits", () => {
     const limitId = createResult.data.id;
 
     try {
-      await goToPage(page, "/mcp-rate-limits");
+      await goToPage(page, "/mcp/rate-limits");
       await page.waitForLoadState("domcontentloaded");
 
       // Wait for the table to show
@@ -320,7 +320,7 @@ test.describe("MCP Rate Limits", () => {
       },
     });
 
-    await goToPage(page, "/mcp-rate-limits");
+    await goToPage(page, "/mcp/rate-limits");
     await page.waitForLoadState("domcontentloaded");
 
     // Wait for the table to show

@@ -1,6 +1,6 @@
 ---
-title: Overview
-category: MCP Gateway
+title: MCP Gateway
+category: MCP
 order: 1
 description: Unified access point for all MCP servers
 lastUpdated: 2025-02-12
@@ -19,8 +19,8 @@ MCP Gateway is the unified access point for all MCP servers in Archestra Platfor
 
 ## To use MCP Gateway:
 
-1. Go to **MCP Registry** and make sure you have at least one MCP server installed.
-2. Go to **MCP Gateways** and create a new gateway or use an existing one.
+1. Go to **MCPs** and make sure you have at least one MCP server installed.
+2. Go to **MCPs > Gateways** and create a new gateway or use an existing one.
 3. Click the pencil icon to open the **Edit MCP Gateway** form.
 4. In the **Tools** section, assign MCP server tools to the MCP Gateway and save the changes by pressing **Update**.
 5. Click the **Connect** icon to get connection instructions.
@@ -82,4 +82,13 @@ See [MCP Authentication](/docs/mcp-authentication) for more details.
 
 ## MCP Rate Limits
 
-See [Rate Limits](/docs/platform-mcp-rate-limits) for per-server and per-tool rate limiting configuration.
+MCP Rate Limits control how frequently tool calls can be made through the MCP Gateway. Limits use a sliding window counter and are scoped per Agent or MCP gateway.
+
+### Types
+
+- **Per Server** — limits total calls to any tool on a given MCP server within a time window.
+- **Per Tool** — limits calls to a specific tool on a given MCP server within a time window.
+
+Multiple limits can apply to the same call (e.g., both a server-level and tool-level limit). All applicable limits are checked — the first exceeded limit triggers the rejection.
+
+Limits are checked before each tool execution. When a limit is exceeded, the tool call returns an error result with a message including the limit value, window, and approximate retry time.
