@@ -3,7 +3,7 @@ title: "Access Control"
 category: Archestra Platform
 description: "Role-based access control (RBAC) system for managing user permissions in Archestra"
 order: 4
-lastUpdated: 2026-03-02
+lastUpdated: 2026-03-03
 ---
 <!--
 Check ../docs_writer_prompt.md before changing this file.
@@ -97,20 +97,20 @@ The following table lists all available permissions that can be assigned to cust
 | `llmProxy:delete` | Remove existing llm proxies for security, observability, and cost management |
 | `llmProxy:team-admin` | Team-level administrative control over the resource llm proxies for security, observability, and cost management |
 | `llmProxy:admin` | Administrative control over llm proxies for security, observability, and cost management |
-| `llmTokenLimit:create` | Create new  |
-| `llmTokenLimit:read` | View and list  |
-| `llmTokenLimit:update` | Modify existing  |
-| `llmTokenLimit:delete` | Remove existing  |
+| `llmTokenLimit:create` | Create new llm token usage limits and quotas |
+| `llmTokenLimit:read` | View and list llm token usage limits and quotas |
+| `llmTokenLimit:update` | Modify existing llm token usage limits and quotas |
+| `llmTokenLimit:delete` | Remove existing llm token usage limits and quotas |
 | `mcpGateway:create` | Create new mcp gateways that provide unified mcp endpoints for tools |
 | `mcpGateway:read` | View and list mcp gateways that provide unified mcp endpoints for tools |
 | `mcpGateway:update` | Modify existing mcp gateways that provide unified mcp endpoints for tools |
 | `mcpGateway:delete` | Remove existing mcp gateways that provide unified mcp endpoints for tools |
 | `mcpGateway:team-admin` | Team-level administrative control over the resource mcp gateways that provide unified mcp endpoints for tools |
 | `mcpGateway:admin` | Administrative control over mcp gateways that provide unified mcp endpoints for tools |
-| `mcpRateLimit:create` | Create new  |
-| `mcpRateLimit:read` | View and list  |
-| `mcpRateLimit:update` | Modify existing  |
-| `mcpRateLimit:delete` | Remove existing  |
+| `mcpRateLimit:create` | Create new mcp rate limits for tool calls |
+| `mcpRateLimit:read` | View and list mcp rate limits for tool calls |
+| `mcpRateLimit:update` | Modify existing mcp rate limits for tool calls |
+| `mcpRateLimit:delete` | Remove existing mcp rate limits for tool calls |
 | `mcpServer:create` | Create new mcp servers for tool integration |
 | `mcpServer:read` | View and list mcp servers for tool integration |
 | `mcpServer:update` | Modify existing mcp servers for tool integration |

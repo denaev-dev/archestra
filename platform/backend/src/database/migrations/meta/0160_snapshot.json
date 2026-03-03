@@ -1,5 +1,5 @@
 {
-  "id": "4f57f5b8-a0b7-47f8-b612-a7d9c5a29dae",
+  "id": "173daa55-a036-44e0-a1de-d91be100b3fd",
   "prevId": "1b7f0cd9-22b7-4cab-8b25-71169ca345a2",
   "version": "7",
   "dialect": "postgresql",
@@ -2967,12 +2967,6 @@
         "tool_name": {
           "name": "tool_name",
           "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "window_seconds": {
-          "name": "window_seconds",
-          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },

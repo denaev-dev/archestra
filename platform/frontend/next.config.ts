@@ -81,11 +81,6 @@ const nextConfig: NextConfig = {
         destination: "/mcp/logs",
         permanent: true,
       },
-      {
-        source: "/mcp-rate-limits",
-        destination: "/mcp/rate-limits",
-        permanent: true,
-      },
     ];
   },
   async rewrites() {

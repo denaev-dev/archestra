@@ -10,10 +10,9 @@ const {
   deleteMcpRateLimit,
 } = archestraApiSdk;
 
-export function useMcpRateLimits(params?: {
-  agentId?: string;
-  limitType?: "mcp_server_calls" | "tool_calls";
-}) {
+export function useMcpRateLimits(
+  params?: archestraApiTypes.GetMcpRateLimitsData["query"],
+) {
   return useQuery({
     queryKey: ["mcpRateLimits", params],
     queryFn: async () => {

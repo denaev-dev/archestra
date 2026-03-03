@@ -5,11 +5,7 @@ import { toast } from "sonner";
 const { getLimits, createLimit, getLimit, updateLimit, deleteLimit } =
   archestraApiSdk;
 
-export function useLimits(params?: {
-  entityType?: "team" | "organization" | "agent";
-  entityId?: string;
-  limitType?: "token_cost";
-}) {
+export function useLimits(params?: archestraApiTypes.GetLimitsData["query"]) {
   return useQuery({
     queryKey: ["limits", params],
     queryFn: async () => {

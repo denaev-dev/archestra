@@ -2057,16 +2057,6 @@ export function getArchestraMcpTools(): Tool[] {
             description:
               "Array of model names (required for token_cost limits)",
           },
-          mcp_server_name: {
-            type: "string",
-            description:
-              "MCP server name (deprecated, use MCP rate limits API instead)",
-          },
-          tool_name: {
-            type: "string",
-            description:
-              "Tool name (deprecated, use MCP rate limits API instead)",
-          },
         },
         required: ["entity_type", "entity_id", "limit_type", "limit_value"],
       },
