@@ -6,6 +6,7 @@ import {
   ChevronDown,
   ChevronUp,
   Hash,
+  Loader2,
   Plus,
   Search,
   X,
@@ -16,6 +17,7 @@ import { useCallback, useMemo, useState } from "react";
 import { AgentBadge } from "@/components/agent-badge";
 import { DebouncedInput } from "@/components/debounced-input";
 import Divider from "@/components/divider";
+import { LoadingSpinner } from "@/components/loading";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -93,7 +95,11 @@ export function ChannelsSection({
   const offset = pageIndex * pageSize;
 
   // Data queries
-  const { data: bindingsResponse, isLoading } = useChatOpsBindings({
+  const {
+    data: bindingsResponse,
+    isLoading,
+    isFetching,
+  } = useChatOpsBindings({
     provider: providerConfig.provider,
     limit: pageSize,
     offset,
@@ -141,6 +147,7 @@ export function ChannelsSection({
   const pagination = bindingsResponse?.pagination;
   const counts = bindingsResponse?.counts;
   const workspaces = bindingsResponse?.workspaces ?? [];
+  const hasDmBinding = bindingsResponse?.hasDmBinding ?? false;
   const hasMultipleWorkspaces = workspaces.length > 1;
 
   const totalCount = (counts?.configured ?? 0) + (counts?.unassigned ?? 0);
@@ -178,11 +185,10 @@ export function ChannelsSection({
   );
 
   // Virtual DM row logic
-  const hasDmBinding = bindings.some((b) => b.isDm);
   const providerConfigured = providerStatus
     ? !!(providerStatus as { configured?: boolean }).configured
     : false;
-  // Show virtual DM only when: on first page, no search, no configured filter, no DM already
+  // Show virtual DM only when: no DM binding exists globally, first page, no search/workspace filter
   const showVirtualDmRow =
     !hasDmBinding &&
     providerConfigured &&
@@ -313,9 +319,14 @@ export function ChannelsSection({
     <section className="flex flex-col gap-4">
       <div>
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold">Channels</h2>
-          {!isLoading && hasAnyChannels && counts && (
-            <div className="flex items-end gap-3 text-xs text-muted-foreground ml-1">
+          <h2 className="text-lg font-semibold relative">
+            Channels
+            {isFetching && (
+              <LoadingSpinner className="h-3 w-3 animate-spin text-muted-foreground absolute right-[-20px] top-[7px]" />
+            )}
+          </h2>
+          {hasAnyChannels && counts && (
+            <div className="flex items-end gap-3 text-xs text-muted-foreground ml-4">
               <span className="inline-flex items-center gap-1.5 text-xs font-medium">
                 <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" />
                 Total: {totalCount}
@@ -347,7 +358,7 @@ export function ChannelsSection({
       </div>
 
       {isLoading && !bindingsResponse ? (
-        <ChannelTableLoading />
+        <ChannelTableSkeleton />
       ) : hasAnyChannels ? (
         <>
           {/* Search + bulk assign */}
@@ -918,7 +929,7 @@ function AgentPicker({
 // Loading skeleton
 // ---------------------------------------------------------------------------
 
-function ChannelTableLoading() {
+function ChannelTableSkeleton() {
   return (
     <div className="overflow-hidden rounded-md border">
       <Table>

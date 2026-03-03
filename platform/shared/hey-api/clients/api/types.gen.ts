@@ -19924,6 +19924,7 @@ export type ListChatOpsBindingsResponses = {
             id: string;
             name: string;
         }>;
+        hasDmBinding: boolean;
     };
 };
 

@@ -157,35 +157,36 @@ class ChatOpsChannelBindingModel {
     PaginatedResult<ChatOpsChannelBinding> & {
       counts: { configured: number; unassigned: number };
       workspaces: Array<{ id: string; name: string }>;
+      hasDmBinding: boolean;
     }
   > {
     const t = schema.chatopsChannelBindingsTable;
     const { organizationId, userEmail, pagination, sorting, filters } = params;
 
-    // Base conditions (always applied, including for counts)
-    const baseConditions = [
+    // Global conditions (org + DM visibility + provider only — used for summary counts)
+    const globalConditions = [
       eq(t.organizationId, organizationId),
       // DM visibility: exclude other users' DMs
       or(eq(t.isDm, false), eq(t.dmOwnerEmail, userEmail)),
+      ...(filters?.provider ? [eq(t.provider, filters.provider)] : []),
     ];
 
-    if (filters?.provider) {
-      baseConditions.push(eq(t.provider, filters.provider));
-    }
-    if (filters?.workspaceId) {
-      baseConditions.push(eq(t.workspaceId, filters.workspaceId));
-    }
-    if (filters?.search) {
-      baseConditions.push(ilike(t.channelName, `%${filters.search}%`));
-    }
+    // Filtered conditions (adds search + workspace on top of global)
+    const filteredConditions = [
+      ...globalConditions,
+      ...(filters?.workspaceId ? [eq(t.workspaceId, filters.workspaceId)] : []),
+      ...(filters?.search ? [ilike(t.channelName, `%${filters.search}%`)] : []),
+    ];
 
-    // Status condition (only for data + total, NOT for counts)
-    const statusConditions = [...baseConditions];
-    if (filters?.status === "configured") {
-      statusConditions.push(isNotNull(t.agentId));
-    } else if (filters?.status === "unassigned") {
-      statusConditions.push(isNull(t.agentId));
-    }
+    // Data conditions (adds status filter on top of filtered)
+    const dataConditions = [
+      ...filteredConditions,
+      ...(filters?.status === "configured"
+        ? [isNotNull(t.agentId)]
+        : filters?.status === "unassigned"
+          ? [isNull(t.agentId)]
+          : []),
+    ];
 
     // Sorting
     const direction = sorting?.sortDirection === "asc" ? asc : desc;
@@ -195,39 +196,49 @@ class ChatOpsChannelBindingModel {
         : direction(t.createdAt);
 
     // Run data query, total count, configured count, unassigned count, and workspaces in parallel
-    const [data, [{ total }], [{ configured }], [{ unassigned }], workspaces] =
-      await Promise.all([
-        db
-          .select()
-          .from(t)
-          .where(and(...statusConditions))
-          .orderBy(desc(t.isDm), orderByClause, asc(t.id))
-          .limit(pagination.limit)
-          .offset(pagination.offset),
-        db
-          .select({ total: count() })
-          .from(t)
-          .where(and(...statusConditions)),
-        db
-          .select({ configured: count() })
-          .from(t)
-          .where(and(...baseConditions, isNotNull(t.agentId))),
-        db
-          .select({ unassigned: count() })
-          .from(t)
-          .where(and(...baseConditions, isNull(t.agentId))),
-        db
-          .selectDistinct({ id: t.workspaceId, name: t.workspaceName })
-          .from(t)
-          .where(
-            and(
-              eq(t.organizationId, organizationId),
-              isNotNull(t.workspaceId),
-              isNotNull(t.workspaceName),
-              ...(filters?.provider ? [eq(t.provider, filters.provider)] : []),
-            ),
+    const [
+      data,
+      [{ total }],
+      [{ configured }],
+      [{ unassigned }],
+      workspaces,
+      [{ dmCount }],
+    ] = await Promise.all([
+      db
+        .select()
+        .from(t)
+        .where(and(...dataConditions))
+        .orderBy(desc(t.isDm), orderByClause, asc(t.id))
+        .limit(pagination.limit)
+        .offset(pagination.offset),
+      db
+        .select({ total: count() })
+        .from(t)
+        .where(and(...dataConditions)),
+      db
+        .select({ configured: count() })
+        .from(t)
+        .where(and(...globalConditions, isNotNull(t.agentId))),
+      db
+        .select({ unassigned: count() })
+        .from(t)
+        .where(and(...globalConditions, isNull(t.agentId))),
+      db
+        .selectDistinct({ id: t.workspaceId, name: t.workspaceName })
+        .from(t)
+        .where(
+          and(
+            eq(t.organizationId, organizationId),
+            isNotNull(t.workspaceId),
+            isNotNull(t.workspaceName),
+            ...(filters?.provider ? [eq(t.provider, filters.provider)] : []),
           ),
-      ]);
+        ),
+      db
+        .select({ dmCount: count() })
+        .from(t)
+        .where(and(...globalConditions, eq(t.isDm, true))),
+    ]);
 
     return {
       ...createPaginatedResult(
@@ -243,6 +254,7 @@ class ChatOpsChannelBindingModel {
         (w): w is { id: string; name: string } =>
           w.id !== null && w.name !== null,
       ),
+      hasDmBinding: Number(dmCount) > 0,
     };
   }
 

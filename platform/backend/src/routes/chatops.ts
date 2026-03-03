@@ -946,6 +946,7 @@ const chatopsRoutes: FastifyPluginAsyncZod = async (fastify) => {
               unassigned: z.number(),
             }),
             workspaces: z.array(z.object({ id: z.string(), name: z.string() })),
+            hasDmBinding: z.boolean(),
           }),
         ),
       },
@@ -979,6 +980,7 @@ const chatopsRoutes: FastifyPluginAsyncZod = async (fastify) => {
         pagination: result.pagination,
         counts: result.counts,
         workspaces: result.workspaces,
+        hasDmBinding: result.hasDmBinding,
       });
     },
   );

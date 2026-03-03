@@ -1,5 +1,10 @@
 import { archestraApiSdk } from "@shared";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 import { handleApiError } from "./utils";
 
@@ -25,6 +30,7 @@ export function useChatOpsBindings(params: {
 }) {
   return useQuery({
     queryKey: ["chatops", "bindings", params],
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       const { data, error } = await archestraApiSdk.listChatOpsBindings({
         query: {
