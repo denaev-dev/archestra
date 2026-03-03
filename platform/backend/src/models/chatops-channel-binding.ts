@@ -1,15 +1,25 @@
 import {
   and,
+  asc,
+  count,
   desc,
   eq,
+  ilike,
   inArray,
+  isNotNull,
   isNull,
   ne,
   notInArray,
+  or,
   sql,
 } from "drizzle-orm";
 import db, { schema } from "@/database";
+import {
+  createPaginatedResult,
+  type PaginatedResult,
+} from "@/database/utils/pagination";
 import logger from "@/logging";
+import type { PaginationQuery, SortingQueryFor } from "@/types";
 import type { ChatOpsProviderType } from "@/types/chatops";
 import type {
   ChatOpsChannelBinding,
@@ -125,6 +135,115 @@ class ChatOpsChannelBindingModel {
       .orderBy(desc(schema.chatopsChannelBindingsTable.createdAt));
 
     return bindings as ChatOpsChannelBinding[];
+  }
+
+  /**
+   * Find all bindings for an organization with server-side pagination,
+   * sorting, filtering, and status/search support.
+   * Returns paginated data plus configured/unassigned counts.
+   */
+  static async findAllPaginated(params: {
+    organizationId: string;
+    userEmail: string;
+    pagination: PaginationQuery;
+    sorting?: SortingQueryFor<["channelName", "createdAt"]>;
+    filters?: {
+      provider?: ChatOpsProviderType;
+      workspaceId?: string;
+      search?: string;
+      status?: "configured" | "unassigned";
+    };
+  }): Promise<
+    PaginatedResult<ChatOpsChannelBinding> & {
+      counts: { configured: number; unassigned: number };
+      workspaces: Array<{ id: string; name: string }>;
+    }
+  > {
+    const t = schema.chatopsChannelBindingsTable;
+    const { organizationId, userEmail, pagination, sorting, filters } = params;
+
+    // Base conditions (always applied, including for counts)
+    const baseConditions = [
+      eq(t.organizationId, organizationId),
+      // DM visibility: exclude other users' DMs
+      or(eq(t.isDm, false), eq(t.dmOwnerEmail, userEmail)),
+    ];
+
+    if (filters?.provider) {
+      baseConditions.push(eq(t.provider, filters.provider));
+    }
+    if (filters?.workspaceId) {
+      baseConditions.push(eq(t.workspaceId, filters.workspaceId));
+    }
+    if (filters?.search) {
+      baseConditions.push(ilike(t.channelName, `%${filters.search}%`));
+    }
+
+    // Status condition (only for data + total, NOT for counts)
+    const statusConditions = [...baseConditions];
+    if (filters?.status === "configured") {
+      statusConditions.push(isNotNull(t.agentId));
+    } else if (filters?.status === "unassigned") {
+      statusConditions.push(isNull(t.agentId));
+    }
+
+    // Sorting
+    const direction = sorting?.sortDirection === "asc" ? asc : desc;
+    const orderByClause =
+      sorting?.sortBy === "channelName"
+        ? direction(t.channelName)
+        : direction(t.createdAt);
+
+    // Run data query, total count, configured count, unassigned count, and workspaces in parallel
+    const [data, [{ total }], [{ configured }], [{ unassigned }], workspaces] =
+      await Promise.all([
+        db
+          .select()
+          .from(t)
+          .where(and(...statusConditions))
+          .orderBy(orderByClause, asc(t.id))
+          .limit(pagination.limit)
+          .offset(pagination.offset),
+        db
+          .select({ total: count() })
+          .from(t)
+          .where(and(...statusConditions)),
+        db
+          .select({ configured: count() })
+          .from(t)
+          .where(and(...baseConditions, isNotNull(t.agentId))),
+        db
+          .select({ unassigned: count() })
+          .from(t)
+          .where(and(...baseConditions, isNull(t.agentId))),
+        db
+          .selectDistinct({ id: t.workspaceId, name: t.workspaceName })
+          .from(t)
+          .where(
+            and(
+              eq(t.organizationId, organizationId),
+              isNotNull(t.workspaceId),
+              isNotNull(t.workspaceName),
+              ...(filters?.provider ? [eq(t.provider, filters.provider)] : []),
+            ),
+          ),
+      ]);
+
+    return {
+      ...createPaginatedResult(
+        data as ChatOpsChannelBinding[],
+        Number(total),
+        pagination,
+      ),
+      counts: {
+        configured: Number(configured),
+        unassigned: Number(unassigned),
+      },
+      workspaces: workspaces.filter(
+        (w): w is { id: string; name: string } =>
+          w.id !== null && w.name !== null,
+      ),
+    };
   }
 
   /**
