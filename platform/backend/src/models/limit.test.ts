@@ -3,23 +3,19 @@ import LimitModel, { LimitValidationService } from "./limit";
 
 describe("LimitModel", () => {
   describe("create", () => {
-    test("can create a token_cost limit for an agent", async ({
-      makeAgent,
-    }) => {
+    test("can create a token_cost limit for a team", async ({ makeAgent }) => {
       const agent = await makeAgent({ name: "Test Agent" });
 
       const limit = await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["claude-3-5-sonnet-20241022"],
       });
 
       expect(limit.id).toBeDefined();
-      expect(limit.entityType).toBe("agent");
+      expect(limit.entityType).toBe("team");
       expect(limit.entityId).toBe(agent.id);
-      expect(limit.limitType).toBe("token_cost");
       expect(limit.limitValue).toBe(1000000);
       expect(limit.model).toEqual(["claude-3-5-sonnet-20241022"]);
     });
@@ -36,7 +32,6 @@ describe("LimitModel", () => {
       const limit = await LimitModel.create({
         entityType: "team",
         entityId: team.id,
-        limitType: "token_cost",
         limitValue: 5000000,
         model: ["gpt-4"],
       });
@@ -54,7 +49,6 @@ describe("LimitModel", () => {
       const limit = await LimitModel.create({
         entityType: "organization",
         entityId: org.id,
-        limitType: "token_cost",
         limitValue: 10000000,
         model: ["claude-3-5-sonnet-20241022"],
       });
@@ -70,9 +64,8 @@ describe("LimitModel", () => {
       const agent = await makeAgent({ name: "Test Agent" });
 
       const limit = await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["gpt-4o", "claude-3-5-sonnet-20241022", "gemini-pro"],
       });
@@ -107,17 +100,15 @@ describe("LimitModel", () => {
       const agent2 = await makeAgent({ name: "Agent 2" });
 
       await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent1.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["claude-3-5-sonnet-20241022"],
       });
 
       await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent2.id,
-        limitType: "token_cost",
         limitValue: 2000000,
         model: ["gpt-4"],
       });
@@ -134,9 +125,8 @@ describe("LimitModel", () => {
       const org = await makeOrganization();
 
       await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["claude-3-5-sonnet-20241022"],
       });
@@ -144,14 +134,13 @@ describe("LimitModel", () => {
       await LimitModel.create({
         entityType: "organization",
         entityId: org.id,
-        limitType: "token_cost",
         limitValue: 10000000,
         model: ["claude-3-5-sonnet-20241022"],
       });
 
-      const agentLimits = await LimitModel.findAll("agent");
+      const agentLimits = await LimitModel.findAll("team");
       expect(agentLimits).toHaveLength(1);
-      expect(agentLimits[0].entityType).toBe("agent");
+      expect(agentLimits[0].entityType).toBe("team");
 
       const orgLimits = await LimitModel.findAll("organization");
       expect(orgLimits).toHaveLength(1);
@@ -163,17 +152,15 @@ describe("LimitModel", () => {
       const agent2 = await makeAgent({ name: "Agent 2" });
 
       await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent1.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["claude-3-5-sonnet-20241022"],
       });
 
       await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent2.id,
-        limitType: "token_cost",
         limitValue: 2000000,
         model: ["gpt-4"],
       });
@@ -191,9 +178,8 @@ describe("LimitModel", () => {
       const org = await makeOrganization();
 
       await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["claude-3-5-sonnet-20241022"],
       });
@@ -201,14 +187,13 @@ describe("LimitModel", () => {
       await LimitModel.create({
         entityType: "organization",
         entityId: org.id,
-        limitType: "token_cost",
         limitValue: 10000000,
         model: ["claude-3-5-sonnet-20241022"],
       });
 
-      const agentLimits = await LimitModel.findAll("agent", agent.id);
+      const agentLimits = await LimitModel.findAll("team", agent.id);
       expect(agentLimits).toHaveLength(1);
-      expect(agentLimits[0].entityType).toBe("agent");
+      expect(agentLimits[0].entityType).toBe("team");
       expect(agentLimits[0].entityId).toBe(agent.id);
     });
   });
@@ -218,9 +203,8 @@ describe("LimitModel", () => {
       const agent = await makeAgent({ name: "Test Agent" });
 
       const created = await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["claude-3-5-sonnet-20241022"],
       });
@@ -244,9 +228,8 @@ describe("LimitModel", () => {
       const agent = await makeAgent({ name: "Test Agent" });
 
       const limit = await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["claude-3-5-sonnet-20241022"],
       });
@@ -276,9 +259,8 @@ describe("LimitModel", () => {
       const agent = await makeAgent({ name: "Test Agent" });
 
       const limit = await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["claude-3-5-sonnet-20241022"],
       });
@@ -352,15 +334,14 @@ describe("LimitModel", () => {
       const agent = await makeAgent({ name: "Test Agent" });
 
       const limit = await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["claude-3-5-sonnet-20241022"],
       });
 
       await LimitModel.updateTokenLimitUsage(
-        "agent",
+        "team",
         agent.id,
         "claude-3-5-sonnet-20241022",
         100,
@@ -381,22 +362,21 @@ describe("LimitModel", () => {
       const agent = await makeAgent({ name: "Test Agent" });
 
       const limit = await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["claude-3-5-sonnet-20241022"],
       });
 
       await LimitModel.updateTokenLimitUsage(
-        "agent",
+        "team",
         agent.id,
         "claude-3-5-sonnet-20241022",
         100,
         200,
       );
       await LimitModel.updateTokenLimitUsage(
-        "agent",
+        "team",
         agent.id,
         "claude-3-5-sonnet-20241022",
         50,
@@ -418,16 +398,15 @@ describe("LimitModel", () => {
 
       // Create limit with multiple models
       const limit = await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["gpt-4o", "claude-3-5-sonnet-20241022"],
       });
 
       // Update usage for gpt-4o only
       await LimitModel.updateTokenLimitUsage(
-        "agent",
+        "team",
         agent.id,
         "gpt-4o",
         100,
@@ -457,24 +436,22 @@ describe("LimitModel", () => {
 
       // Create two limits, both containing gpt-4o
       const limit1 = await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["gpt-4o", "claude-3-5-sonnet-20241022"],
       });
 
       const limit2 = await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent.id,
-        limitType: "token_cost",
         limitValue: 500000,
         model: ["gpt-4o", "gemini-pro"],
       });
 
       // Update usage for gpt-4o
       await LimitModel.updateTokenLimitUsage(
-        "agent",
+        "team",
         agent.id,
         "gpt-4o",
         100,
@@ -502,9 +479,8 @@ describe("LimitModel", () => {
       const agent = await makeAgent({ name: "Test Agent" });
 
       const limit = await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["gpt-4o"],
       });
@@ -524,23 +500,22 @@ describe("LimitModel", () => {
       const agent = await makeAgent({ name: "Test Agent" });
 
       const limit = await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["gpt-4o", "claude-3-5-sonnet-20241022"],
       });
 
       // Add usage for both models
       await LimitModel.updateTokenLimitUsage(
-        "agent",
+        "team",
         agent.id,
         "gpt-4o",
         100000,
         50000,
       );
       await LimitModel.updateTokenLimitUsage(
-        "agent",
+        "team",
         agent.id,
         "claude-3-5-sonnet-20241022",
         200000,
@@ -581,7 +556,6 @@ describe("LimitModel", () => {
       await LimitModel.create({
         entityType: "organization",
         entityId: org.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["claude-3-5-sonnet-20241022"],
       });
@@ -604,7 +578,6 @@ describe("LimitModel", () => {
       const limit = await LimitModel.create({
         entityType: "organization",
         entityId: org.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["claude-3-5-sonnet-20241022"],
       });
@@ -631,7 +604,6 @@ describe("LimitModel", () => {
       const limit = await LimitModel.create({
         entityType: "organization",
         entityId: org.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["claude-3-5-sonnet-20241022"],
       });
@@ -658,16 +630,15 @@ describe("LimitModel", () => {
       const agent = await makeAgent({ name: "Test Agent" });
 
       const limit = await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["claude-3-5-sonnet-20241022"],
       });
 
       // Add some usage
       await LimitModel.updateTokenLimitUsage(
-        "agent",
+        "team",
         agent.id,
         "claude-3-5-sonnet-20241022",
         100,
@@ -694,21 +665,15 @@ describe("LimitModel", () => {
       const agent = await makeAgent({ name: "Test Agent" });
 
       await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["claude-3-5-sonnet-20241022"],
       });
 
-      const limits = await LimitModel.findLimitsForValidation(
-        "agent",
-        agent.id,
-        "token_cost",
-      );
+      const limits = await LimitModel.findLimitsForValidation("team", agent.id);
 
       expect(limits).toHaveLength(1);
-      expect(limits[0].limitType).toBe("token_cost");
     });
 
     test("should not find limits for other entity types", async ({
@@ -719,9 +684,8 @@ describe("LimitModel", () => {
       const org = await makeOrganization();
 
       await LimitModel.create({
-        entityType: "agent",
+        entityType: "team",
         entityId: agent.id,
-        limitType: "token_cost",
         limitValue: 1000000,
         model: ["claude-3-5-sonnet-20241022"],
       });
@@ -729,7 +693,6 @@ describe("LimitModel", () => {
       const limits = await LimitModel.findLimitsForValidation(
         "organization",
         org.id,
-        "token_cost",
       );
 
       expect(limits).toHaveLength(0);
@@ -752,16 +715,6 @@ describe("LimitValidationService", () => {
       expect(result).toBeNull();
     });
 
-    test("should return refusal message when agent-level limit is exceeded", async () => {
-      // TODO: Set up test data with agent limit of 1000 tokens and current usage of 1000+
-      const result =
-        await LimitValidationService.checkLimitsBeforeRequest("agent-123");
-
-      // For now, this will return null since no test data is set up
-      // Once test data is added, update this expectation
-      expect(result).toBeNull();
-    });
-
     test("should return refusal message when team-level limit is exceeded", async () => {
       // TODO: Set up test data with team limit exceeded
       const result =
@@ -771,14 +724,6 @@ describe("LimitValidationService", () => {
 
     test("should return refusal message when organization-level limit is exceeded", async () => {
       // TODO: Set up test data with organization limit exceeded
-      const result =
-        await LimitValidationService.checkLimitsBeforeRequest("agent-123");
-      expect(result).toBeNull();
-    });
-
-    test("should check agent limits first (highest priority)", async () => {
-      // TODO: Set up conflicting limits where agent allows but team/org forbids
-      // Should return null (allowed) because agent limit takes priority
       const result =
         await LimitValidationService.checkLimitsBeforeRequest("agent-123");
       expect(result).toBeNull();

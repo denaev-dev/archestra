@@ -446,7 +446,6 @@ for (const config of testConfigs) {
         const limitResponse = await createLimit(request, {
           entityType: "agent",
           entityId: profileId,
-          limitType: "token_cost",
           limitValue: 2,
           model: [config.modelName],
         });
@@ -604,7 +603,6 @@ for (const config of testConfigs) {
         const limitResponse = await createLimit(request, {
           entityType: "agent",
           entityId: profileId,
-          limitType: "token_cost",
           limitValue: 1000,
           model: [config.modelName],
         });

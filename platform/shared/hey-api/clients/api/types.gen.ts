@@ -26235,9 +26235,8 @@ export type GetLimitsData = {
     body?: never;
     path?: never;
     query?: {
-        entityType?: 'organization' | 'team' | 'agent';
+        entityType?: 'organization' | 'team';
         entityId?: string;
-        limitType?: 'token_cost';
     };
     url: '/api/limits';
 };
@@ -26307,13 +26306,11 @@ export type GetLimitsResponses = {
      */
     200: Array<{
         id: string;
-        entityType: 'organization' | 'team' | 'agent';
+        entityType: 'organization' | 'team';
         entityId: string;
-        limitType: 'token_cost';
         limitValue: number;
         mcpServerName: string | null;
         toolName: string | null;
-        windowSeconds: number | null;
         model?: Array<string> | null;
         lastCleanup: string | null;
         createdAt: string;
@@ -26331,13 +26328,11 @@ export type GetLimitsResponse = GetLimitsResponses[keyof GetLimitsResponses];
 
 export type CreateLimitData = {
     body: {
-        entityType: 'organization' | 'team' | 'agent';
+        entityType: 'organization' | 'team';
         entityId: string;
-        limitType: 'token_cost';
         limitValue: number;
         mcpServerName?: string | null;
         toolName?: string | null;
-        windowSeconds?: number | null;
         model?: Array<string> | null;
         lastCleanup?: unknown;
     };
@@ -26411,13 +26406,11 @@ export type CreateLimitResponses = {
      */
     200: {
         id: string;
-        entityType: 'organization' | 'team' | 'agent';
+        entityType: 'organization' | 'team';
         entityId: string;
-        limitType: 'token_cost';
         limitValue: number;
         mcpServerName: string | null;
         toolName: string | null;
-        windowSeconds: number | null;
         model?: Array<string> | null;
         lastCleanup: string | null;
         createdAt: string;
@@ -26580,13 +26573,11 @@ export type GetLimitResponses = {
      */
     200: {
         id: string;
-        entityType: 'organization' | 'team' | 'agent';
+        entityType: 'organization' | 'team';
         entityId: string;
-        limitType: 'token_cost';
         limitValue: number;
         mcpServerName: string | null;
         toolName: string | null;
-        windowSeconds: number | null;
         model?: Array<string> | null;
         lastCleanup: string | null;
         createdAt: string;
@@ -26598,13 +26589,11 @@ export type GetLimitResponse = GetLimitResponses[keyof GetLimitResponses];
 
 export type UpdateLimitData = {
     body?: {
-        entityType?: 'organization' | 'team' | 'agent';
+        entityType?: 'organization' | 'team';
         entityId?: string;
-        limitType?: 'token_cost';
         limitValue?: number;
         mcpServerName?: string | null;
         toolName?: string | null;
-        windowSeconds?: number | null;
         model?: Array<string> | null;
         lastCleanup?: unknown;
     };
@@ -26680,13 +26669,11 @@ export type UpdateLimitResponses = {
      */
     200: {
         id: string;
-        entityType: 'organization' | 'team' | 'agent';
+        entityType: 'organization' | 'team';
         entityId: string;
-        limitType: 'token_cost';
         limitValue: number;
         mcpServerName: string | null;
         toolName: string | null;
-        windowSeconds: number | null;
         model?: Array<string> | null;
         lastCleanup: string | null;
         createdAt: string;

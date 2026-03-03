@@ -51,96 +51,96 @@ The following table lists all available permissions that can be assigned to cust
 | `ac:read` | View and list RBAC roles |
 | `ac:update` | Modify existing RBAC roles |
 | `ac:delete` | Remove existing RBAC roles |
-| `agent:create` | Create new automation agents with prompts and configurations |
-| `agent:read` | View and list automation agents with prompts and configurations |
-| `agent:update` | Modify existing automation agents with prompts and configurations |
-| `agent:delete` | Remove existing automation agents with prompts and configurations |
-| `agent:team-admin` | Team-level administrative control over the resource automation agents with prompts and configurations |
-| `agent:admin` | Administrative control over automation agents with prompts and configurations |
-| `chatSettings:create` | Create new chat feature configuration and settings |
-| `chatSettings:read` | View and list chat feature configuration and settings |
-| `chatSettings:update` | Modify existing chat feature configuration and settings |
-| `chatSettings:delete` | Remove existing chat feature configuration and settings |
-| `conversation:create` | Create new chat conversations with automation experts |
-| `conversation:read` | View and list chat conversations with automation experts |
-| `conversation:update` | Modify existing chat conversations with automation experts |
-| `conversation:delete` | Remove existing chat conversations with automation experts |
-| `dualLlmConfig:create` | Create new dual llm security configuration settings |
-| `dualLlmConfig:read` | View and list dual llm security configuration settings |
-| `dualLlmConfig:update` | Modify existing dual llm security configuration settings |
-| `dualLlmConfig:delete` | Remove existing dual llm security configuration settings |
-| `dualLlmResult:create` | Create new results from dual llm security validation |
-| `dualLlmResult:read` | View and list results from dual llm security validation |
-| `dualLlmResult:update` | Modify existing results from dual llm security validation |
-| `dualLlmResult:delete` | Remove existing results from dual llm security validation |
-| `identityProvider:create` | Create new identity providers for authentication |
-| `identityProvider:read` | View and list identity providers for authentication |
-| `identityProvider:update` | Modify existing identity providers for authentication |
-| `identityProvider:delete` | Remove existing identity providers for authentication |
-| `interaction:create` | Create new conversation history and agent interactions |
-| `interaction:read` | View and list conversation history and agent interactions |
-| `interaction:update` | Modify existing conversation history and agent interactions |
-| `interaction:delete` | Remove existing conversation history and agent interactions |
-| `internalMcpCatalog:create` | Create new internal mcp server catalog management |
-| `internalMcpCatalog:read` | View and list internal mcp server catalog management |
-| `internalMcpCatalog:update` | Modify existing internal mcp server catalog management |
-| `internalMcpCatalog:delete` | Remove existing internal mcp server catalog management |
-| `invitation:create` | Create new member invitations and onboarding |
-| `invitation:cancel` | Cancel member invitations and onboarding |
-| `llmModels:create` | Create new llm models and pricing configuration |
-| `llmModels:read` | View and list llm models and pricing configuration |
-| `llmModels:update` | Modify existing llm models and pricing configuration |
-| `llmModels:delete` | Remove existing llm models and pricing configuration |
-| `llmProxy:create` | Create new llm proxies for security, observability, and cost management |
-| `llmProxy:read` | View and list llm proxies for security, observability, and cost management |
-| `llmProxy:update` | Modify existing llm proxies for security, observability, and cost management |
-| `llmProxy:delete` | Remove existing llm proxies for security, observability, and cost management |
-| `llmProxy:team-admin` | Team-level administrative control over the resource llm proxies for security, observability, and cost management |
-| `llmProxy:admin` | Administrative control over llm proxies for security, observability, and cost management |
-| `llmTokenLimit:create` | Create new llm token usage limits and quotas |
-| `llmTokenLimit:read` | View and list llm token usage limits and quotas |
-| `llmTokenLimit:update` | Modify existing llm token usage limits and quotas |
-| `llmTokenLimit:delete` | Remove existing llm token usage limits and quotas |
-| `mcpGateway:create` | Create new mcp gateways that provide unified mcp endpoints for tools |
-| `mcpGateway:read` | View and list mcp gateways that provide unified mcp endpoints for tools |
-| `mcpGateway:update` | Modify existing mcp gateways that provide unified mcp endpoints for tools |
-| `mcpGateway:delete` | Remove existing mcp gateways that provide unified mcp endpoints for tools |
-| `mcpGateway:team-admin` | Team-level administrative control over the resource mcp gateways that provide unified mcp endpoints for tools |
-| `mcpGateway:admin` | Administrative control over mcp gateways that provide unified mcp endpoints for tools |
-| `mcpRateLimit:create` | Create new mcp rate limits for tool calls |
-| `mcpRateLimit:read` | View and list mcp rate limits for tool calls |
-| `mcpRateLimit:update` | Modify existing mcp rate limits for tool calls |
-| `mcpRateLimit:delete` | Remove existing mcp rate limits for tool calls |
-| `mcpServer:create` | Create new mcp servers for tool integration |
-| `mcpServer:read` | View and list mcp servers for tool integration |
-| `mcpServer:update` | Modify existing mcp servers for tool integration |
-| `mcpServer:delete` | Remove existing mcp servers for tool integration |
-| `mcpServer:admin` | Administrative control over mcp servers for tool integration |
-| `mcpServerInstallationRequest:create` | Create new requests for new mcp server installations |
-| `mcpServerInstallationRequest:read` | View and list requests for new mcp server installations |
-| `mcpServerInstallationRequest:update` | Modify existing requests for new mcp server installations |
-| `mcpServerInstallationRequest:delete` | Remove existing requests for new mcp server installations |
-| `mcpServerInstallationRequest:admin` | Administrative control over requests for new mcp server installations |
-| `mcpToolCall:read` | View and list tool execution logs and results |
-| `member:create` | Create new organization members and their roles |
-| `member:update` | Modify existing organization members and their roles |
-| `member:delete` | Remove existing organization members and their roles |
-| `organization:read` | View and list organization settings |
-| `organization:update` | Modify existing organization settings |
-| `organization:delete` | Remove existing organization settings |
-| `policy:create` | Create new tool invocation and trusted data policies for security |
-| `policy:read` | View and list tool invocation and trusted data policies for security |
-| `policy:update` | Modify existing tool invocation and trusted data policies for security |
-| `policy:delete` | Remove existing tool invocation and trusted data policies for security |
-| `team:create` | Create new teams for organizing members and access control |
-| `team:read` | View and list teams for organizing members and access control |
-| `team:update` | Modify existing teams for organizing members and access control |
-| `team:delete` | Remove existing teams for organizing members and access control |
-| `team:admin` | Administrative control over teams for organizing members and access control |
-| `tool:create` | Create new individual tools that can be assigned to agents |
-| `tool:read` | View and list individual tools that can be assigned to agents |
-| `tool:update` | Modify existing individual tools that can be assigned to agents |
-| `tool:delete` | Remove existing individual tools that can be assigned to agents |
+| `agent:create` | Create new Automation agents with prompts and configurations |
+| `agent:read` | View and list Automation agents with prompts and configurations |
+| `agent:update` | Modify existing Automation agents with prompts and configurations |
+| `agent:delete` | Remove existing Automation agents with prompts and configurations |
+| `agent:team-admin` | Team-level administrative control over the resource Automation agents with prompts and configurations |
+| `agent:admin` | Administrative control over Automation agents with prompts and configurations |
+| `chatSettings:create` | Create new Chat feature configuration and settings |
+| `chatSettings:read` | View and list Chat feature configuration and settings |
+| `chatSettings:update` | Modify existing Chat feature configuration and settings |
+| `chatSettings:delete` | Remove existing Chat feature configuration and settings |
+| `conversation:create` | Create new Chat conversations with automation experts |
+| `conversation:read` | View and list Chat conversations with automation experts |
+| `conversation:update` | Modify existing Chat conversations with automation experts |
+| `conversation:delete` | Remove existing Chat conversations with automation experts |
+| `dualLlmConfig:create` | Create new Dual LLM security configuration settings |
+| `dualLlmConfig:read` | View and list Dual LLM security configuration settings |
+| `dualLlmConfig:update` | Modify existing Dual LLM security configuration settings |
+| `dualLlmConfig:delete` | Remove existing Dual LLM security configuration settings |
+| `dualLlmResult:create` | Create new Results from dual LLM security validation |
+| `dualLlmResult:read` | View and list Results from dual LLM security validation |
+| `dualLlmResult:update` | Modify existing Results from dual LLM security validation |
+| `dualLlmResult:delete` | Remove existing Results from dual LLM security validation |
+| `identityProvider:create` | Create new Identity providers for authentication |
+| `identityProvider:read` | View and list Identity providers for authentication |
+| `identityProvider:update` | Modify existing Identity providers for authentication |
+| `identityProvider:delete` | Remove existing Identity providers for authentication |
+| `interaction:create` | Create new Conversation history and agent interactions |
+| `interaction:read` | View and list Conversation history and agent interactions |
+| `interaction:update` | Modify existing Conversation history and agent interactions |
+| `interaction:delete` | Remove existing Conversation history and agent interactions |
+| `internalMcpCatalog:create` | Create new Internal MCP server catalog management |
+| `internalMcpCatalog:read` | View and list Internal MCP server catalog management |
+| `internalMcpCatalog:update` | Modify existing Internal MCP server catalog management |
+| `internalMcpCatalog:delete` | Remove existing Internal MCP server catalog management |
+| `invitation:create` | Create new Member invitations and onboarding |
+| `invitation:cancel` | Cancel Member invitations and onboarding |
+| `llmModels:create` | Create new LLM models and pricing configuration |
+| `llmModels:read` | View and list LLM models and pricing configuration |
+| `llmModels:update` | Modify existing LLM models and pricing configuration |
+| `llmModels:delete` | Remove existing LLM models and pricing configuration |
+| `llmProxy:create` | Create new LLM Proxies for security, observability, and cost management |
+| `llmProxy:read` | View and list LLM Proxies for security, observability, and cost management |
+| `llmProxy:update` | Modify existing LLM Proxies for security, observability, and cost management |
+| `llmProxy:delete` | Remove existing LLM Proxies for security, observability, and cost management |
+| `llmProxy:team-admin` | Team-level administrative control over the resource LLM Proxies for security, observability, and cost management |
+| `llmProxy:admin` | Administrative control over LLM Proxies for security, observability, and cost management |
+| `llmTokenLimit:create` | Create new LLM token usage limits and quotas |
+| `llmTokenLimit:read` | View and list LLM token usage limits and quotas |
+| `llmTokenLimit:update` | Modify existing LLM token usage limits and quotas |
+| `llmTokenLimit:delete` | Remove existing LLM token usage limits and quotas |
+| `mcpGateway:create` | Create new MCP Gateways that provide unified MCP endpoints for tools |
+| `mcpGateway:read` | View and list MCP Gateways that provide unified MCP endpoints for tools |
+| `mcpGateway:update` | Modify existing MCP Gateways that provide unified MCP endpoints for tools |
+| `mcpGateway:delete` | Remove existing MCP Gateways that provide unified MCP endpoints for tools |
+| `mcpGateway:team-admin` | Team-level administrative control over the resource MCP Gateways that provide unified MCP endpoints for tools |
+| `mcpGateway:admin` | Administrative control over MCP Gateways that provide unified MCP endpoints for tools |
+| `mcpRateLimit:create` | Create new MCP rate limits for tool calls |
+| `mcpRateLimit:read` | View and list MCP rate limits for tool calls |
+| `mcpRateLimit:update` | Modify existing MCP rate limits for tool calls |
+| `mcpRateLimit:delete` | Remove existing MCP rate limits for tool calls |
+| `mcpServer:create` | Create new MCP servers for tool integration |
+| `mcpServer:read` | View and list MCP servers for tool integration |
+| `mcpServer:update` | Modify existing MCP servers for tool integration |
+| `mcpServer:delete` | Remove existing MCP servers for tool integration |
+| `mcpServer:admin` | Administrative control over MCP servers for tool integration |
+| `mcpServerInstallationRequest:create` | Create new Requests for new MCP server installations |
+| `mcpServerInstallationRequest:read` | View and list Requests for new MCP server installations |
+| `mcpServerInstallationRequest:update` | Modify existing Requests for new MCP server installations |
+| `mcpServerInstallationRequest:delete` | Remove existing Requests for new MCP server installations |
+| `mcpServerInstallationRequest:admin` | Administrative control over Requests for new MCP server installations |
+| `mcpToolCall:read` | View and list Tool execution logs and results |
+| `member:create` | Create new Organization members and their roles |
+| `member:update` | Modify existing Organization members and their roles |
+| `member:delete` | Remove existing Organization members and their roles |
+| `organization:read` | View and list Organization settings |
+| `organization:update` | Modify existing Organization settings |
+| `organization:delete` | Remove existing Organization settings |
+| `policy:create` | Create new Tool invocation and trusted data policies for security |
+| `policy:read` | View and list Tool invocation and trusted data policies for security |
+| `policy:update` | Modify existing Tool invocation and trusted data policies for security |
+| `policy:delete` | Remove existing Tool invocation and trusted data policies for security |
+| `team:create` | Create new Teams for organizing members and access control |
+| `team:read` | View and list Teams for organizing members and access control |
+| `team:update` | Modify existing Teams for organizing members and access control |
+| `team:delete` | Remove existing Teams for organizing members and access control |
+| `team:admin` | Administrative control over Teams for organizing members and access control |
+| `tool:create` | Create new Individual tools that can be assigned to agents |
+| `tool:read` | View and list Individual tools that can be assigned to agents |
+| `tool:update` | Modify existing Individual tools that can be assigned to agents |
+| `tool:delete` | Remove existing Individual tools that can be assigned to agents |
 
 
 ## Best Practices

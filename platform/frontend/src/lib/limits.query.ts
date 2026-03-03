@@ -14,7 +14,6 @@ export function useLimits(params?: archestraApiTypes.GetLimitsData["query"]) {
           ? {
               ...(params.entityType && { entityType: params.entityType }),
               ...(params.entityId && { entityId: params.entityId }),
-              ...(params.limitType && { limitType: params.limitType }),
             }
           : undefined,
       });

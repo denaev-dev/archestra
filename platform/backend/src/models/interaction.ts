@@ -734,17 +734,6 @@ class InteractionModel {
         }
       }
 
-      // Update profile-level token cost limits (if any exist)
-      updatePromises.push(
-        LimitModel.updateTokenLimitUsage(
-          "agent",
-          interaction.profileId,
-          model,
-          inputTokens,
-          outputTokens,
-        ),
-      );
-
       // Execute all updates in parallel
       await Promise.all(updatePromises);
     } catch (error) {

@@ -81,7 +81,6 @@ type TokenPriceData = {
 };
 type TeamData = archestraApiTypes.GetTeamsResponses["200"][number];
 type UsageStatus = "safe" | "warning" | "danger";
-type LimitType = Pick<LimitData, "limitType">["limitType"];
 
 // Loading skeleton component
 function LoadingSkeleton({ count, prefix }: { count: number; prefix: string }) {
@@ -102,7 +101,6 @@ function LoadingSkeleton({ count, prefix }: { count: number; prefix: string }) {
 // Inline Form Component for adding/editing limits
 function LimitInlineForm({
   initialData,
-  limitType,
   onSave,
   onCancel,
   teams,
@@ -110,7 +108,6 @@ function LimitInlineForm({
   organizationId,
 }: {
   initialData?: LimitData;
-  limitType: LimitType;
   onSave: (data: archestraApiTypes.CreateLimitData["body"]) => void;
   onCancel: () => void;
   teams: TeamData[];
@@ -118,14 +115,13 @@ function LimitInlineForm({
   organizationId: string;
 }) {
   const [formData, setFormData] = useState<{
-    entityType: "organization" | "team" | "agent";
+    entityType: "organization" | "team";
     entityId: string;
     mcpServerName: string;
     limitValue: string;
     model: string[];
   }>({
-    entityType:
-      (initialData?.entityType as "organization" | "team" | "agent") || "team",
+    entityType: (initialData?.entityType as "organization" | "team") || "team",
     entityId: initialData?.entityId || "",
     mcpServerName: initialData?.mcpServerName || "",
     limitValue: initialData?.limitValue?.toString() || "",
@@ -137,7 +133,6 @@ function LimitInlineForm({
       e.preventDefault();
       onSave({
         ...formData,
-        limitType,
         limitValue: parseInt(formData.limitValue, 10),
         entityId:
           formData.entityType === "organization"
@@ -145,7 +140,7 @@ function LimitInlineForm({
             : formData.entityId,
       });
     },
-    [formData, onSave, limitType, organizationId],
+    [formData, onSave, organizationId],
   );
 
   const isValid =
@@ -171,7 +166,7 @@ function LimitInlineForm({
                 onValueChange={(value) =>
                   setFormData({
                     ...formData,
-                    entityType: value as "agent" | "organization" | "team",
+                    entityType: value as "organization" | "team",
                     entityId: "",
                   })
                 }
@@ -380,7 +375,6 @@ function LimitRow({
   getEntityName: (limit: LimitData) => string;
   getUsageStatus: (
     limitValue: number,
-    limitType: string,
     modelUsage?: Array<{
       model: string;
       tokensIn: number;
@@ -399,7 +393,6 @@ function LimitRow({
     return (
       <LimitInlineForm
         initialData={limit}
-        limitType={limit.limitType as LimitType}
         onSave={onSave}
         onCancel={onCancel}
         teams={teams}
@@ -411,7 +404,6 @@ function LimitRow({
 
   const { percentage, status, actualUsage, actualLimit } = getUsageStatus(
     limit.limitValue,
-    limit.limitType,
     limit.modelUsage,
   );
 
@@ -542,8 +534,7 @@ export default function LimitsPage() {
   const createLimit = useCreateLimit();
   const updateLimit = useUpdateLimit();
 
-  // Filter limits by type
-  const llmLimits = limits.filter((limit) => limit.limitType === "token_cost");
+  const llmLimits = limits;
 
   // Helper function to get entity name
   const getEntityName = useCallback(
@@ -564,7 +555,6 @@ export default function LimitsPage() {
   const getUsageStatus = useCallback(
     (
       limitValue: number,
-      _limitType: string,
       modelUsage?: Array<{
         model: string;
         tokensIn: number;
@@ -702,7 +692,6 @@ export default function LimitsPage() {
               <TableBody>
                 {isAddingLlmLimit && (
                   <LimitInlineForm
-                    limitType="token_cost"
                     onSave={handleCreateLimit}
                     onCancel={handleCancelEdit}
                     teams={teams}

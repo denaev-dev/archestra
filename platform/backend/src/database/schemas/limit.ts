@@ -8,7 +8,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import type { LimitEntityType, LimitType } from "@/types";
+import type { LimitEntityType } from "@/types";
 
 const limitsTable = pgTable(
   "limits",
@@ -16,7 +16,6 @@ const limitsTable = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     entityType: varchar("entity_type").$type<LimitEntityType>().notNull(),
     entityId: text("entity_id").notNull(),
-    limitType: varchar("limit_type").$type<LimitType>().notNull(),
     limitValue: integer("limit_value").notNull(),
     mcpServerName: varchar("mcp_server_name", { length: 255 }),
     toolName: varchar("tool_name", { length: 255 }),
@@ -35,7 +34,6 @@ const limitsTable = pgTable(
   },
   (table) => ({
     entityIdx: index("limits_entity_idx").on(table.entityType, table.entityId),
-    limitTypeIdx: index("limits_type_idx").on(table.limitType),
   }),
 );
 

@@ -9,32 +9,22 @@ import { schema } from "@/database";
 /**
  * Entity types that can have limits applied
  */
-// TODO: need to make a database migration to migrate agent -> profile
-export const LimitEntityTypeSchema = z.enum(["organization", "team", "agent"]);
+export const LimitEntityTypeSchema = z.enum(["organization", "team"]);
 export type LimitEntityType = z.infer<typeof LimitEntityTypeSchema>;
-
-/**
- * Types of limits that can be applied
- */
-export const LimitTypeSchema = z.enum(["token_cost"]);
-export type LimitType = z.infer<typeof LimitTypeSchema>;
 
 /**
  * Base database schema derived from Drizzle
  */
 export const SelectLimitSchema = createSelectSchema(schema.limitsTable, {
   entityType: LimitEntityTypeSchema,
-  limitType: LimitTypeSchema,
   model: z.array(z.string()).nullable().optional(),
 });
 export const InsertLimitSchema = createInsertSchema(schema.limitsTable, {
   entityType: LimitEntityTypeSchema,
-  limitType: LimitTypeSchema,
   model: z.array(z.string()).nullable().optional(),
 });
 export const UpdateLimitSchema = createUpdateSchema(schema.limitsTable, {
   entityType: LimitEntityTypeSchema,
-  limitType: LimitTypeSchema,
   model: z.array(z.string()).nullable().optional(),
 }).omit({
   id: true,
@@ -51,23 +41,18 @@ export const CreateLimitSchema = InsertLimitSchema.omit({
   updatedAt: true,
 }).refine(
   (data) => {
-    // Validation: token_cost requires non-empty model array and should not have mcp or tool specificity
-    if (data.limitType === "token_cost") {
-      if (
-        !data.model ||
-        !Array.isArray(data.model) ||
-        data.model.length === 0
-      ) {
-        return false;
-      }
-      if (data.mcpServerName || data.toolName) {
-        return false;
-      }
+    // Requires non-empty model array and should not have mcp or tool specificity
+    if (!data.model || !Array.isArray(data.model) || data.model.length === 0) {
+      return false;
+    }
+    if (data.mcpServerName || data.toolName) {
+      return false;
     }
     return true;
   },
   {
-    message: "Invalid limit configuration for the specified limit type",
+    message:
+      "A non-empty model array is required. mcpServerName and toolName are not allowed.",
   },
 );
 

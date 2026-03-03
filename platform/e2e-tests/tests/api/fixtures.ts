@@ -719,7 +719,7 @@ const deleteOptimizationRule = async (
   });
 
 /**
- * Create a limit (token cost, mcp_server_calls, or tool_calls)
+ * Create an LLM token limit
  * (authnz is handled by the authenticated session)
  */
 const createLimit = async (
@@ -727,11 +727,8 @@ const createLimit = async (
   limit: {
     entityType: "organization" | "team" | "agent";
     entityId: string;
-    limitType: "token_cost" | "mcp_server_calls" | "tool_calls";
     limitValue: number;
     model?: string[];
-    mcpServerName?: string;
-    toolName?: string;
   },
 ) =>
   makeApiRequest({

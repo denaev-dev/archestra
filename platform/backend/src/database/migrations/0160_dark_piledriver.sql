@@ -10,9 +10,11 @@ CREATE TABLE "mcp_rate_limits" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+DROP INDEX "limits_type_idx";--> statement-breakpoint
 ALTER TABLE "mcp_rate_limits" ADD CONSTRAINT "mcp_rate_limits_agent_id_agents_id_fk" FOREIGN KEY ("agent_id") REFERENCES "public"."agents"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "mcp_rate_limits_agent_idx" ON "mcp_rate_limits" USING btree ("agent_id");--> statement-breakpoint
-CREATE INDEX "mcp_rate_limits_agent_server_idx" ON "mcp_rate_limits" USING btree ("agent_id","mcp_server_name");
+CREATE INDEX "mcp_rate_limits_agent_server_idx" ON "mcp_rate_limits" USING btree ("agent_id","mcp_server_name");--> statement-breakpoint
+ALTER TABLE "limits" DROP COLUMN "limit_type";
 
 -- RBAC resource rename: "limit" -> "llmTokenLimit" in custom roles
 -- Also copy "limit" permissions to "mcpRateLimit" for backward compatibility

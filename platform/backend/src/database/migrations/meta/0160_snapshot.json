@@ -1,5 +1,5 @@
 {
-  "id": "173daa55-a036-44e0-a1de-d91be100b3fd",
+  "id": "7bf3f1c0-3751-4715-9ac0-b542fcd4acb6",
   "prevId": "1b7f0cd9-22b7-4cab-8b25-71169ca345a2",
   "version": "7",
   "dialect": "postgresql",
@@ -2946,12 +2946,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "limit_type": {
-          "name": "limit_type",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
         "limit_value": {
           "name": "limit_value",
           "type": "integer",
@@ -3009,21 +3003,6 @@
             },
             {
               "expression": "entity_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "limits_type_idx": {
-          "name": "limits_type_idx",
-          "columns": [
-            {
-              "expression": "limit_type",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

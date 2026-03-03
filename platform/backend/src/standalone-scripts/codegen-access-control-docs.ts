@@ -89,8 +89,7 @@ function generateCustomRolesPermissionsTable(): string {
     for (const action of actions) {
       const permission = `${resource}:${action}`;
       const actionDesc = getActionDescription(action);
-      // don't lowercase "RBAC roles"
-      const fullDescription = `${actionDesc} ${resource === "ac" ? description : description.toLowerCase()}`;
+      const fullDescription = `${actionDesc} ${description}`;
 
       table += `| \`${permission}\` | ${fullDescription} |\n`;
     }

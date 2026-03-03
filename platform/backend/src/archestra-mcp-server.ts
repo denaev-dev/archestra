@@ -30,8 +30,6 @@ import type { InternalMcpCatalog } from "@/types";
 import {
   AutonomyPolicyOperator,
   type LimitEntityType,
-  type LimitType,
-  LimitTypeSchema,
   type ToolInvocation,
   type TrustedData,
 } from "@/types";
@@ -533,37 +531,29 @@ export async function executeArchestraTool(
 
     try {
       const entityType = args?.entity_type as LimitEntityType;
-
       const entityId = args?.entity_id as string;
-      const limitType = args?.limit_type as LimitType;
       const limitValue = args?.limit_value as number;
       const model = args?.model as string[] | undefined;
-      const mcpServerName = args?.mcp_server_name as string | undefined;
-      const toolName = args?.tool_name as string | undefined;
 
       // Validate required fields
-      if (!entityType || !entityId || !limitType || limitValue === undefined) {
+      if (!entityType || !entityId || limitValue === undefined) {
         return {
           content: [
             {
               type: "text",
-              text: "Error: entity_type, entity_id, limit_type, and limit_value are required fields.",
+              text: "Error: entity_type, entity_id, and limit_value are required fields.",
             },
           ],
           isError: true,
         };
       }
 
-      // Validate limit type specific requirements
-      if (
-        limitType === "token_cost" &&
-        (!model || !Array.isArray(model) || model.length === 0)
-      ) {
+      if (!model || !Array.isArray(model) || model.length === 0) {
         return {
           content: [
             {
               type: "text",
-              text: "Error: model array with at least one model is required for token_cost limits.",
+              text: "Error: model array with at least one model is required.",
             },
           ],
           isError: true,
@@ -574,26 +564,15 @@ export async function executeArchestraTool(
       const limit = await LimitModel.create({
         entityType,
         entityId,
-        limitType,
         limitValue,
         model,
-        mcpServerName,
-        toolName,
       });
 
       return {
         content: [
           {
             type: "text",
-            text: `Successfully created limit.\n\nLimit ID: ${
-              limit.id
-            }\nEntity Type: ${limit.entityType}\nEntity ID: ${
-              limit.entityId
-            }\nLimit Type: ${limit.limitType}\nLimit Value: ${
-              limit.limitValue
-            }${limit.model ? `\nModel: ${limit.model}` : ""}${
-              limit.mcpServerName ? `\nMCP Server: ${limit.mcpServerName}` : ""
-            }${limit.toolName ? `\nTool: ${limit.toolName}` : ""}`,
+            text: `Successfully created limit.\n\nLimit ID: ${limit.id}\nEntity Type: ${limit.entityType}\nEntity ID: ${limit.entityId}\nLimit Value: ${limit.limitValue}${limit.model ? `\nModel: ${limit.model}` : ""}`,
           },
         ],
         isError: false,
@@ -649,7 +628,6 @@ export async function executeArchestraTool(
           let result = `**Limit ID:** ${limit.id}`;
           result += `\n  Entity Type: ${limit.entityType}`;
           result += `\n  Entity ID: ${limit.entityId}`;
-          result += `\n  Limit Type: ${limit.limitType}`;
           result += `\n  Limit Value: ${limit.limitValue}`;
           if (limit.model) result += `\n  Model: ${limit.model}`;
           if (limit.mcpServerName)
@@ -743,7 +721,7 @@ export async function executeArchestraTool(
         content: [
           {
             type: "text",
-            text: `Successfully updated limit.\n\nLimit ID: ${limit.id}\nEntity Type: ${limit.entityType}\nEntity ID: ${limit.entityId}\nLimit Type: ${limit.limitType}\nLimit Value: ${limit.limitValue}`,
+            text: `Successfully updated limit.\n\nLimit ID: ${limit.id}\nEntity Type: ${limit.entityType}\nEntity ID: ${limit.entityId}\nLimit Value: ${limit.limitValue}`,
           },
         ],
         isError: false,
@@ -2023,49 +2001,40 @@ export function getArchestraMcpTools(): Tool[] {
     },
     {
       name: TOOL_CREATE_LIMIT_FULL_NAME,
-      title: "Create Limit",
-      description:
-        "Create a new token cost limit for an organization, team, agent, LLM proxy, or MCP gateway.",
+      title: "Create LLM Token Limit",
+      description: "Create a new token cost limit for an organization or team.",
       inputSchema: {
         type: "object",
         properties: {
           entity_type: {
             type: "string",
-            enum: ["organization", "team", "agent", "llm_proxy", "mcp_gateway"],
+            enum: ["organization", "team"],
             description: "The type of entity to apply the limit to",
           },
           entity_id: {
             type: "string",
-            description:
-              "The ID of the entity (organization, team, agent, LLM proxy, or MCP gateway)",
-          },
-          limit_type: {
-            type: "string",
-            enum: LimitTypeSchema.options,
-            description: "The type of limit to apply",
+            description: "The ID of the organization or team",
           },
           limit_value: {
             type: "number",
-            description:
-              "The limit value (tokens or count depending on limit type)",
+            description: "The token cost limit value in dollars",
           },
           model: {
             type: "array",
             items: {
               type: "string",
             },
-            description:
-              "Array of model names (required for token_cost limits)",
+            description: "Array of model names the limit applies to",
           },
         },
-        required: ["entity_type", "entity_id", "limit_type", "limit_value"],
+        required: ["entity_type", "entity_id", "limit_value", "model"],
       },
       annotations: {},
       _meta: {},
     },
     {
       name: TOOL_GET_LIMITS_FULL_NAME,
-      title: "Get Limits",
+      title: "Get LLM Token Limits",
       description:
         "Retrieve all limits, optionally filtered by entity type and/or entity ID.",
       inputSchema: {
@@ -2073,7 +2042,7 @@ export function getArchestraMcpTools(): Tool[] {
         properties: {
           entity_type: {
             type: "string",
-            enum: ["organization", "team", "agent", "llm_proxy", "mcp_gateway"],
+            enum: ["organization", "team"],
             description: "Optional filter by entity type",
           },
           entity_id: {
@@ -2088,7 +2057,7 @@ export function getArchestraMcpTools(): Tool[] {
     },
     {
       name: TOOL_UPDATE_LIMIT_FULL_NAME,
-      title: "Update Limit",
+      title: "Update LLM Token Limit",
       description: "Update an existing limit's value.",
       inputSchema: {
         type: "object",
@@ -2109,7 +2078,7 @@ export function getArchestraMcpTools(): Tool[] {
     },
     {
       name: TOOL_DELETE_LIMIT_FULL_NAME,
-      title: "Delete Limit",
+      title: "Delete LLM Token Limit",
       description: "Delete an existing limit by ID.",
       inputSchema: {
         type: "object",
