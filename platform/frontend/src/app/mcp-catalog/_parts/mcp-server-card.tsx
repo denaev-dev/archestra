@@ -573,6 +573,7 @@ export function McpServerCard({
           size="sm"
           className="flex-1 text-muted-foreground"
           onClick={() => setIsToolsDialogOpen(true)}
+          disabled={serversForCatalog.length === 0}
         >
           <Bot className="h-4 w-4 mr-1.5" />
           Agents
@@ -585,6 +586,7 @@ export function McpServerCard({
           size="sm"
           className="flex-1 text-muted-foreground"
           onClick={() => setIsToolsDialogOpen(true)}
+          disabled={serversForCatalog.length === 0}
         >
           <Route className="h-4 w-4 mr-1.5" />
           MCP Gateways

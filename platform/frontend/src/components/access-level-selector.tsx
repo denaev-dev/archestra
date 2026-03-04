@@ -13,24 +13,27 @@ import {
 
 type Scope = "personal" | "team" | "org";
 
-function getScopeOptions(resourceLabel: string) {
+function getScopeOptions(resourceLabel: string, verb: "access" | "install") {
   return [
     {
       value: "personal" as const,
       label: "Personal",
-      description: `Only you can access this ${resourceLabel}`,
+      description: `Only you can ${verb} this ${resourceLabel}`,
       icon: User,
     },
     {
       value: "team" as const,
       label: "Teams",
-      description: `Share ${resourceLabel} with selected teams`,
+      description:
+        verb === "install"
+          ? `Members of selected teams can install this ${resourceLabel}`
+          : `Share ${resourceLabel} with selected teams`,
       icon: Users,
     },
     {
       value: "org" as const,
       label: "Organization",
-      description: `Anyone in your org can access this ${resourceLabel}`,
+      description: `Anyone in your org can ${verb} this ${resourceLabel}`,
       icon: Building2,
     },
   ];
@@ -49,6 +52,8 @@ export function AccessLevelSelector({
   hasNoAvailableTeams,
   disabledScopes,
   variant = "dropdown",
+  verb,
+  hideLabel,
 }: {
   scope: Scope;
   onScopeChange: (scope: Scope) => void;
@@ -62,9 +67,11 @@ export function AccessLevelSelector({
   hasNoAvailableTeams: boolean;
   disabledScopes?: Partial<Record<Scope, string>>;
   variant?: "dropdown" | "full";
+  verb?: "access" | "install";
+  hideLabel?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const scopeOptions = getScopeOptions(resourceLabel);
+  const scopeOptions = getScopeOptions(resourceLabel, verb ?? "access");
   const selected =
     scopeOptions.find((o) => o.value === scope) ?? scopeOptions[0];
 
@@ -96,7 +103,7 @@ export function AccessLevelSelector({
     <div className="space-y-4">
       {/* ACCESS LEVEL */}
       <div className="space-y-2">
-        <Label>Who can use this {resourceLabel}</Label>
+        {!hideLabel && <Label>Who can use this {resourceLabel}</Label>}
 
         {showExpanded ? (
           <div className="space-y-1.5">

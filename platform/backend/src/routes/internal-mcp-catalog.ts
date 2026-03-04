@@ -140,6 +140,14 @@ const internalMcpCatalogRoutes: FastifyPluginAsyncZod = async (fastify) => {
         }
       }
 
+      // Reject if an org-wide catalog item with the same name already exists
+      if (await InternalMcpCatalogModel.existsOrgWide(body.name)) {
+        throw new ApiError(
+          409,
+          "An org-wide MCP server with this name already exists",
+        );
+      }
+
       const {
         oauthClientSecretVaultPath,
         oauthClientSecretVaultKey,

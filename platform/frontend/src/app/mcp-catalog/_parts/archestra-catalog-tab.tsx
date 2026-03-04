@@ -663,6 +663,7 @@ function ServerCard({
       (i) => i.scope === "personal",
     );
     const hasOrg = existingCatalogItems.some((i) => i.scope === "org");
+    if (hasOrg) return true; // org-wide item covers everything
     const coveredTeamIds = new Set(
       existingCatalogItems
         .filter((i) => i.scope === "team")
@@ -674,7 +675,7 @@ function ServerCard({
         : true;
 
     // Factor in permissions: if user can't create at a scope, it doesn't need covering
-    const orgCovered = hasOrg || !isAdmin;
+    const orgCovered = !isAdmin;
     const teamCovered = allTeamsCovered || !(isAdmin || isTeamAdmin);
     const personalCovered = hasPersonal;
 
@@ -831,14 +832,21 @@ function ScopeDialog({
     .filter((i) => i.scope === "team")
     .flatMap((i) => i.teams?.map((t) => t.name) ?? []);
 
-  // Compute disabled scopes
+  // Compute available teams and disabled scopes
+  const availableTeams = hasOrg
+    ? []
+    : (teams ?? []).filter((t) => !coveredTeamIds.has(t.id));
   const disabledScopes: Partial<Record<"personal" | "team" | "org", string>> =
     {};
-  if (hasPersonal) disabledScopes.personal = "Already added as personal";
-  if (hasOrg) disabledScopes.org = "Already added org-wide";
-  const availableTeams = (teams ?? []).filter((t) => !coveredTeamIds.has(t.id));
-  if ((teams ?? []).length > 0 && availableTeams.length === 0) {
-    disabledScopes.team = "Already added for all your teams";
+  if (hasOrg) {
+    disabledScopes.personal = "Already available org-wide";
+    disabledScopes.team = "Already available org-wide";
+    disabledScopes.org = "Already added org-wide";
+  } else {
+    if (hasPersonal) disabledScopes.personal = "Already added as personal";
+    if ((teams ?? []).length > 0 && availableTeams.length === 0) {
+      disabledScopes.team = "Already added for all your teams";
+    }
   }
 
   // Contextual promote banner: show when user selects team scope and has a personal item
@@ -873,7 +881,7 @@ function ScopeDialog({
                 className="w-10 h-10 rounded-lg flex-shrink-0"
               />
             )}
-            <DialogTitle>Add to Your Registry</DialogTitle>
+            <DialogTitle>Who can install this MCP server</DialogTitle>
           </div>
         </DialogHeader>
 
@@ -894,6 +902,8 @@ function ScopeDialog({
           hasNoAvailableTeams={availableTeams.length === 0}
           disabledScopes={disabledScopes}
           variant="full"
+          verb="install"
+          hideLabel
         />
 
         {/* Promote banner */}

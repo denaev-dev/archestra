@@ -358,6 +358,20 @@ class InternalMcpCatalogModel {
     return result;
   }
 
+  static async existsOrgWide(name: string): Promise<boolean> {
+    const [item] = await db
+      .select({ id: schema.internalMcpCatalogTable.id })
+      .from(schema.internalMcpCatalogTable)
+      .where(
+        and(
+          eq(schema.internalMcpCatalogTable.name, name),
+          eq(schema.internalMcpCatalogTable.scope, "org"),
+        ),
+      )
+      .limit(1);
+    return !!item;
+  }
+
   static async findByName(name: string): Promise<InternalMcpCatalog | null> {
     const [dbItem] = await db
       .select()
