@@ -57,8 +57,9 @@ const secretsRoutes: FastifyPluginAsyncZod = async (fastify) => {
         throw new ApiError(404, "Secret not found");
       }
 
-      // Only allow access if BYOS is enabled globally OR the secret is a BYOS secret
-      if (!isByosEnabled() && !secret.isByosVault) {
+      // Only allow access if the secret is a BYOS secret to not leak actual values
+      // (we want to expose only vault references)
+      if (!secret.isByosVault) {
         throw new ApiError(
           403,
           "Access to secrets is only allowed for BYOS (Bring Your Own Secrets) secrets when BYOS is enabled",

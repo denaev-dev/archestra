@@ -21,7 +21,13 @@ export function useSecretsType() {
   });
 }
 
-export function useGetSecret(secretId: string | null | undefined) {
+export function useGetSecret({
+  secretId,
+  enabled,
+}: {
+  secretId: string | null | undefined;
+  enabled: boolean;
+}) {
   return useQuery({
     queryKey: secretsKeys.byId(secretId ?? ""),
     queryFn: async () => {
@@ -35,7 +41,7 @@ export function useGetSecret(secretId: string | null | undefined) {
       }
       return response.data;
     },
-    enabled: !!secretId,
+    enabled: !!secretId && enabled,
   });
 }
 

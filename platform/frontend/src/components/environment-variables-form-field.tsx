@@ -49,6 +49,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const ExternalSecretSelector = lazy(
   () =>
@@ -78,6 +83,8 @@ interface EnvironmentVariablesFormFieldProps<TFieldValues extends FieldValues> {
   showDescription?: boolean;
   /** When true, non-prompted secret values will be sourced from external secrets manager (Vault) */
   useExternalSecretsManager?: boolean;
+  /** When true, existing secrets are stored in DB (not vault). */
+  hasDbStoredSecrets?: boolean;
 }
 
 export function EnvironmentVariablesFormField<
@@ -92,6 +99,7 @@ export function EnvironmentVariablesFormField<
   showLabel = true,
   showDescription = true,
   useExternalSecretsManager = false,
+  hasDbStoredSecrets = false,
 }: EnvironmentVariablesFormFieldProps<TFieldValues>) {
   // State for external secret dialog
   const [dialogOpenForEnvIndex, setDialogOpenForEnvIndex] = useState<
@@ -342,6 +350,27 @@ export function EnvironmentVariablesFormField<
                                 {parseVaultReference(formValue).key}
                               </span>
                             </Button>
+                          ) : hasDbStoredSecrets ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 text-xs"
+                                    disabled
+                                  >
+                                    <Key className="h-3 w-3 mr-1" />
+                                    Set secret
+                                  </Button>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                This secret is stored in the database. Delete it
+                                and recreate it with a vault reference.
+                              </TooltipContent>
+                            </Tooltip>
                           ) : (
                             <Button
                               type="button"
@@ -628,6 +657,27 @@ export function EnvironmentVariablesFormField<
                                   {parseVaultReference(formValue).key}
                                 </span>
                               </Button>
+                            ) : hasDbStoredSecrets ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-8 text-xs"
+                                      disabled
+                                    >
+                                      <Key className="h-3 w-3 mr-1" />
+                                      Set secret
+                                    </Button>
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  This secret is stored in the database. Delete
+                                  it and recreate it with a vault reference.
+                                </TooltipContent>
+                              </Tooltip>
                             ) : (
                               <Button
                                 type="button"
