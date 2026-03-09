@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, inArray, or } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, ne, or } from "drizzle-orm";
 import db, { schema } from "@/database";
 import { secretManager } from "@/secrets-manager";
 import type {
@@ -268,6 +268,14 @@ class InternalMcpCatalogModel {
   ): Promise<InternalMcpCatalog | null> {
     const { labels, teams, ...dbValues } = catalogItem;
 
+    // Ensure slug is unique (excluding this item's own row)
+    if (dbValues.slug) {
+      dbValues.slug = await InternalMcpCatalogModel.ensureUniqueSlug(
+        dbValues.slug,
+        id,
+      );
+    }
+
     let dbItem: typeof schema.internalMcpCatalogTable.$inferSelect | undefined;
 
     if (Object.keys(dbValues).length > 0) {
@@ -495,13 +503,22 @@ class InternalMcpCatalogModel {
 
   /**
    * Ensure slug is unique. If a catalog item with the same slug already exists,
-   * append a short random suffix (first 8 chars of a UUID).
+   * append a short random suffix (first 4 chars of a UUID).
+   * Pass excludeId to skip the item's own row when checking (used during updates).
    */
-  private static async ensureUniqueSlug(slug: string): Promise<string> {
+  private static async ensureUniqueSlug(
+    slug: string,
+    excludeId?: string,
+  ): Promise<string> {
+    const conditions = [eq(schema.internalMcpCatalogTable.slug, slug)];
+    if (excludeId) {
+      conditions.push(ne(schema.internalMcpCatalogTable.id, excludeId));
+    }
+
     const existing = await db
       .select({ id: schema.internalMcpCatalogTable.id })
       .from(schema.internalMcpCatalogTable)
-      .where(eq(schema.internalMcpCatalogTable.slug, slug))
+      .where(and(...conditions))
       .limit(1);
 
     if (existing.length === 0) {
