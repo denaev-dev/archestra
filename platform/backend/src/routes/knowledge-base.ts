@@ -10,6 +10,7 @@ import {
   ConnectorRunModel,
   KnowledgeBaseConnectorModel,
   KnowledgeBaseModel,
+  TaskModel,
 } from "@/models";
 import { secretManager } from "@/secrets-manager";
 import { taskQueueService } from "@/task-queue";
@@ -554,10 +555,27 @@ const knowledgeBaseRoutes: FastifyPluginAsyncZod = async (fastify) => {
     async ({ params: { id }, organizationId }, reply) => {
       await findConnectorOrThrow(id, organizationId);
 
+      const hasPendingOrProcessing = await TaskModel.hasPendingOrProcessing(
+        "connector_sync",
+        id,
+      );
+      if (hasPendingOrProcessing) {
+        throw new ApiError(
+          409,
+          "A sync is already in progress for this connector",
+        );
+      }
+
       const taskId = await taskQueueService.enqueue({
         taskType: "connector_sync",
         payload: { connectorId: id },
       });
+
+      // Set status immediately so the UI can react before the worker picks up the task
+      await KnowledgeBaseConnectorModel.update(id, {
+        lastSyncStatus: "running",
+      });
+
       return reply.send({ taskId, status: "enqueued" });
     },
   );

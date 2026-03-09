@@ -1,4 +1,4 @@
-import { count, desc, eq, inArray, sql, sum } from "drizzle-orm";
+import { and, count, desc, eq, inArray, sql, sum } from "drizzle-orm";
 import db, { schema } from "@/database";
 import type {
   ConnectorRun,
@@ -29,6 +29,7 @@ class ConnectorRunModel {
         totalItems: t.totalItems,
         totalBatches: t.totalBatches,
         completedBatches: t.completedBatches,
+        itemErrors: t.itemErrors,
         error: t.error,
         checkpoint: t.checkpoint,
         createdAt: t.createdAt,
@@ -116,12 +117,30 @@ class ConnectorRunModel {
       .update(t)
       .set({
         completedBatches: sql`${t.completedBatches} + 1`,
-        status: sql`CASE WHEN ${t.completedBatches} + 1 >= ${t.totalBatches} THEN 'success' ELSE ${t.status} END`,
+        status: sql`CASE
+          WHEN ${t.completedBatches} + 1 >= ${t.totalBatches} AND ${t.itemErrors} > 0 THEN 'completed_with_errors'
+          WHEN ${t.completedBatches} + 1 >= ${t.totalBatches} THEN 'success'
+          ELSE ${t.status}
+        END`,
         completedAt: sql`CASE WHEN ${t.completedBatches} + 1 >= ${t.totalBatches} THEN NOW() ELSE ${t.completedAt} END`,
       })
       .where(eq(t.id, runId))
       .returning();
     return result ?? null;
+  }
+
+  static async hasActiveRun(connectorId: string): Promise<boolean> {
+    const [result] = await db
+      .select({ count: count() })
+      .from(schema.connectorRunsTable)
+      .where(
+        and(
+          eq(schema.connectorRunsTable.connectorId, connectorId),
+          eq(schema.connectorRunsTable.status, "running"),
+        ),
+      );
+
+    return (result?.count ?? 0) > 0;
   }
 
   static async sumDocsIngestedByKnowledgeBaseIds(

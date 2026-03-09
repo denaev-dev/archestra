@@ -1,5 +1,5 @@
 {
-  "id": "2ec8d7ca-a162-4992-ad80-35ee21eafbc7",
+  "id": "c792aa2c-4c0e-41b2-a320-fa5b44e4bc6d",
   "prevId": "d4f52644-de03-47f3-9b64-be9b330195c5",
   "version": "7",
   "dialect": "postgresql",
@@ -1873,6 +1873,13 @@
           "notNull": false,
           "default": 0
         },
+        "item_errors": {
+          "name": "item_errors",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
         "error": {
           "name": "error",
           "type": "text",
@@ -2837,14 +2844,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "slug": {
-          "name": "slug",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "display_name": {
-          "name": "display_name",
+        "name": {
+          "name": "name",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -3084,15 +3085,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "internal_mcp_catalog_slug_unique": {
-          "name": "internal_mcp_catalog_slug_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
