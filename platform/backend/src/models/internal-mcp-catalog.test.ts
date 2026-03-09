@@ -610,7 +610,7 @@ describe("InternalMcpCatalogModel", () => {
       );
 
       expect(archestraCatalog).toBeDefined();
-      expect(archestraCatalog?.slug).toBe("archestra");
+      expect(archestraCatalog?.slug).toBe("Archestra");
       expect(archestraCatalog?.serverType).toBe("builtin");
     });
   });

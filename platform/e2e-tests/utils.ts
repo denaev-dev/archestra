@@ -5,7 +5,7 @@ import {
   type Locator,
   type Page,
 } from "@playwright/test";
-import { archestraApiSdk, DEFAULT_MCP_GATEWAY_NAME } from "@shared";
+import { archestraApiSdk, DEFAULT_MCP_GATEWAY_NAME, slugify } from "@shared";
 import { testMcpServerCommand } from "@shared/test-mcp-server";
 import {
   API_BASE_URL,
@@ -122,13 +122,14 @@ export async function addCustomSelfHostedCatalogItem({
     );
   }
 
+  const slugifiedName = slugify(catalogItemName);
   const newCatalogItem = catalogItems.data.find(
-    (item) => item.slug === catalogItemName,
+    (item) => item.slug === slugifiedName,
   );
   if (!newCatalogItem) {
     const itemNames = catalogItems.data.map((i) => i.slug).join(", ");
     throw new Error(
-      `Failed to find catalog item "${catalogItemName}". Available items: [${itemNames}]`,
+      `Failed to find catalog item "${catalogItemName}" (slugified: "${slugifiedName}"). Available items: [${itemNames}]`,
     );
   }
   return { id: newCatalogItem.id, name: newCatalogItem.slug };
