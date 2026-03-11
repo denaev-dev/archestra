@@ -344,36 +344,28 @@ function McpAppContainer({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isFullscreen, onClose]);
 
-  // Measure the Conversation scroll area so the overlay covers exactly that region
+  // Cover the entire viewport in fullscreen mode
   useEffect(() => {
-    if (!isFullscreen || !containerRef.current) {
+    if (!isFullscreen) {
       setBounds(null);
       return;
     }
-    const scrollArea = containerRef.current.closest(
-      '[role="log"]',
-    ) as HTMLElement | null;
-    if (!scrollArea) return;
-
+    setBounds({
+      top: 0,
+      left: 0,
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
     const update = () => {
-      const rect = scrollArea.getBoundingClientRect();
-      let margin = 0;
-      if (isFullscreen) {
-        margin = 10;
-      }
       setBounds({
-        top: rect.top + margin,
-        left: rect.left + margin,
-        width: rect.width - margin * 2,
-        height: rect.height - margin * 2,
+        top: 0,
+        left: 0,
+        width: window.innerWidth,
+        height: window.innerHeight,
       });
     };
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(scrollArea);
     window.addEventListener("resize", update);
     return () => {
-      ro.disconnect();
       window.removeEventListener("resize", update);
     };
   }, [isFullscreen]);
@@ -384,7 +376,7 @@ function McpAppContainer({
       className={cn(
         "will-change-auto origin-center transition-all duration-400 ease-[cubic-bezier(0.23,1,0.32,1)]",
         isFullscreen
-          ? "fixed z-50 bg-background flex flex-col shadow-2xl rounded-xl border border-border/50"
+          ? "fixed z-[100] bg-background flex flex-col"
           : "p-4 pt-0",
         isFullscreen && !bounds
           ? "opacity-0 scale-95 pointer-events-none"
@@ -442,10 +434,10 @@ function McpAppContainer({
             : `${size?.height || 150}px`,
         }}
         className={cn(
-          "shadow-xs border border-border/50 rounded-lg transition-[max-height] duration-400 ease-[cubic-bezier(0.23,1,0.32,1)]",
+          "transition-[max-height] duration-400 ease-[cubic-bezier(0.23,1,0.32,1)]",
           isFullscreen
             ? "flex-1 overflow-hidden [&_iframe]:!w-full [&_iframe]:!h-full [&_iframe]:!min-h-0 [&_iframe]:!max-h-none [&_div]:!h-full"
-            : "[&_iframe]:!w-full overflow-y-hidden [&_div]:!max-h-none",
+            : "shadow-xs border border-border/50 rounded-lg [&_iframe]:!w-full overflow-y-hidden [&_div]:!max-h-none",
         )}
       >
         {children}
