@@ -522,6 +522,9 @@ describe("filterToolsByEnabledIds", () => {
 
     expect(Object.keys(result)).toContain("github__list_repos");
     expect(Object.keys(result)).not.toContain("slack__send_message");
+  });
+});
+
 describe("clearChatMcpClient", () => {
   test("closes and removes all cached clients for an agent", async ({
     makeAgent,
