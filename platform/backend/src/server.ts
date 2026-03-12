@@ -471,16 +471,17 @@ const startMetricsServer = async () => {
 // ============ MCP Sandbox Server ============
 
 /**
- * Validate CSP domain entries to prevent injection attacks.
- * Rejects entries containing characters that could:
- * - `;` or newlines: break out to new CSP directive
- * - quotes: inject CSP keywords like 'unsafe-eval'
- * - space: inject multiple sources in one entry
+ * Allowlist-validate CSP domain entries.
+ * Only permits valid hostnames and wildcard-subdomain patterns (e.g. *.example.com).
+ * Blocks dangerous CSP sources like *, data:, blob:, https: that a denylist would miss.
  */
+const VALID_CSP_DOMAIN =
+  /^(\*\.)?[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/;
+
 export function sanitizeCspDomains(domains?: string[]): string[] {
   if (!domains) return [];
   return domains.filter(
-    (d) => typeof d === "string" && !/[;\r\n'"\\ ]/.test(d),
+    (d) => typeof d === "string" && VALID_CSP_DOMAIN.test(d),
   );
 }
 
