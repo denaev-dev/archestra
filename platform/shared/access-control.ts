@@ -891,6 +891,9 @@ export const requiredEndpointPermissionsMap: Partial<
   [RouteId.CheckSecretsConnectivity]: {
     secret: ["update"],
   },
+  [RouteId.TestVaultConnection]: {
+    secret: ["update"],
+  },
   [RouteId.GetSecret]: {
     secret: ["read"],
   },

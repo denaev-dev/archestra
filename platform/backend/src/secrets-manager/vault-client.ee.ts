@@ -35,6 +35,7 @@ export class VaultClient {
     const normalizedEndpoint = vaultConfig.address.replace(/\/+$/, "");
     this.client = Vault({
       endpoint: normalizedEndpoint,
+      requestOptions: { timeout: 60_000 },
     });
 
     if (vaultConfig.authMethod === "token") {

@@ -27,6 +27,7 @@ import { FaviconUpload } from "./_components/favicon-upload";
 import { IconLogoUpload } from "./_components/icon-logo-upload";
 import { LogoUpload } from "./_components/logo-upload";
 import { OrganizationTokenSection } from "./_components/organization-token-section";
+import { TestVaultConnectionSection } from "./_components/test-vault-connection-section";
 import { ThemeSelector } from "./_components/theme-selector";
 
 export default function OrganizationSettingsPage() {
@@ -232,6 +233,9 @@ export default function OrganizationSettingsPage() {
           <OrganizationTokenSection />
         </div>
       </div>
+
+      {/* Vault Connection Test */}
+      <TestVaultConnectionSection />
 
       {/* Unified save bar for all changes (theme + fields) */}
       {(hasThemeChanges || hasFieldChanges) && (

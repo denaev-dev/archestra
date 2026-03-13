@@ -1,8 +1,9 @@
 import { archestraApiSdk, type archestraApiTypes } from "@shared";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { handleApiError } from "./utils";
 
-const { getSecretsType, checkSecretsConnectivity, getSecret } = archestraApiSdk;
+const { getSecretsType, checkSecretsConnectivity, getSecret, testVaultConnection } = archestraApiSdk;
 
 export const secretsKeys = {
   all: ["secrets"] as const,
@@ -48,6 +49,24 @@ export function useCheckSecretsConnectivity() {
         return null;
       }
       return response.data as archestraApiTypes.CheckSecretsConnectivityResponses["200"];
+    },
+  });
+}
+
+export function useTestVaultConnection() {
+  return useMutation({
+    mutationFn: async () => {
+      const response = await testVaultConnection();
+      if (response.error) {
+        handleApiError(response.error);
+        return null;
+      }
+      return response.data as archestraApiTypes.TestVaultConnectionResponses["200"];
+    },
+    onSuccess: (data) => {
+      if (data) {
+        toast.success(data.message);
+      }
     },
   });
 }

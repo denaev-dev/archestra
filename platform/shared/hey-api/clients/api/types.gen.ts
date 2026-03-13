@@ -35859,6 +35859,84 @@ export type CheckSecretsConnectivityResponses = {
 
 export type CheckSecretsConnectivityResponse = CheckSecretsConnectivityResponses[keyof CheckSecretsConnectivityResponses];
 
+export type TestVaultConnectionData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/secrets/test-vault-connection';
+};
+
+export type TestVaultConnectionErrors = {
+    /**
+     * Default Response
+     */
+    400: {
+        error: {
+            message: string;
+            type: 'api_validation_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    401: {
+        error: {
+            message: string;
+            type: 'api_authentication_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    403: {
+        error: {
+            message: string;
+            type: 'api_authorization_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    404: {
+        error: {
+            message: string;
+            type: 'api_not_found_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    409: {
+        error: {
+            message: string;
+            type: 'api_conflict_error';
+        };
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: {
+            message: string;
+            type: 'api_internal_server_error';
+        };
+    };
+};
+
+export type TestVaultConnectionError = TestVaultConnectionErrors[keyof TestVaultConnectionErrors];
+
+export type TestVaultConnectionResponses = {
+    /**
+     * Default Response
+     */
+    200: {
+        success: boolean;
+        message: string;
+    };
+};
+
+export type TestVaultConnectionResponse = TestVaultConnectionResponses[keyof TestVaultConnectionResponses];
+
 export type GetTeamStatisticsData = {
     body?: never;
     path?: never;

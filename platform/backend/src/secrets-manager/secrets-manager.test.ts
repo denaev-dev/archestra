@@ -1157,6 +1157,105 @@ describe("SecretsManager", async () => {
     });
   });
 
+  describe("VaultSecretManager - BYOS compatibility", () => {
+    const vaultConfig = {
+      address: "http://localhost:8200",
+      authMethod: "token" as const,
+      kvVersion: "2" as const,
+      token: "dev-root-token",
+      secretPath: "secret/data/archestra",
+      k8sTokenPath: "/var/run/secrets/kubernetes.io/serviceaccount/token",
+      k8sMountPoint: "kubernetes",
+      awsMountPoint: "aws",
+      awsRegion: "us-east-1",
+      awsStsEndpoint: "https://sts.amazonaws.com",
+    };
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    test("getSecret resolves BYOS vault references when isByosVault=true", async () => {
+      const vaultManager = new VaultSecretManager(vaultConfig);
+
+      // Create a DB record with isByosVault=true and vault references
+      const created = await SecretModel.create({
+        name: "byos-secret",
+        secret: {
+          apiKey: "secret/data/my-keys#api_key",
+          dbPass: "secret/data/db-creds#password",
+        },
+        isByosVault: true,
+      });
+
+      // Mock vault reads for the two paths
+      mockVaultClient.read
+        .mockResolvedValueOnce({
+          data: { data: { api_key: "resolved-api-key" } },
+        })
+        .mockResolvedValueOnce({
+          data: { data: { password: "resolved-db-pass" } },
+        });
+
+      const result = await vaultManager.getSecret(created.id);
+
+      expect(result).not.toBeNull();
+      expect(result?.secret).toEqual({
+        apiKey: "resolved-api-key",
+        dbPass: "resolved-db-pass",
+      });
+      // Should NOT have tried to read from the archestra-managed vault path
+      expect(mockVaultClient.read).not.toHaveBeenCalledWith(
+        expect.stringContaining("archestra/byos-secret"),
+      );
+
+      await SecretModel.delete(created.id);
+    });
+
+    test("getSecret self-heals corrupted isByosVault flag when no real vault refs exist", async () => {
+      const vaultManager = new VaultSecretManager(vaultConfig);
+
+      // Create a DB record with isByosVault=true but plain values (no path#key refs)
+      const created = await SecretModel.create({
+        name: "corrupted-secret",
+        secret: { access_token: "plain-oauth-token" },
+        isByosVault: true,
+      });
+
+      const result = await vaultManager.getSecret(created.id);
+
+      expect(result).not.toBeNull();
+      expect(result?.isByosVault).toBe(false);
+      expect(result?.secret).toEqual({ access_token: "plain-oauth-token" });
+
+      // Verify the DB was fixed
+      const dbRecord = await SecretModel.findById(created.id);
+      expect(dbRecord?.isByosVault).toBe(false);
+
+      await SecretModel.delete(created.id);
+    });
+
+    test("getSecret returns plain DB secrets when isByosVault=false and isVault=false", async () => {
+      const vaultManager = new VaultSecretManager(vaultConfig);
+
+      const created = await SecretModel.create({
+        name: "plain-db-secret",
+        secret: { token: "my-plain-token" },
+        isByosVault: false,
+        isVault: false,
+      });
+
+      const result = await vaultManager.getSecret(created.id);
+
+      expect(result).not.toBeNull();
+      expect(result?.secret).toEqual({ token: "my-plain-token" });
+      // Should not have made any vault calls
+      expect(mockVaultClient.read).not.toHaveBeenCalled();
+
+      await SecretModel.delete(created.id);
+    });
+  });
+
   describe("ReadonlyVaultSecretManager", () => {
     const vaultConfig = {
       address: "http://localhost:8200",

@@ -1,8 +1,10 @@
 import { RouteId, SecretsManagerType } from "@shared";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
+import logger from "@/logging";
 import SecretModel from "@/models/secret";
 import { isByosEnabled, secretManager } from "@/secrets-manager";
+import { extractVaultErrorMessage } from "@/secrets-manager/utils";
 import {
   ApiError,
   constructResponseSchema,
@@ -11,6 +13,11 @@ import {
 } from "@/types";
 
 const SecretsManagerTypeSchema = z.nativeEnum(SecretsManagerType);
+
+const TestVaultConnectionResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+});
 
 const secretsRoutes: FastifyPluginAsyncZod = async (fastify) => {
   fastify.get(
@@ -90,6 +97,51 @@ const secretsRoutes: FastifyPluginAsyncZod = async (fastify) => {
     async (_request, reply) => {
       const result = await secretManager().checkConnectivity();
       return reply.send(result);
+    },
+  );
+  fastify.post(
+    "/api/secrets/test-vault-connection",
+    {
+      schema: {
+        operationId: RouteId.TestVaultConnection,
+        description:
+          "Test Vault connection by creating and deleting a test secret.",
+        tags: ["Secrets"],
+        response: constructResponseSchema(TestVaultConnectionResponseSchema),
+      },
+    },
+    async (_request, reply) => {
+      const manager = secretManager();
+      if (manager.type !== SecretsManagerType.Vault) {
+        throw new ApiError(
+          400,
+          "Test Vault connection is only available when using Vault secrets manager",
+        );
+      }
+
+      try {
+        const testSecret = await manager.createSecret(
+          { test: "vault-connection-test" },
+          `test-${Date.now()}`,
+        );
+        await manager.deleteSecret(testSecret.id);
+      } catch (error) {
+        const vaultError = extractVaultErrorMessage(error);
+        logger.error(
+          { error, vaultError },
+          "testVaultConnection: failed",
+        );
+        throw new ApiError(
+          502,
+          `Vault connection test failed: ${vaultError}`,
+        );
+      }
+
+      return reply.send({
+        success: true,
+        message:
+          "Vault connection test passed. Successfully created and deleted a test secret.",
+      });
     },
   );
 };

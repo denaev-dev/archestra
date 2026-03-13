@@ -346,6 +346,7 @@ export const RouteId = {
   GetSecretsType: "getSecretsType",
   GetSecret: "getSecret",
   CheckSecretsConnectivity: "checkSecretsConnectivity",
+  TestVaultConnection: "testVaultConnection",
 
   // Incoming Email Routes
   GetIncomingEmailStatus: "getIncomingEmailStatus",

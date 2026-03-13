@@ -1,9 +1,10 @@
-import { SecretsManagerType } from "@shared";
+import { isVaultReference, SecretsManagerType } from "@shared";
 import logger from "@/logging";
 import SecretModel from "@/models/secret";
 import {
   ApiError,
   type ISecretManager,
+  parseVaultSecretReference,
   type SecretsConnectivityResult,
   type SecretValue,
   type SelectSecret,
@@ -146,6 +147,10 @@ export default class VaultSecretManager
       return null;
     }
 
+    if (dbRecord.isByosVault) {
+      return await this.resolveByosVaultSecret(dbRecord);
+    }
+
     if (!dbRecord.isVault) {
       return dbRecord;
     }
@@ -243,6 +248,78 @@ export default class VaultSecretManager
   // ============================================================
   // Private methods
   // ============================================================
+
+  /**
+   * Handle a BYOS vault secret: self-heal corrupted records, then resolve vault references.
+   */
+  private async resolveByosVaultSecret(
+    dbRecord: SelectSecret,
+  ): Promise<SelectSecret> {
+    const secretValues = dbRecord.secret as Record<string, unknown>;
+
+    // Self-heal corrupted records: isByosVault=true but no actual vault references
+    const hasAnyVaultReference = Object.values(secretValues).some(
+      (v) => typeof v === "string" && isVaultReference(v),
+    );
+    if (!hasAnyVaultReference) {
+      logger.warn(
+        { secretId: dbRecord.id },
+        "VaultSecretManager.getSecret: isByosVault=true but no vault references found, fixing corrupted flag",
+      );
+      await SecretModel.update(dbRecord.id, { isByosVault: false });
+      return { ...dbRecord, isByosVault: false };
+    }
+
+    const resolved = await this.resolveByosVaultReferences(secretValues);
+    return { ...dbRecord, secret: resolved };
+  }
+
+  /**
+   * Resolve BYOS vault references (path#key format) by fetching values from Vault.
+   * Groups by path to minimize Vault API calls.
+   */
+  private async resolveByosVaultReferences(
+    references: Record<string, unknown>,
+  ): Promise<SecretValue> {
+    const resolved: SecretValue = {};
+
+    const pathToKeys = new Map<
+      string,
+      { archestraKey: string; vaultKey: string }[]
+    >();
+
+    for (const [archestraKey, ref] of Object.entries(references)) {
+      if (typeof ref !== "string" || !isVaultReference(ref)) {
+        resolved[archestraKey] = ref;
+        continue;
+      }
+      const { path, key: vaultKey } = parseVaultSecretReference(
+        ref as `${string}#${string}`,
+      );
+      const existing = pathToKeys.get(path);
+      if (existing) {
+        existing.push({ archestraKey, vaultKey });
+      } else {
+        pathToKeys.set(path, [{ archestraKey, vaultKey }]);
+      }
+    }
+
+    for (const [path, keys] of pathToKeys) {
+      const vaultData = await this.getSecretFromPath(path);
+      for (const { archestraKey, vaultKey } of keys) {
+        if (vaultData[vaultKey] !== undefined) {
+          resolved[archestraKey] = vaultData[vaultKey];
+        } else {
+          logger.warn(
+            { path, vaultKey, archestraKey },
+            "VaultSecretManager: vault key not found in secret",
+          );
+        }
+      }
+    }
+
+    return resolved;
+  }
 
   private getVaultPath(name: string, id: string): string {
     const basePath = this.config.secretPath;
