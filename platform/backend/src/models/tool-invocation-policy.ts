@@ -4,7 +4,7 @@ import {
   isAgentTool,
   isArchestraMcpServerTool,
 } from "@shared";
-import { desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { get } from "lodash-es";
 import db, { schema } from "@/database";
 import logger from "@/logging";
@@ -619,6 +619,44 @@ class ToolInvocationPolicyModel {
     }
 
     return { isAllowed: true, reason: "" };
+  }
+
+  /**
+   * Check if a tool has any policy that could lead to blocking during streaming.
+   * Only `allow_when_context_is_untrusted` with empty conditions ("Allow always")
+   * is safe to stream — any other policy action or custom conditions requires buffering.
+   */
+  static async hasBlockingPolicy(
+    toolName: string,
+    contextIsTrusted: boolean,
+  ): Promise<boolean> {
+    const blockingActions: ToolInvocation.ToolInvocationPolicyAction[] =
+      contextIsTrusted
+        ? ["block_always", "require_approval"]
+        : [
+            "block_always",
+            "require_approval",
+            "block_when_context_is_untrusted",
+          ];
+    const result = await db
+      .select({ id: schema.toolInvocationPoliciesTable.id })
+      .from(schema.toolInvocationPoliciesTable)
+      .innerJoin(
+        schema.toolsTable,
+        eq(schema.toolInvocationPoliciesTable.toolId, schema.toolsTable.id),
+      )
+      .where(
+        and(
+          eq(schema.toolsTable.name, toolName),
+          or(
+            inArray(schema.toolInvocationPoliciesTable.action, blockingActions),
+            sql`jsonb_typeof(${schema.toolInvocationPoliciesTable.conditions}) = 'array' AND jsonb_array_length(${schema.toolInvocationPoliciesTable.conditions}) > 0`,
+          ),
+        ),
+      )
+      .limit(1);
+
+    return result.length > 0;
   }
 }
 
