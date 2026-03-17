@@ -1,8 +1,7 @@
 "use client";
 
 import { E2eTestId, type IdentityProviderFormValues } from "@shared";
-import { Info, Plus, Trash2 } from "lucide-react";
-import { useCallback, useRef } from "react";
+import { ChevronRight, Info, Plus, Trash2 } from "lucide-react";
 import { type UseFormReturn, useFieldArray } from "react-hook-form";
 import {
   Accordion,
@@ -12,6 +11,11 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   FormControl,
   FormDescription,
@@ -61,55 +65,32 @@ export function RoleMappingForm({ form }: RoleMappingFormProps) {
     control: form.control,
     name: "roleMapping.rules",
   });
-  const accordionContentRef = useRef<HTMLDivElement>(null);
-
-  // Scroll the accordion content into view when expanded
-  const handleAccordionChange = useCallback((value: string) => {
-    if (value === "role-mapping") {
-      // Small delay to allow accordion animation to start
-      setTimeout(() => {
-        accordionContentRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      }, 100);
-    }
-  }, []);
 
   return (
-    <div className="space-y-6">
-      <Separator />
-
-      <Accordion
-        type="single"
-        collapsible
-        className="w-full"
-        onValueChange={handleAccordionChange}
-      >
-        <AccordionItem value="role-mapping" className="border-none">
-          <AccordionTrigger className="hover:no-underline">
-            <div className="flex items-center gap-2">
-              <h4 className="text-md font-medium">Role Mapping (Optional)</h4>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="h-4 w-4 text-muted-foreground" />
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-sm">
-                    <p>
-                      Map identity provider attributes to Archestra roles using
-                      Handlebars templates. Rules are evaluated in order - first
-                      match wins.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent
-            ref={accordionContentRef}
-            className="space-y-4 pt-4"
-          >
+    <Collapsible>
+      <div className="rounded-lg border bg-card">
+        <CollapsibleTrigger className="flex w-full items-center justify-between p-4 hover:bg-muted/50 transition-colors [&[data-state=open]>svg]:rotate-90">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-semibold">Role Mapping (Optional)</h3>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-sm">
+                  <p>
+                    Map identity provider attributes to Archestra roles using
+                    Handlebars templates. Rules are evaluated in order - first
+                    match wins.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform" />
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="border-t p-4 space-y-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <FormLabel>Mapping Rules</FormLabel>
@@ -314,9 +295,9 @@ export function RoleMappingForm({ form }: RoleMappingFormProps) {
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </div>
+          </div>
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
   );
 }

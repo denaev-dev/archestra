@@ -163,10 +163,7 @@ export function EditIdentityProviderDialog({
         className="max-w-4xl"
       >
         <Form {...form}>
-          <DialogForm
-            className="flex min-h-0 flex-1 flex-col"
-            onSubmit={form.handleSubmit(onSubmit)}
-          >
+          <DialogForm onSubmit={form.handleSubmit(onSubmit)}>
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
               {providerType === "saml" ? (
                 <SamlConfigForm form={form} />
@@ -175,7 +172,7 @@ export function EditIdentityProviderDialog({
               )}
             </div>
 
-            <DialogStickyFooter>
+            <DialogStickyFooter className="mt-0">
               <div className="flex w-full justify-between">
                 <PermissionButton
                   type="button"

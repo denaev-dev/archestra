@@ -1,8 +1,7 @@
 "use client";
 
 import type { IdentityProviderFormValues } from "@shared";
-import { Info } from "lucide-react";
-import { useCallback, useRef } from "react";
+import { ChevronRight, Info } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import {
   Accordion,
@@ -12,6 +11,11 @@ import {
 } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
   FormControl,
   FormDescription,
   FormField,
@@ -20,7 +24,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import {
   Tooltip,
   TooltipContent,
@@ -48,56 +51,32 @@ const HANDLEBARS_EXAMPLES = [
 ];
 
 export function TeamSyncConfigForm({ form }: TeamSyncConfigFormProps) {
-  const accordionContentRef = useRef<HTMLDivElement>(null);
-
-  // Scroll the accordion content into view when expanded
-  const handleAccordionChange = useCallback((value: string) => {
-    if (value === "team-sync") {
-      // Small delay to allow accordion animation to start
-      setTimeout(() => {
-        accordionContentRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      }, 100);
-    }
-  }, []);
-
   return (
-    <div className="space-y-6">
-      <Separator />
-
-      <Accordion
-        type="single"
-        collapsible
-        className="w-full"
-        onValueChange={handleAccordionChange}
-      >
-        <AccordionItem value="team-sync" className="border-none">
-          <AccordionTrigger className="hover:no-underline">
-            <div className="flex items-center gap-2">
-              <h4 className="text-md font-medium">
-                Team Sync Configuration (Optional)
-              </h4>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="h-4 w-4 text-muted-foreground" />
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-sm">
-                    <p>
-                      Configure how group identifiers are extracted from SSO
-                      tokens for automatic team membership synchronization.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent
-            ref={accordionContentRef}
-            className="space-y-4 pt-4"
-          >
+    <Collapsible>
+      <div className="rounded-lg border bg-card">
+        <CollapsibleTrigger className="flex w-full items-center justify-between p-4 hover:bg-muted/50 transition-colors [&[data-state=open]>svg]:rotate-90">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-semibold">
+              Team Sync Configuration (Optional)
+            </h3>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-sm">
+                  <p>
+                    Configure how group identifiers are extracted from SSO
+                    tokens for automatic team membership synchronization.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform" />
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="border-t p-4 space-y-4">
             <FormField
               control={form.control}
               name="teamSyncConfig.enabled"
@@ -177,9 +156,9 @@ export function TeamSyncConfigForm({ form }: TeamSyncConfigFormProps) {
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </div>
+          </div>
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
   );
 }

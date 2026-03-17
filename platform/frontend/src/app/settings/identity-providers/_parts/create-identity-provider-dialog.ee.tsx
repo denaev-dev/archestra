@@ -114,10 +114,7 @@ export function CreateIdentityProviderDialog({
       className="max-w-4xl"
     >
       <Form {...form}>
-        <DialogForm
-          className="flex min-h-0 flex-1 flex-col"
-          onSubmit={form.handleSubmit(onSubmit)}
-        >
+        <DialogForm onSubmit={form.handleSubmit(onSubmit)}>
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
             {currentProviderType === "saml" ? (
               <SamlConfigForm form={form} hideProviderId={hideProviderId} />
@@ -130,7 +127,7 @@ export function CreateIdentityProviderDialog({
             )}
           </div>
 
-          <DialogStickyFooter>
+          <DialogStickyFooter className="mt-0">
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>

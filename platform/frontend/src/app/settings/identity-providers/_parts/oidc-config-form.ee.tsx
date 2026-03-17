@@ -16,7 +16,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { RoleMappingForm } from "./role-mapping-form.ee";
 import { TeamSyncConfigForm } from "./team-sync-config-form.ee";
 
@@ -55,8 +54,11 @@ export function OidcConfigForm({
   );
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4">
+    <div className="space-y-4">
+      {/* Basic Settings */}
+      <div className="rounded-lg border bg-card p-4 space-y-4">
+        <h3 className="text-sm font-semibold">Basic Settings</h3>
+
         {!hideProviderId && (
           <FormField
             control={form.control}
@@ -110,12 +112,12 @@ export function OidcConfigForm({
             </FormItem>
           )}
         />
+      </div>
 
-        <Separator />
+      {/* OIDC Settings */}
+      <div className="rounded-lg border bg-card p-4 space-y-4">
+        <h3 className="text-sm font-semibold">OIDC Settings</h3>
 
-        <div>
-          <h4 className="text-md font-medium mb-4">OIDC Settings</h4>
-        </div>
         <FormField
           control={form.control}
           name="oidcConfig.clientId"
@@ -348,100 +350,100 @@ export function OidcConfigForm({
         />
       </div>
 
-      <Separator />
+      {/* Attribute Mapping */}
+      <div className="rounded-lg border bg-card p-4 space-y-4">
+        <h3 className="text-sm font-semibold">Attribute Mapping</h3>
 
-      <div>
-        <h4 className="text-md font-medium mb-4">Attribute Mapping</h4>
-        <div className="grid gap-4">
-          <FormField
-            control={form.control}
-            name="oidcConfig.mapping.id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>User ID Claim</FormLabel>
-                <FormControl>
-                  <Input placeholder="sub" {...field} />
-                </FormControl>
-                <FormDescription>
-                  The claim that contains the unique user identifier.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <FormField
+          control={form.control}
+          name="oidcConfig.mapping.id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>User ID Claim</FormLabel>
+              <FormControl>
+                <Input placeholder="sub" {...field} />
+              </FormControl>
+              <FormDescription>
+                The claim that contains the unique user identifier.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="oidcConfig.mapping.email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email Claim</FormLabel>
-                <FormControl>
-                  <Input placeholder="email" {...field} />
-                </FormControl>
-                <FormDescription>
-                  The claim that contains the user's email address.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <FormField
+          control={form.control}
+          name="oidcConfig.mapping.email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email Claim</FormLabel>
+              <FormControl>
+                <Input placeholder="email" {...field} />
+              </FormControl>
+              <FormDescription>
+                The claim that contains the user's email address.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="oidcConfig.mapping.name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name Claim</FormLabel>
-                <FormControl>
-                  <Input placeholder="name" {...field} />
-                </FormControl>
-                <FormDescription>
-                  The claim that contains the user's display name.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <FormField
+          control={form.control}
+          name="oidcConfig.mapping.name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name Claim</FormLabel>
+              <FormControl>
+                <Input placeholder="name" {...field} />
+              </FormControl>
+              <FormDescription>
+                The claim that contains the user's display name.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="oidcConfig.mapping.emailVerified"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email Verified Claim (Optional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="email_verified" {...field} />
-                </FormControl>
-                <FormDescription>
-                  The claim that indicates if the email is verified.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <FormField
+          control={form.control}
+          name="oidcConfig.mapping.emailVerified"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email Verified Claim (Optional)</FormLabel>
+              <FormControl>
+                <Input placeholder="email_verified" {...field} />
+              </FormControl>
+              <FormDescription>
+                The claim that indicates if the email is verified.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="oidcConfig.mapping.image"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Avatar Image Claim (Optional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="picture" {...field} />
-                </FormControl>
-                <FormDescription>
-                  The claim that contains the user's profile picture URL.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="oidcConfig.mapping.image"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Avatar Image Claim (Optional)</FormLabel>
+              <FormControl>
+                <Input placeholder="picture" {...field} />
+              </FormControl>
+              <FormDescription>
+                The claim that contains the user's profile picture URL.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
 
+      {/* Role Mapping (Collapsible) */}
       <RoleMappingForm form={form} />
 
+      {/* Team Sync (Collapsible) */}
       <TeamSyncConfigForm form={form} />
     </div>
   );
