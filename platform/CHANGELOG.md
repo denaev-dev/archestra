@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.1.28](https://github.com/archestra-ai/archestra/compare/platform-v1.1.27...platform-v1.1.28) (2026-03-17)
+
+
+### Bug Fixes
+
+* add missing RBAC check to archestra__ create_* tools ([#3418](https://github.com/archestra-ai/archestra/issues/3418)) ([1938030](https://github.com/archestra-ai/archestra/commit/193803037748f3cacf45facad3891783eed310b6))
+* improve Vertex Gemini model discovery and identity provider dialogs ([#3419](https://github.com/archestra-ai/archestra/issues/3419)) ([ddcd37d](https://github.com/archestra-ai/archestra/commit/ddcd37d9aa979010e8ba710680b9d649e4947a6c))
+
+
+### Miscellaneous Chores
+
+* **deps:** bump next from 16.1.6 to 16.1.7 in /platform/frontend ([#3415](https://github.com/archestra-ai/archestra/issues/3415)) ([db7ab64](https://github.com/archestra-ai/archestra/commit/db7ab64dc0232ef390747dc213903578e543da95))
+* do not fail on unknown user ([#3420](https://github.com/archestra-ai/archestra/issues/3420)) ([762afa9](https://github.com/archestra-ai/archestra/commit/762afa9dbacf3fb2c1178e11bfdeee1e012ba5b6))
+* skip failing e2e tests ([#3409](https://github.com/archestra-ai/archestra/issues/3409)) ([92dff24](https://github.com/archestra-ai/archestra/commit/92dff24843c1d7a6faf112b6766a3acdcc9500b6))
+
+## [1.1.27](https://github.com/archestra-ai/archestra/compare/platform-v1.1.26...platform-v1.1.27) (2026-03-17)
+
+
+### Features
+
+* **helm:** extra data support for Helm-managed auth Secret ([#3414](https://github.com/archestra-ai/archestra/issues/3414)) ([a032b28](https://github.com/archestra-ai/archestra/commit/a032b28c72e4640c143e40a4131aa851545515ec))
+* support multiple organization chat links ([#3412](https://github.com/archestra-ai/archestra/issues/3412)) ([e9b2ecb](https://github.com/archestra-ai/archestra/commit/e9b2ecb4ab1d04f5694158f9c7b53dbbe15e8232))
+
+
+### Bug Fixes
+
+* N+1 query in available chat API keys ([#3410](https://github.com/archestra-ai/archestra/issues/3410)) ([588d07d](https://github.com/archestra-ai/archestra/commit/588d07df1a97fea8faf392dd8ff350b396a6a921))
+
+
+### Miscellaneous Chores
+
+* harden Archestra MCP tool schemas and typed registry ([#3381](https://github.com/archestra-ai/archestra/issues/3381)) ([0363cf9](https://github.com/archestra-ai/archestra/commit/0363cf99abf5ed203783f1e7f2e5ba10ce22aa9b))
+
 ## [1.1.26](https://github.com/archestra-ai/archestra/compare/platform-v1.1.25...platform-v1.1.26) (2026-03-17)
 
 
