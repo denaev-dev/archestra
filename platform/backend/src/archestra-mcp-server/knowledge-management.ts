@@ -1,8 +1,8 @@
 import { TOOL_QUERY_KNOWLEDGE_SOURCES_FULL_NAME } from "@shared";
 import { z } from "zod";
 import {
-  buildUserAcl,
-  knowledgeSourceAccessService,
+  buildUserAccessControlList,
+  knowledgeSourceAccessControlService,
   queryService,
 } from "@/knowledge-base";
 import logger from "@/logging";
@@ -484,7 +484,7 @@ async function handleQueryKnowledgeSources(params: {
 
     const access =
       context.userId && organizationId
-        ? await knowledgeSourceAccessService.buildAccessContext({
+        ? await knowledgeSourceAccessControlService.buildAccessControlContext({
             userId: context.userId,
             organizationId,
           })
@@ -498,7 +498,10 @@ async function handleQueryKnowledgeSources(params: {
         ).filter((kb): kb is NonNullable<typeof kb> => kb !== null)
       : [];
     const visibleKbs = access
-      ? knowledgeSourceAccessService.filterKnowledgeBases(access, validKbs)
+      ? knowledgeSourceAccessControlService.filterKnowledgeBases(
+          access,
+          validKbs,
+        )
       : validKbs;
 
     const directConnectors = directConnectorIds.length
@@ -514,7 +517,10 @@ async function handleQueryKnowledgeSources(params: {
         )
       : [];
     const visibleDirectConnectors = access
-      ? knowledgeSourceAccessService.filterConnectors(access, directConnectors)
+      ? knowledgeSourceAccessControlService.filterConnectors(
+          access,
+          directConnectors,
+        )
       : directConnectors;
 
     const connectorIdsFromVisibleKbs = visibleKbs.length
@@ -572,7 +578,7 @@ async function handleQueryKnowledgeSources(params: {
                 )
               ? "team-scoped"
               : "auto-sync-permissions";
-        userAcl = buildUserAcl({
+        userAcl = buildUserAccessControlList({
           userEmail: user.email,
           teamIds,
           visibility,
@@ -634,7 +640,7 @@ async function handleGetKnowledgeBases(params: { context: ArchestraContext }) {
     }
 
     const access = context.userId
-      ? await knowledgeSourceAccessService.buildAccessContext({
+      ? await knowledgeSourceAccessControlService.buildAccessControlContext({
           userId: context.userId,
           organizationId: context.organizationId,
         })
@@ -674,7 +680,7 @@ async function handleGetKnowledgeBase(params: {
     const [kb, access] = await Promise.all([
       KnowledgeBaseModel.findById(args.id),
       context.userId
-        ? knowledgeSourceAccessService.buildAccessContext({
+        ? knowledgeSourceAccessControlService.buildAccessControlContext({
             userId: context.userId,
             organizationId: context.organizationId,
           })
@@ -684,7 +690,7 @@ async function handleGetKnowledgeBase(params: {
       !kb ||
       kb.organizationId !== context.organizationId ||
       (access &&
-        !knowledgeSourceAccessService.canAccessKnowledgeBase(access, kb))
+        !knowledgeSourceAccessControlService.canAccessKnowledgeBase(access, kb))
     ) {
       return errorResult(`Knowledge base not found: ${args.id}`);
     }
@@ -718,7 +724,7 @@ async function handleUpdateKnowledgeBase(params: {
     const [existing, access] = await Promise.all([
       KnowledgeBaseModel.findById(args.id),
       context.userId
-        ? knowledgeSourceAccessService.buildAccessContext({
+        ? knowledgeSourceAccessControlService.buildAccessControlContext({
             userId: context.userId,
             organizationId: context.organizationId,
           })
@@ -728,7 +734,10 @@ async function handleUpdateKnowledgeBase(params: {
       !existing ||
       existing.organizationId !== context.organizationId ||
       (access &&
-        !knowledgeSourceAccessService.canAccessKnowledgeBase(access, existing))
+        !knowledgeSourceAccessControlService.canAccessKnowledgeBase(
+          access,
+          existing,
+        ))
     ) {
       return errorResult(`Knowledge base not found: ${args.id}`);
     }
@@ -759,7 +768,7 @@ async function handleDeleteKnowledgeBase(params: {
     const [existing, access] = await Promise.all([
       KnowledgeBaseModel.findById(args.id),
       context.userId
-        ? knowledgeSourceAccessService.buildAccessContext({
+        ? knowledgeSourceAccessControlService.buildAccessControlContext({
             userId: context.userId,
             organizationId: context.organizationId,
           })
@@ -769,7 +778,10 @@ async function handleDeleteKnowledgeBase(params: {
       !existing ||
       existing.organizationId !== context.organizationId ||
       (access &&
-        !knowledgeSourceAccessService.canAccessKnowledgeBase(access, existing))
+        !knowledgeSourceAccessControlService.canAccessKnowledgeBase(
+          access,
+          existing,
+        ))
     ) {
       return errorResult(`Knowledge base not found: ${args.id}`);
     }
@@ -822,7 +834,7 @@ async function handleGetKnowledgeConnectors(params: {
     }
 
     const access = context.userId
-      ? await knowledgeSourceAccessService.buildAccessContext({
+      ? await knowledgeSourceAccessControlService.buildAccessControlContext({
           userId: context.userId,
           organizationId: context.organizationId,
         })
@@ -862,7 +874,7 @@ async function handleGetKnowledgeConnector(params: {
     const [connector, access] = await Promise.all([
       KnowledgeBaseConnectorModel.findById(args.id),
       context.userId
-        ? knowledgeSourceAccessService.buildAccessContext({
+        ? knowledgeSourceAccessControlService.buildAccessControlContext({
             userId: context.userId,
             organizationId: context.organizationId,
           })
@@ -872,7 +884,10 @@ async function handleGetKnowledgeConnector(params: {
       !connector ||
       connector.organizationId !== context.organizationId ||
       (access &&
-        !knowledgeSourceAccessService.canAccessConnector(access, connector))
+        !knowledgeSourceAccessControlService.canAccessConnector(
+          access,
+          connector,
+        ))
     ) {
       return errorResult(`Knowledge connector not found: ${args.id}`);
     }
@@ -913,7 +928,7 @@ async function handleUpdateKnowledgeConnector(params: {
     const [existingConnector, access] = await Promise.all([
       KnowledgeBaseConnectorModel.findById(args.id),
       context.userId
-        ? knowledgeSourceAccessService.buildAccessContext({
+        ? knowledgeSourceAccessControlService.buildAccessControlContext({
             userId: context.userId,
             organizationId: context.organizationId,
           })
@@ -923,7 +938,7 @@ async function handleUpdateKnowledgeConnector(params: {
       !existingConnector ||
       existingConnector.organizationId !== context.organizationId ||
       (access &&
-        !knowledgeSourceAccessService.canAccessConnector(
+        !knowledgeSourceAccessControlService.canAccessConnector(
           access,
           existingConnector,
         ))
@@ -960,7 +975,7 @@ async function handleDeleteKnowledgeConnector(params: {
     const [existing, access] = await Promise.all([
       KnowledgeBaseConnectorModel.findById(args.id),
       context.userId
-        ? knowledgeSourceAccessService.buildAccessContext({
+        ? knowledgeSourceAccessControlService.buildAccessControlContext({
             userId: context.userId,
             organizationId: context.organizationId,
           })
@@ -970,7 +985,10 @@ async function handleDeleteKnowledgeConnector(params: {
       !existing ||
       existing.organizationId !== context.organizationId ||
       (access &&
-        !knowledgeSourceAccessService.canAccessConnector(access, existing))
+        !knowledgeSourceAccessControlService.canAccessConnector(
+          access,
+          existing,
+        ))
     ) {
       return errorResult(`Knowledge connector not found: ${args.id}`);
     }

@@ -12,7 +12,7 @@ import {
   hasAnyAgentTypeReadPermission,
   requireAgentModifyPermission,
 } from "@/auth";
-import { knowledgeSourceAccessService } from "@/knowledge-base";
+import { knowledgeSourceAccessControlService } from "@/knowledge-base";
 import {
   AgentLabelModel,
   AgentModel,
@@ -364,7 +364,7 @@ const agentRoutes: FastifyPluginAsyncZod = async (fastify) => {
           );
         }
         const knowledgeSourceAccess =
-          await knowledgeSourceAccessService.buildAccessContext({
+          await knowledgeSourceAccessControlService.buildAccessControlContext({
             userId: user.id,
             organizationId,
           });
@@ -386,7 +386,7 @@ const agentRoutes: FastifyPluginAsyncZod = async (fastify) => {
           );
         }
         const knowledgeSourceAccess =
-          await knowledgeSourceAccessService.buildAccessContext({
+          await knowledgeSourceAccessControlService.buildAccessControlContext({
             userId: user.id,
             organizationId,
           });
@@ -572,7 +572,7 @@ const agentRoutes: FastifyPluginAsyncZod = async (fastify) => {
           );
         }
         const knowledgeSourceAccess =
-          await knowledgeSourceAccessService.buildAccessContext({
+          await knowledgeSourceAccessControlService.buildAccessControlContext({
             userId: user.id,
             organizationId,
           });
@@ -594,7 +594,7 @@ const agentRoutes: FastifyPluginAsyncZod = async (fastify) => {
           );
         }
         const knowledgeSourceAccess =
-          await knowledgeSourceAccessService.buildAccessContext({
+          await knowledgeSourceAccessControlService.buildAccessControlContext({
             userId: user.id,
             organizationId,
           });
@@ -810,14 +810,19 @@ async function validateKnowledgeBaseAccess(params: {
   kbId: string;
   organizationId: string;
   access: Awaited<
-    ReturnType<typeof knowledgeSourceAccessService.buildAccessContext>
+    ReturnType<
+      typeof knowledgeSourceAccessControlService.buildAccessControlContext
+    >
   >;
 }) {
   const kb = await KnowledgeBaseModel.findById(params.kbId);
   if (
     !kb ||
     kb.organizationId !== params.organizationId ||
-    !knowledgeSourceAccessService.canAccessKnowledgeBase(params.access, kb)
+    !knowledgeSourceAccessControlService.canAccessKnowledgeBase(
+      params.access,
+      kb,
+    )
   ) {
     throw new ApiError(404, `Knowledge base not found: ${params.kbId}`);
   }
@@ -827,7 +832,9 @@ async function validateConnectorAccess(params: {
   connectorId: string;
   organizationId: string;
   access: Awaited<
-    ReturnType<typeof knowledgeSourceAccessService.buildAccessContext>
+    ReturnType<
+      typeof knowledgeSourceAccessControlService.buildAccessControlContext
+    >
   >;
 }) {
   const connector = await KnowledgeBaseConnectorModel.findById(
@@ -836,7 +843,10 @@ async function validateConnectorAccess(params: {
   if (
     !connector ||
     connector.organizationId !== params.organizationId ||
-    !knowledgeSourceAccessService.canAccessConnector(params.access, connector)
+    !knowledgeSourceAccessControlService.canAccessConnector(
+      params.access,
+      connector,
+    )
   ) {
     throw new ApiError(404, `Connector not found: ${params.connectorId}`);
   }

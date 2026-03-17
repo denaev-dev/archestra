@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Radix Popper / floating-ui needs ResizeObserver
@@ -107,6 +107,16 @@ vi.mock("@/lib/chat-models.query", () => ({
 
 vi.mock("@/lib/config.query", () => ({
   useFeature: () => false,
+  useProviderBaseUrls: () => ({
+    data: {},
+  }),
+}));
+
+vi.mock("@/lib/team.query", () => ({
+  useTeams: () => ({
+    data: [],
+    isPending: false,
+  }),
 }));
 
 vi.mock("@/lib/auth.query", () => ({
@@ -216,6 +226,7 @@ describe("KnowledgeSettingsPage", () => {
       mockOrganization = {
         embeddingChatApiKeyId: "key-1",
         embeddingModel: "text-embedding-3-small",
+        embeddingDimensions: 1536,
         rerankerChatApiKeyId: "key-1",
         rerankerModel: "gpt-4o",
       };
@@ -340,6 +351,40 @@ describe("KnowledgeSettingsPage", () => {
     });
   });
 
+  describe("embedding dimensions requirement", () => {
+    it("disables save when an embedding model is selected without dimensions", () => {
+      mockOrganization = {
+        embeddingChatApiKeyId: "key-1",
+        embeddingModel: null,
+        embeddingDimensions: null,
+        rerankerChatApiKeyId: "key-1",
+        rerankerModel: "gpt-4o",
+      };
+      mockApiKeys = [
+        {
+          id: "key-1",
+          name: "OpenAI Key",
+          provider: "openai",
+          scope: "org_wide",
+        },
+      ];
+
+      renderPage();
+
+      const modelTrigger = screen
+        .getAllByRole("combobox")
+        .find((el) => el.textContent?.includes("Select embedding model"));
+      expect(modelTrigger).toBeDefined();
+      fireEvent.click(modelTrigger!);
+      fireEvent.click(screen.getByRole("button", { name: /text-embedding-3-small/i }));
+
+      expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+      expect(
+        screen.getByText("Select dimensions..."),
+      ).toBeInTheDocument();
+    });
+  });
+
   describe("embedding model disabled state", () => {
     it("shows 'Select an embedding API key first' when no key is selected", () => {
       mockOrganization = {
@@ -429,6 +474,7 @@ describe("KnowledgeSettingsPage", () => {
       mockOrganization = {
         embeddingChatApiKeyId: "key-1",
         embeddingModel: "text-embedding-3-small",
+        embeddingDimensions: 1536,
         rerankerChatApiKeyId: "key-1",
         rerankerModel: "gpt-4o",
       };
@@ -445,6 +491,42 @@ describe("KnowledgeSettingsPage", () => {
       // No element should have animate-pulse
       const pulsing = document.querySelectorAll(".animate-pulse");
       expect(pulsing.length).toBe(0);
+    });
+  });
+
+  describe("embedding api key dialog", () => {
+    it("disables all providers except OpenAI and Ollama", () => {
+      mockOrganization = {
+        embeddingChatApiKeyId: null,
+        embeddingModel: null,
+        rerankerChatApiKeyId: null,
+        rerankerModel: null,
+      };
+
+      renderPage();
+
+      const addButtons = screen.getAllByRole("button", {
+        name: /Add LLM Provider Key/,
+      });
+      fireEvent.click(addButtons[0]);
+
+      const providerTrigger = screen.getByRole("combobox", {
+        name: /Provider/i,
+      });
+      fireEvent.click(providerTrigger);
+
+      expect(
+        screen.getByRole("option", { name: /OpenAI/i }),
+      ).not.toHaveAttribute("data-disabled");
+      expect(
+        screen.getByRole("option", { name: /Ollama/i }),
+      ).not.toHaveAttribute("data-disabled");
+      expect(
+        screen.getByRole("option", { name: /Anthropic/i }),
+      ).toHaveAttribute("data-disabled");
+      expect(screen.getByRole("option", { name: /Gemini/i })).toHaveAttribute(
+        "data-disabled",
+      );
     });
   });
 

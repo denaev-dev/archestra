@@ -6,7 +6,7 @@ import {
 } from "@shared";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { knowledgeSourceAccessService } from "@/knowledge-base";
+import { knowledgeSourceAccessControlService } from "@/knowledge-base";
 import { getConnector } from "@/knowledge-base/connectors/registry";
 import logger from "@/logging";
 import {
@@ -78,10 +78,11 @@ const knowledgeBaseRoutes: FastifyPluginAsyncZod = async (fastify) => {
       { query: { limit, offset, search }, organizationId, user },
       reply,
     ) => {
-      const access = await knowledgeSourceAccessService.buildAccessContext({
-        userId: user.id,
-        organizationId,
-      });
+      const access =
+        await knowledgeSourceAccessControlService.buildAccessControlContext({
+          userId: user.id,
+          organizationId,
+        });
       const [knowledgeBases, total] = await Promise.all([
         KnowledgeBaseModel.findByOrganization({
           organizationId,
@@ -337,10 +338,11 @@ const knowledgeBaseRoutes: FastifyPluginAsyncZod = async (fastify) => {
       },
       reply,
     ) => {
-      const access = await knowledgeSourceAccessService.buildAccessContext({
-        userId: user.id,
-        organizationId,
-      });
+      const access =
+        await knowledgeSourceAccessControlService.buildAccessControlContext({
+          userId: user.id,
+          organizationId,
+        });
       let data: Awaited<
         ReturnType<typeof KnowledgeBaseConnectorModel.findByOrganization>
       >;
@@ -863,10 +865,11 @@ const knowledgeBaseRoutes: FastifyPluginAsyncZod = async (fastify) => {
       },
     },
     async ({ params: { id }, organizationId, user }, reply) => {
-      const access = await knowledgeSourceAccessService.buildAccessContext({
-        userId: user.id,
-        organizationId,
-      });
+      const access =
+        await knowledgeSourceAccessControlService.buildAccessControlContext({
+          userId: user.id,
+          organizationId,
+        });
       await findConnectorOrThrow({
         id,
         organizationId,
@@ -881,7 +884,7 @@ const knowledgeBaseRoutes: FastifyPluginAsyncZod = async (fastify) => {
         if (
           kb &&
           kb.organizationId === organizationId &&
-          knowledgeSourceAccessService.canAccessKnowledgeBase(access, kb)
+          knowledgeSourceAccessControlService.canAccessKnowledgeBase(access, kb)
         ) {
           knowledgeBases.push(kb);
         }
@@ -987,11 +990,12 @@ async function findKnowledgeBaseOrThrow(params: {
   if (!kg || kg.organizationId !== params.organizationId) {
     throw new ApiError(404, "Knowledge base not found");
   }
-  const access = await knowledgeSourceAccessService.buildAccessContext({
-    userId: params.userId,
-    organizationId: params.organizationId,
-  });
-  if (!knowledgeSourceAccessService.canAccessKnowledgeBase(access, kg)) {
+  const access =
+    await knowledgeSourceAccessControlService.buildAccessControlContext({
+      userId: params.userId,
+      organizationId: params.organizationId,
+    });
+  if (!knowledgeSourceAccessControlService.canAccessKnowledgeBase(access, kg)) {
     throw new ApiError(404, "Knowledge base not found");
   }
   return kg;
@@ -1006,11 +1010,14 @@ async function findConnectorOrThrow(params: {
   if (!connector || connector.organizationId !== params.organizationId) {
     throw new ApiError(404, "Connector not found");
   }
-  const access = await knowledgeSourceAccessService.buildAccessContext({
-    userId: params.userId,
-    organizationId: params.organizationId,
-  });
-  if (!knowledgeSourceAccessService.canAccessConnector(access, connector)) {
+  const access =
+    await knowledgeSourceAccessControlService.buildAccessControlContext({
+      userId: params.userId,
+      organizationId: params.organizationId,
+    });
+  if (
+    !knowledgeSourceAccessControlService.canAccessConnector(access, connector)
+  ) {
     throw new ApiError(404, "Connector not found");
   }
   return connector;

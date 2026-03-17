@@ -1,7 +1,7 @@
 import { describe, expect, test } from "@/test";
-import { knowledgeSourceAccessService } from "./source-access";
+import { knowledgeSourceAccessControlService } from "./source-access-control";
 
-describe("knowledgeSourceAccessService", () => {
+describe("knowledgeSourceAccessControlService", () => {
   test("allows org-wide knowledge sources for users with read access", async ({
     makeOrganization,
     makeUser,
@@ -18,19 +18,20 @@ describe("knowledgeSourceAccessService", () => {
       org.id,
     );
 
-    const access = await knowledgeSourceAccessService.buildAccessContext({
-      userId: user.id,
-      organizationId: org.id,
-    });
+    const access =
+      await knowledgeSourceAccessControlService.buildAccessControlContext({
+        userId: user.id,
+        organizationId: org.id,
+      });
 
     expect(
-      knowledgeSourceAccessService.canAccessKnowledgeBase(
+      knowledgeSourceAccessControlService.canAccessKnowledgeBase(
         access,
         knowledgeBase,
       ),
     ).toBe(true);
     expect(
-      knowledgeSourceAccessService.canAccessConnector(access, connector),
+      knowledgeSourceAccessControlService.canAccessConnector(access, connector),
     ).toBe(true);
   });
 
@@ -59,19 +60,20 @@ describe("knowledgeSourceAccessService", () => {
       },
     );
 
-    const access = await knowledgeSourceAccessService.buildAccessContext({
-      userId: user.id,
-      organizationId: org.id,
-    });
+    const access =
+      await knowledgeSourceAccessControlService.buildAccessControlContext({
+        userId: user.id,
+        organizationId: org.id,
+      });
 
     expect(
-      knowledgeSourceAccessService.canAccessKnowledgeBase(
+      knowledgeSourceAccessControlService.canAccessKnowledgeBase(
         access,
         knowledgeBase,
       ),
     ).toBe(false);
     expect(
-      knowledgeSourceAccessService.canAccessConnector(access, connector),
+      knowledgeSourceAccessControlService.canAccessConnector(access, connector),
     ).toBe(false);
   });
 
@@ -100,20 +102,21 @@ describe("knowledgeSourceAccessService", () => {
       },
     );
 
-    const access = await knowledgeSourceAccessService.buildAccessContext({
-      userId: admin.id,
-      organizationId: org.id,
-    });
+    const access =
+      await knowledgeSourceAccessControlService.buildAccessControlContext({
+        userId: admin.id,
+        organizationId: org.id,
+      });
 
     expect(access.canReadAll).toBe(true);
     expect(
-      knowledgeSourceAccessService.canAccessKnowledgeBase(
+      knowledgeSourceAccessControlService.canAccessKnowledgeBase(
         access,
         knowledgeBase,
       ),
     ).toBe(true);
     expect(
-      knowledgeSourceAccessService.canAccessConnector(access, connector),
+      knowledgeSourceAccessControlService.canAccessConnector(access, connector),
     ).toBe(true);
   });
 });
