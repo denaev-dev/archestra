@@ -1338,6 +1338,13 @@
       "when": 1773762737519,
       "tag": "0190_chat_links_multi",
       "breakpoints": true
+    },
+    {
+      "idx": 191,
+      "version": "7",
+      "when": 1773768135597,
+      "tag": "0191_stale_masque",
+      "breakpoints": true
     }
   ]
 }

@@ -8,6 +8,7 @@ import {
 import { ArrowLeft, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { KnowledgeSourceVisibilitySelector } from "@/app/knowledge/_parts/knowledge-source-visibility-selector";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -90,6 +91,10 @@ interface CreateConnectorFormValues {
   schedule: string;
 }
 
+type ConnectorVisibility = NonNullable<
+  archestraApiTypes.CreateConnectorData["body"]["visibility"]
+>;
+
 export function CreateConnectorDialog({
   knowledgeBaseId,
   open,
@@ -104,6 +109,8 @@ export function CreateConnectorDialog({
   const createConnector = useCreateConnector();
   const [step, setStep] = useState<"select" | "configure">("select");
   const [selectedType, setSelectedType] = useState<ConnectorType | null>(null);
+  const [visibility, setVisibility] = useState<ConnectorVisibility>("org-wide");
+  const [teamIds, setTeamIds] = useState<string[]>([]);
 
   const form = useForm<CreateConnectorFormValues>({
     defaultValues: {
@@ -149,6 +156,8 @@ export function CreateConnectorDialog({
     const result = await createConnector.mutateAsync({
       name: values.name,
       description: values.description || null,
+      visibility,
+      teamIds: visibility === "team-scoped" ? teamIds : [],
       connectorType: values.connectorType,
       config: config as archestraApiTypes.CreateConnectorData["body"]["config"],
       credentials: {
@@ -162,6 +171,8 @@ export function CreateConnectorDialog({
       form.reset();
       setStep("select");
       setSelectedType(null);
+      setVisibility("org-wide");
+      setTeamIds([]);
       onOpenChange(false);
     }
   };
@@ -171,6 +182,8 @@ export function CreateConnectorDialog({
       form.reset();
       setStep("select");
       setSelectedType(null);
+      setVisibility("org-wide");
+      setTeamIds([]);
     }
     onOpenChange(isOpen);
   };
@@ -305,6 +318,14 @@ export function CreateConnectorDialog({
                       <FormMessage />
                     </FormItem>
                   )}
+                />
+
+                <KnowledgeSourceVisibilitySelector
+                  visibility={visibility}
+                  onVisibilityChange={setVisibility}
+                  teamIds={teamIds}
+                  onTeamIdsChange={setTeamIds}
+                  showTeamRequired
                 />
 
                 <FormField

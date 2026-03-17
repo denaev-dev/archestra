@@ -22,7 +22,7 @@ All Archestra tools are prefixed with `archestra__` and are always trusted — t
 
 Archestra tools are **trusted**, meaning they bypass [tool invocation policies](/platform-tool-invocation-policies) and [trusted data policies](/platform-trusted-data-policies) — the tool will always execute without policy evaluation.
 
-However, **RBAC (role-based access control) is still enforced**. Every tool is mapped to a required permission (resource + action). The `tools/list` endpoint dynamically filters tools so users only see tools they have permission to use. For example, a user without `knowledgeBase:create` permission will not see `create_knowledge_base` in their tool list and cannot execute it.
+However, **RBAC (role-based access control) is still enforced**. Every tool is mapped to a required permission (resource + action). The `tools/list` endpoint dynamically filters tools so users only see tools they have permission to use. For example, a user without `knowledgeSources:create` permission will not see `create_knowledge_base` in their tool list and cannot execute it.
 
 ## Tools Reference
 
@@ -1155,6 +1155,8 @@ This tool takes no arguments.
 | `connector_type` | `string` | Yes | Type of the knowledge connector (for example jira, confluence, or google_drive). |
 | `config` | `object` | Yes | Provider-specific configuration object. |
 | `description` | `any` | No | Description of the knowledge connector. |
+| `visibility` | `"org-wide" \| "team-scoped"` | No | Visibility for the knowledge connector. |
+| `team_ids` | `string[]` | No | Team IDs allowed to access a team-scoped connector. |
 
 ##### Output
 
@@ -1220,6 +1222,8 @@ This tool takes no arguments.
 | `name` | `string` | No | New connector name. |
 | `description` | `any` | No | New connector description. |
 | `enabled` | `boolean` | No | Whether the connector is enabled. |
+| `visibility` | `"org-wide" \| "team-scoped"` | No | Updated visibility for the connector. |
+| `team_ids` | `string[]` | No | Updated team IDs for a team-scoped connector. |
 | `config` | `object` | No | Updated connector configuration (provider-specific settings). |
 
 ##### Output

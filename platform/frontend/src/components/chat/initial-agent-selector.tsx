@@ -154,7 +154,7 @@ export function InitialAgentSelector({
     toolPolicy: ["read"],
   });
   const { data: canReadKnowledgeBase } = useHasPermissions({
-    knowledgeBase: ["read"],
+    knowledgeSources: ["read"],
   });
   const { data: catalogItems = [] } = useInternalMcpCatalog({
     enabled: !!canReadMcpRegistry,

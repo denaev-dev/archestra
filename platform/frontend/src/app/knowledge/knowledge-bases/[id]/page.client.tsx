@@ -267,7 +267,7 @@ function KnowledgeBaseDetail({ id }: { id: string }) {
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Connectors</h2>
           <PermissionButton
-            permissions={{ knowledgeBase: ["create"] }}
+            permissions={{ knowledgeSources: ["create"] }}
             onClick={() => setIsAddConnectorOpen(true)}
             size="sm"
           >

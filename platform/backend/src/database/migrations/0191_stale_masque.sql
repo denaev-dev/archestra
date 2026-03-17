@@ -1,0 +1,2 @@
+ALTER TABLE "knowledge_base_connectors" ADD COLUMN "visibility" text DEFAULT 'org-wide' NOT NULL;--> statement-breakpoint
+ALTER TABLE "knowledge_base_connectors" ADD COLUMN "team_ids" jsonb DEFAULT '[]'::jsonb NOT NULL;

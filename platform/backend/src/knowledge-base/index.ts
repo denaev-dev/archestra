@@ -7,3 +7,4 @@ export {
   resolveRerankerConfig,
 } from "./kb-llm-client";
 export { queryService } from "./query";
+export { knowledgeSourceAccessService } from "./source-access";

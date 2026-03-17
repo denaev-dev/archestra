@@ -3,7 +3,7 @@ title: Overview
 category: Knowledge
 order: 1
 description: Built-in RAG with pgvector for document ingestion, hybrid search, and retrieval
-lastUpdated: 2026-03-06
+lastUpdated: 2026-03-17
 ---
 
 <!--
@@ -78,3 +78,11 @@ Knowledge bases can be assigned to Agents and MCP Gateways. An Agent can have mu
 | **Org-wide**              | All documents accessible to all users in the organization       |
 | **Team-scoped**           | Documents accessible only to members of the assigned teams      |
 | **Auto-sync permissions** | ACL entries synced from the source system (user emails, groups). *Coming soon — see [#3218](https://github.com/archestra-ai/archestra/issues/3218).* |
+
+Source visibility is enforced in three places:
+
+- The Knowledge Bases and Connectors pages only show sources the current user can see
+- Knowledge source pickers in Agent and MCP Gateway forms only include visible sources
+- `query_knowledge_sources` only searches connectors that are visible to the calling user
+
+Users with `knowledgeSources:admin` can view all knowledge bases and connectors regardless of org or team scope.

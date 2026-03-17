@@ -84,39 +84,48 @@ export const TOOL_PERMISSIONS: Record<
   },
 
   // Knowledge Management
-  query_knowledge_sources: { resource: "knowledgeBase", action: "read" },
-  create_knowledge_base: { resource: "knowledgeBase", action: "create" },
-  get_knowledge_bases: { resource: "knowledgeBase", action: "read" },
-  get_knowledge_base: { resource: "knowledgeBase", action: "read" },
-  update_knowledge_base: { resource: "knowledgeBase", action: "update" },
-  delete_knowledge_base: { resource: "knowledgeBase", action: "delete" },
-  create_knowledge_connector: { resource: "knowledgeBase", action: "create" },
-  get_knowledge_connectors: { resource: "knowledgeBase", action: "read" },
-  get_knowledge_connector: { resource: "knowledgeBase", action: "read" },
-  update_knowledge_connector: { resource: "knowledgeBase", action: "update" },
-  delete_knowledge_connector: { resource: "knowledgeBase", action: "delete" },
+  query_knowledge_sources: { resource: "knowledgeSources", action: "read" },
+  create_knowledge_base: { resource: "knowledgeSources", action: "create" },
+  get_knowledge_bases: { resource: "knowledgeSources", action: "read" },
+  get_knowledge_base: { resource: "knowledgeSources", action: "read" },
+  update_knowledge_base: { resource: "knowledgeSources", action: "update" },
+  delete_knowledge_base: { resource: "knowledgeSources", action: "delete" },
+  create_knowledge_connector: {
+    resource: "knowledgeSources",
+    action: "create",
+  },
+  get_knowledge_connectors: { resource: "knowledgeSources", action: "read" },
+  get_knowledge_connector: { resource: "knowledgeSources", action: "read" },
+  update_knowledge_connector: {
+    resource: "knowledgeSources",
+    action: "update",
+  },
+  delete_knowledge_connector: {
+    resource: "knowledgeSources",
+    action: "delete",
+  },
   assign_knowledge_connector_to_knowledge_base: {
-    resource: "knowledgeBase",
+    resource: "knowledgeSources",
     action: "update",
   },
   unassign_knowledge_connector_from_knowledge_base: {
-    resource: "knowledgeBase",
+    resource: "knowledgeSources",
     action: "update",
   },
   assign_knowledge_base_to_agent: {
-    resource: "knowledgeBase",
+    resource: "knowledgeSources",
     action: "update",
   },
   unassign_knowledge_base_from_agent: {
-    resource: "knowledgeBase",
+    resource: "knowledgeSources",
     action: "update",
   },
   assign_knowledge_connector_to_agent: {
-    resource: "knowledgeBase",
+    resource: "knowledgeSources",
     action: "update",
   },
   unassign_knowledge_connector_from_agent: {
-    resource: "knowledgeBase",
+    resource: "knowledgeSources",
     action: "update",
   },
 

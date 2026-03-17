@@ -97,6 +97,32 @@ describe("KnowledgeBaseConnectorModel", () => {
       });
       expect(results).toHaveLength(0);
     });
+
+    test("filters out team-scoped connectors when viewer is not on the team", async ({
+      makeOrganization,
+      makeKnowledgeBase,
+      makeKnowledgeBaseConnector,
+      makeTeam,
+      makeUser,
+    }) => {
+      const org = await makeOrganization();
+      const user = await makeUser();
+      const kb = await makeKnowledgeBase(org.id);
+      const team = await makeTeam(org.id, user.id);
+      await makeKnowledgeBaseConnector(kb.id, org.id, { name: "Org Wide" });
+      await makeKnowledgeBaseConnector(kb.id, org.id, {
+        name: "Restricted",
+        visibility: "team-scoped",
+        teamIds: [team.id],
+      });
+
+      const results = await KnowledgeBaseConnectorModel.findByOrganization({
+        organizationId: org.id,
+        viewerTeamIds: [],
+      });
+
+      expect(results.map((connector) => connector.name)).toEqual(["Org Wide"]);
+    });
   });
 
   describe("countByOrganization", () => {
@@ -283,6 +309,36 @@ describe("KnowledgeBaseConnectorModel", () => {
       );
 
       expect(results).toHaveLength(0);
+    });
+
+    test("filters out team-scoped connectors when listing connectors for a knowledge base", async ({
+      makeOrganization,
+      makeKnowledgeBase,
+      makeKnowledgeBaseConnector,
+      makeTeam,
+      makeUser,
+    }) => {
+      const org = await makeOrganization();
+      const user = await makeUser();
+      const kb = await makeKnowledgeBase(org.id);
+      const team = await makeTeam(org.id, user.id);
+      await makeKnowledgeBaseConnector(kb.id, org.id, {
+        name: "Visible Connector",
+      });
+      await makeKnowledgeBaseConnector(kb.id, org.id, {
+        name: "Hidden Connector",
+        visibility: "team-scoped",
+        teamIds: [team.id],
+      });
+
+      const results = await KnowledgeBaseConnectorModel.findByKnowledgeBaseId(
+        kb.id,
+        { viewerTeamIds: [] },
+      );
+
+      expect(results.map((connector) => connector.name)).toEqual([
+        "Visible Connector",
+      ]);
     });
   });
 

@@ -3,7 +3,7 @@ title: Knowledge Connectors
 category: Knowledge
 order: 2
 description: Supported connector types, configuration, and management
-lastUpdated: 2026-03-12
+lastUpdated: 2026-03-17
 ---
 
 <!--
@@ -12,6 +12,13 @@ Check ../docs_writer_prompt.md before changing this file.
 -->
 
 Connectors pull data from external tools on a cron schedule into knowledge bases. Each connector tracks a checkpoint for incremental sync -- only changes since the last run are processed. A connector can be assigned to multiple knowledge bases.
+
+Each connector also has its own visibility:
+
+- **Org-wide**: any user with `knowledgeSources:read` can view and use it
+- **Team-scoped**: only members of the assigned teams can view and use it
+
+When an Agent or MCP Gateway calls `query_knowledge_sources`, Archestra filters out connectors the calling user is not allowed to see before retrieval runs.
 
 In local development (no K8s), connector syncs run in-process. In production, connector syncs run as background tasks via the postgres queue worker.
 

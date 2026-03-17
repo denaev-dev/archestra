@@ -1,6 +1,10 @@
 import { TOOL_QUERY_KNOWLEDGE_SOURCES_FULL_NAME } from "@shared";
 import { z } from "zod";
-import { buildUserAcl, queryService } from "@/knowledge-base";
+import {
+  buildUserAcl,
+  knowledgeSourceAccessService,
+  queryService,
+} from "@/knowledge-base";
 import logger from "@/logging";
 import {
   AgentConnectorAssignmentModel,
@@ -15,6 +19,7 @@ import {
   type AclEntry,
   InsertKnowledgeBaseConnectorSchema,
   InsertKnowledgeBaseSchema,
+  KnowledgeSourceVisibilitySchema,
   UpdateKnowledgeBaseConnectorSchema,
   UpdateKnowledgeBaseSchema,
   UuidIdSchema,
@@ -75,6 +80,13 @@ const ConnectorCreateToolArgsSchema = z
     description: InsertKnowledgeBaseConnectorSchema.shape.description
       .optional()
       .describe("Description of the knowledge connector."),
+    visibility: KnowledgeSourceVisibilitySchema.optional().describe(
+      "Visibility for the knowledge connector.",
+    ),
+    team_ids: z
+      .array(z.string())
+      .optional()
+      .describe("Team IDs allowed to access a team-scoped connector."),
   })
   .strict();
 
@@ -90,6 +102,13 @@ const ConnectorUpdateToolArgsSchema = z
     enabled: UpdateKnowledgeBaseConnectorSchema.shape.enabled
       .optional()
       .describe("Whether the connector is enabled."),
+    visibility: KnowledgeSourceVisibilitySchema.optional().describe(
+      "Updated visibility for the connector.",
+    ),
+    team_ids: z
+      .array(z.string())
+      .optional()
+      .describe("Updated team IDs for a team-scoped connector."),
     config: DynamicObjectSchema.optional().describe(
       "Updated connector configuration (provider-specific settings).",
     ),
@@ -463,22 +482,13 @@ async function handleQueryKnowledgeSources(params: {
       );
     }
 
-    const kbConnectorIdArrays = hasKbs
-      ? await Promise.all(
-          agent.knowledgeBaseIds.map((kbId) =>
-            KnowledgeBaseConnectorModel.getConnectorIds(kbId),
-          ),
-        )
-      : [];
-    const connectorIds = [
-      ...new Set([...kbConnectorIdArrays.flat(), ...directConnectorIds]),
-    ];
-
-    if (connectorIds.length === 0) {
-      return errorResult(
-        "No connectors found for the assigned knowledge bases or agent. Add connectors to enable knowledge search.",
-      );
-    }
+    const access =
+      context.userId && organizationId
+        ? await knowledgeSourceAccessService.buildAccessContext({
+            userId: context.userId,
+            organizationId,
+          })
+        : null;
 
     const validKbs = hasKbs
       ? (
@@ -487,6 +497,58 @@ async function handleQueryKnowledgeSources(params: {
           )
         ).filter((kb): kb is NonNullable<typeof kb> => kb !== null)
       : [];
+    const visibleKbs = access
+      ? knowledgeSourceAccessService.filterKnowledgeBases(access, validKbs)
+      : validKbs;
+
+    const directConnectors = directConnectorIds.length
+      ? (
+          await Promise.all(
+            directConnectorIds.map((id) =>
+              KnowledgeBaseConnectorModel.findById(id),
+            ),
+          )
+        ).filter(
+          (connector): connector is NonNullable<typeof connector> =>
+            connector !== null,
+        )
+      : [];
+    const visibleDirectConnectors = access
+      ? knowledgeSourceAccessService.filterConnectors(access, directConnectors)
+      : directConnectors;
+
+    const connectorIdsFromVisibleKbs = visibleKbs.length
+      ? (
+          await Promise.all(
+            visibleKbs.map((kb) =>
+              KnowledgeBaseConnectorModel.findByKnowledgeBaseId(kb.id, {
+                canReadAll: access?.canReadAll,
+                viewerTeamIds: access?.teamIds,
+              }),
+            ),
+          )
+        )
+          .flat()
+          .map((connector) => connector.id)
+      : [];
+    const connectorIds = [
+      ...new Set([
+        ...connectorIdsFromVisibleKbs,
+        ...visibleDirectConnectors.map((connector) => connector.id),
+      ]),
+    ];
+
+    if (visibleKbs.length === 0 && visibleDirectConnectors.length === 0) {
+      return errorResult(
+        "No visible knowledge sources found for the current user.",
+      );
+    }
+
+    if (connectorIds.length === 0) {
+      return errorResult(
+        "No connectors found for the assigned knowledge bases or agent. Add connectors to enable knowledge search.",
+      );
+    }
 
     let userAcl: AclEntry[] = ["org:*"];
     if (context.userId) {
@@ -495,11 +557,21 @@ async function handleQueryKnowledgeSources(params: {
         TeamModel.getUserTeamIds(context.userId),
       ]);
       if (user?.email) {
-        const visibility = validKbs.some((kb) => kb.visibility === "org-wide")
-          ? "org-wide"
-          : validKbs.some((kb) => kb.visibility === "team-scoped")
-            ? "team-scoped"
-            : "auto-sync-permissions";
+        const hasOrgWideKb = visibleKbs.some(
+          (kb) => kb.visibility === "org-wide",
+        );
+        const hasOrgWideConnector = visibleDirectConnectors.some(
+          (connector) => connector.visibility === "org-wide",
+        );
+        const visibility =
+          hasOrgWideKb || hasOrgWideConnector
+            ? "org-wide"
+            : visibleKbs.some((kb) => kb.visibility === "team-scoped") ||
+                visibleDirectConnectors.some(
+                  (connector) => connector.visibility === "team-scoped",
+                )
+              ? "team-scoped"
+              : "auto-sync-permissions";
         userAcl = buildUserAcl({
           userEmail: user.email,
           teamIds,
@@ -561,8 +633,17 @@ async function handleGetKnowledgeBases(params: { context: ArchestraContext }) {
       return errorResult("Organization context not available");
     }
 
+    const access = context.userId
+      ? await knowledgeSourceAccessService.buildAccessContext({
+          userId: context.userId,
+          organizationId: context.organizationId,
+        })
+      : null;
+
     const kbs = await KnowledgeBaseModel.findByOrganization({
       organizationId: context.organizationId,
+      canReadAll: access?.canReadAll,
+      viewerTeamIds: access?.teamIds,
     });
     if (kbs.length === 0) {
       return structuredSuccessResult(
@@ -590,8 +671,21 @@ async function handleGetKnowledgeBase(params: {
       return errorResult("Organization context not available");
     }
 
-    const kb = await KnowledgeBaseModel.findById(args.id);
-    if (!kb || kb.organizationId !== context.organizationId) {
+    const [kb, access] = await Promise.all([
+      KnowledgeBaseModel.findById(args.id),
+      context.userId
+        ? knowledgeSourceAccessService.buildAccessContext({
+            userId: context.userId,
+            organizationId: context.organizationId,
+          })
+        : null,
+    ]);
+    if (
+      !kb ||
+      kb.organizationId !== context.organizationId ||
+      (access &&
+        !knowledgeSourceAccessService.canAccessKnowledgeBase(access, kb))
+    ) {
       return errorResult(`Knowledge base not found: ${args.id}`);
     }
     return structuredSuccessResult(
@@ -621,8 +715,21 @@ async function handleUpdateKnowledgeBase(params: {
       return errorResult("At least one field to update is required");
     }
 
-    const existing = await KnowledgeBaseModel.findById(args.id);
-    if (!existing || existing.organizationId !== context.organizationId) {
+    const [existing, access] = await Promise.all([
+      KnowledgeBaseModel.findById(args.id),
+      context.userId
+        ? knowledgeSourceAccessService.buildAccessContext({
+            userId: context.userId,
+            organizationId: context.organizationId,
+          })
+        : null,
+    ]);
+    if (
+      !existing ||
+      existing.organizationId !== context.organizationId ||
+      (access &&
+        !knowledgeSourceAccessService.canAccessKnowledgeBase(access, existing))
+    ) {
       return errorResult(`Knowledge base not found: ${args.id}`);
     }
     const kb = await KnowledgeBaseModel.update(args.id, updates);
@@ -649,8 +756,21 @@ async function handleDeleteKnowledgeBase(params: {
       return errorResult("Organization context not available");
     }
 
-    const existing = await KnowledgeBaseModel.findById(args.id);
-    if (!existing || existing.organizationId !== context.organizationId) {
+    const [existing, access] = await Promise.all([
+      KnowledgeBaseModel.findById(args.id),
+      context.userId
+        ? knowledgeSourceAccessService.buildAccessContext({
+            userId: context.userId,
+            organizationId: context.organizationId,
+          })
+        : null,
+    ]);
+    if (
+      !existing ||
+      existing.organizationId !== context.organizationId ||
+      (access &&
+        !knowledgeSourceAccessService.canAccessKnowledgeBase(access, existing))
+    ) {
       return errorResult(`Knowledge base not found: ${args.id}`);
     }
     await KnowledgeBaseModel.delete(args.id);
@@ -678,6 +798,8 @@ async function handleCreateKnowledgeConnector(params: {
         connectorType: args.connector_type,
         config: { type: args.connector_type, ...args.config },
         description: args.description ?? null,
+        visibility: args.visibility,
+        teamIds: args.team_ids,
       }),
     );
     return structuredSuccessResult(
@@ -699,8 +821,17 @@ async function handleGetKnowledgeConnectors(params: {
       return errorResult("Organization context not available");
     }
 
+    const access = context.userId
+      ? await knowledgeSourceAccessService.buildAccessContext({
+          userId: context.userId,
+          organizationId: context.organizationId,
+        })
+      : null;
+
     const connectors = await KnowledgeBaseConnectorModel.findByOrganization({
       organizationId: context.organizationId,
+      canReadAll: access?.canReadAll,
+      viewerTeamIds: access?.teamIds,
     });
     if (connectors.length === 0) {
       return structuredSuccessResult(
@@ -728,8 +859,21 @@ async function handleGetKnowledgeConnector(params: {
       return errorResult("Organization context not available");
     }
 
-    const connector = await KnowledgeBaseConnectorModel.findById(args.id);
-    if (!connector || connector.organizationId !== context.organizationId) {
+    const [connector, access] = await Promise.all([
+      KnowledgeBaseConnectorModel.findById(args.id),
+      context.userId
+        ? knowledgeSourceAccessService.buildAccessContext({
+            userId: context.userId,
+            organizationId: context.organizationId,
+          })
+        : null,
+    ]);
+    if (
+      !connector ||
+      connector.organizationId !== context.organizationId ||
+      (access &&
+        !knowledgeSourceAccessService.canAccessConnector(access, connector))
+    ) {
       return errorResult(`Knowledge connector not found: ${args.id}`);
     }
     return structuredSuccessResult(
@@ -757,6 +901,8 @@ async function handleUpdateKnowledgeConnector(params: {
     if (args.description !== undefined)
       rawUpdates.description = args.description;
     if (args.enabled !== undefined) rawUpdates.enabled = args.enabled;
+    if (args.visibility !== undefined) rawUpdates.visibility = args.visibility;
+    if (args.team_ids !== undefined) rawUpdates.teamIds = args.team_ids;
     if (args.config !== undefined) rawUpdates.config = args.config;
     if (Object.keys(rawUpdates).length === 0) {
       return errorResult("At least one field to update is required");
@@ -764,12 +910,23 @@ async function handleUpdateKnowledgeConnector(params: {
 
     const updates =
       UpdateKnowledgeBaseConnectorSchema.partial().parse(rawUpdates);
-    const existingConnector = await KnowledgeBaseConnectorModel.findById(
-      args.id,
-    );
+    const [existingConnector, access] = await Promise.all([
+      KnowledgeBaseConnectorModel.findById(args.id),
+      context.userId
+        ? knowledgeSourceAccessService.buildAccessContext({
+            userId: context.userId,
+            organizationId: context.organizationId,
+          })
+        : null,
+    ]);
     if (
       !existingConnector ||
-      existingConnector.organizationId !== context.organizationId
+      existingConnector.organizationId !== context.organizationId ||
+      (access &&
+        !knowledgeSourceAccessService.canAccessConnector(
+          access,
+          existingConnector,
+        ))
     ) {
       return errorResult(`Knowledge connector not found: ${args.id}`);
     }
@@ -800,8 +957,21 @@ async function handleDeleteKnowledgeConnector(params: {
       return errorResult("Organization context not available");
     }
 
-    const existing = await KnowledgeBaseConnectorModel.findById(args.id);
-    if (!existing || existing.organizationId !== context.organizationId) {
+    const [existing, access] = await Promise.all([
+      KnowledgeBaseConnectorModel.findById(args.id),
+      context.userId
+        ? knowledgeSourceAccessService.buildAccessContext({
+            userId: context.userId,
+            organizationId: context.organizationId,
+          })
+        : null,
+    ]);
+    if (
+      !existing ||
+      existing.organizationId !== context.organizationId ||
+      (access &&
+        !knowledgeSourceAccessService.canAccessConnector(access, existing))
+    ) {
       return errorResult(`Knowledge connector not found: ${args.id}`);
     }
     await KnowledgeBaseConnectorModel.delete(args.id);

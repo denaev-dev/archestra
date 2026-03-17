@@ -220,6 +220,114 @@ describe("knowledge-management tool execution", () => {
       querySpy.mockRestore();
     });
 
+    test("filters out hidden knowledge sources before querying", async ({
+      makeAgent,
+      makeOrganization,
+      makeUser,
+      makeMember,
+      makeTeam,
+      makeKnowledgeBase,
+      makeKnowledgeBaseConnector,
+    }) => {
+      const org = await makeOrganization();
+      const user = await makeUser();
+      await makeMember(user.id, org.id, { role: "member" });
+
+      const restrictedTeamOwner = await makeUser();
+      const restrictedTeam = await makeTeam(org.id, restrictedTeamOwner.id);
+
+      const visibleKb = await makeKnowledgeBase(org.id);
+      const visibleConnector = await makeKnowledgeBaseConnector(
+        visibleKb.id,
+        org.id,
+      );
+      const hiddenKb = await makeKnowledgeBase(org.id, {
+        visibility: "team-scoped",
+        teamIds: [restrictedTeam.id],
+      });
+      await makeKnowledgeBaseConnector(hiddenKb.id, org.id, {
+        visibility: "team-scoped",
+        teamIds: [restrictedTeam.id],
+      });
+
+      const agentWithMixedSources = await makeAgent({
+        name: "Agent With Mixed Sources",
+        organizationId: org.id,
+        knowledgeBaseIds: [visibleKb.id, hiddenKb.id],
+      });
+
+      const querySpy = vi
+        .spyOn(queryService, "query")
+        .mockResolvedValueOnce([] as any);
+
+      const result = await executeArchestraTool(
+        t("query_knowledge_sources"),
+        { query: "test query" },
+        {
+          agent: {
+            id: agentWithMixedSources.id,
+            name: agentWithMixedSources.name,
+          },
+          organizationId: org.id,
+          userId: user.id,
+        },
+      );
+
+      expect(result.isError).toBeFalsy();
+      expect(querySpy).toHaveBeenCalledOnce();
+      expect(querySpy.mock.calls[0][0].connectorIds).toEqual([
+        visibleConnector.id,
+      ]);
+
+      querySpy.mockRestore();
+    });
+
+    test("returns error when no assigned knowledge source is visible to the caller", async ({
+      makeAgent,
+      makeOrganization,
+      makeUser,
+      makeMember,
+      makeTeam,
+      makeKnowledgeBase,
+      makeKnowledgeBaseConnector,
+    }) => {
+      const org = await makeOrganization();
+      const user = await makeUser();
+      await makeMember(user.id, org.id, { role: "member" });
+
+      const restrictedTeamOwner = await makeUser();
+      const restrictedTeam = await makeTeam(org.id, restrictedTeamOwner.id);
+      const hiddenKb = await makeKnowledgeBase(org.id, {
+        visibility: "team-scoped",
+        teamIds: [restrictedTeam.id],
+      });
+      await makeKnowledgeBaseConnector(hiddenKb.id, org.id, {
+        visibility: "team-scoped",
+        teamIds: [restrictedTeam.id],
+      });
+
+      const agentWithHiddenKb = await makeAgent({
+        name: "Agent With Hidden Sources",
+        organizationId: org.id,
+        knowledgeBaseIds: [hiddenKb.id],
+      });
+
+      const result = await executeArchestraTool(
+        t("query_knowledge_sources"),
+        { query: "test query" },
+        {
+          agent: { id: agentWithHiddenKb.id, name: agentWithHiddenKb.name },
+          organizationId: org.id,
+          userId: user.id,
+        },
+      );
+
+      expect(result.isError).toBe(true);
+      expect((result.content[0] as any).text).toContain(
+        "No visible knowledge sources found",
+      );
+    });
+
     test("returns error when organizationId is missing", async ({
       makeAgent,
       makeOrganization,
@@ -806,7 +914,7 @@ describe("knowledge-management tool execution", () => {
     ];
 
     for (const { tool, args } of mutationTools) {
-      test(`${tool} is denied for member without knowledgeBase permission`, async () => {
+      test(`${tool} is denied for member without knowledgeSources permission`, async () => {
         const result = await executeArchestraTool(t(tool), args, memberContext);
         expect(result.isError).toBe(true);
         expect((result.content[0] as any).text).toContain(

@@ -47,6 +47,7 @@ class QueryService {
   }): Promise<ChunkResult[]> {
     const { connectorIds, organizationId, queryText, limit = 10 } = params;
     if (connectorIds.length === 0) return [];
+    if (params.userAcl.length === 0) return [];
 
     const queryStartTime = Date.now();
     const hybridEnabled = config.kb.hybridSearchEnabled;
@@ -70,6 +71,7 @@ class QueryService {
           embeddingConfig,
           connectorIds,
           limit: overFetchLimit,
+          userAcl: params.userAcl,
           type: eq.type,
           hybridEnabled,
         }),
@@ -125,6 +127,7 @@ class QueryService {
     embeddingConfig: EmbeddingConfig;
     connectorIds: string[];
     limit: number;
+    userAcl: AclEntry[];
     type: "semantic" | "keyword";
     hybridEnabled: boolean;
   }): Promise<VectorSearchResult[]> {
@@ -133,6 +136,7 @@ class QueryService {
       embeddingConfig,
       connectorIds,
       limit,
+      userAcl,
       type,
       hybridEnabled,
     } = params;
@@ -178,6 +182,7 @@ class QueryService {
           connectorIds,
           queryText,
           limit,
+          userAcl,
         })
       : Promise.resolve([] as VectorSearchResult[]);
 
@@ -187,6 +192,7 @@ class QueryService {
         queryEmbedding,
         dimensions: embeddingConfig.dimensions,
         limit,
+        userAcl,
       }),
       fullTextPromise,
     ]);
