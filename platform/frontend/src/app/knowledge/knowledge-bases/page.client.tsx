@@ -8,13 +8,10 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
-  Globe,
   Link2,
   Pencil,
   Plus,
-  RefreshCw,
   Trash2,
-  Users,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
@@ -28,7 +25,6 @@ import {
   type TableRowAction,
   TableRowActions,
 } from "@/components/table-row-actions";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import {
@@ -41,12 +37,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   useConnectors as useAllConnectors,
   useAssignConnectorToKnowledgeBases,
   useConnectors,
@@ -56,7 +46,6 @@ import {
   useDeleteKnowledgeBase,
   useKnowledgeBasesPaginated,
 } from "@/lib/knowledge-base.query";
-import { useTeams } from "@/lib/team.query";
 import { cn, DEFAULT_TABLE_LIMIT, formatDate } from "@/lib/utils";
 import { ConnectorTypeIcon } from "./_parts/connector-icons";
 import { CreateConnectorDialog } from "./_parts/create-connector-dialog";
@@ -98,7 +87,6 @@ function KnowledgeBasesList() {
     offset,
     search: search || undefined,
   });
-  const { data: teams } = useTeams();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<KnowledgeBaseItem | null>(
@@ -165,55 +153,6 @@ function KnowledgeBasesList() {
       id: "docsIndexed",
       header: "Docs Indexed",
       cell: ({ row }) => <div>{row.original.totalDocsIndexed}</div>,
-    },
-    {
-      id: "visibility",
-      header: "Visibility",
-      cell: ({ row }) => {
-        const kb = row.original;
-        const isOrgWide = kb.visibility === "org-wide";
-        const isTeamScoped = kb.visibility === "team-scoped";
-        const isAutoSync = kb.visibility === "auto-sync-permissions";
-        const VisibilityIcon = isAutoSync
-          ? RefreshCw
-          : isOrgWide
-            ? Globe
-            : Users;
-        const matchedTeams = isTeamScoped
-          ? (teams ?? []).filter((t) => kb.teamIds.includes(t.id))
-          : [];
-
-        if (isTeamScoped && matchedTeams.length > 0) {
-          return (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge variant="outline" className="gap-1.5 cursor-default">
-                    <VisibilityIcon className="h-3.5 w-3.5" />
-                    Team-scoped
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <div className="space-y-0.5">
-                    {matchedTeams.map((team) => (
-                      <div key={team.id} className="text-xs">
-                        {team.name}
-                      </div>
-                    ))}
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          );
-        }
-
-        return (
-          <Badge variant="outline" className="gap-1.5">
-            <VisibilityIcon className="h-3.5 w-3.5" />
-            {isAutoSync ? "Auto Sync" : isOrgWide ? "Org-wide" : "Team-scoped"}
-          </Badge>
-        );
-      },
     },
     {
       id: "actions",

@@ -17,8 +17,6 @@ describe("KnowledgeBaseModel", () => {
       expect(kb.organizationId).toBe(org.id);
       expect(kb.name).toBe("My Knowledge Base");
       expect(kb.status).toBe("active");
-      expect(kb.visibility).toBe("org-wide");
-      expect(kb.teamIds).toEqual([]);
       expect(kb.description).toBeNull();
       expect(kb.createdAt).toBeInstanceOf(Date);
       expect(kb.updatedAt).toBeInstanceOf(Date);
@@ -32,15 +30,11 @@ describe("KnowledgeBaseModel", () => {
       const kb = await KnowledgeBaseModel.create({
         organizationId: org.id,
         name: "Team KB",
-        description: "A team-scoped KB",
-        visibility: "team-scoped",
-        teamIds: ["team-1", "team-2"],
+        description: "A reusable KB",
         status: "inactive",
       });
 
-      expect(kb.description).toBe("A team-scoped KB");
-      expect(kb.visibility).toBe("team-scoped");
-      expect(kb.teamIds).toEqual(["team-1", "team-2"]);
+      expect(kb.description).toBe("A reusable KB");
       expect(kb.status).toBe("inactive");
     });
   });
@@ -216,53 +210,6 @@ describe("KnowledgeBaseModel", () => {
       expect(nameResults[0]?.name).toBe("Product Docs");
       expect(descriptionResults).toHaveLength(1);
       expect(descriptionResults[0]?.name).toBe("Support KB");
-    });
-
-    test("filters out team-scoped knowledge bases when viewer is not on the team", async ({
-      makeOrganization,
-      makeTeam,
-      makeUser,
-      makeKnowledgeBase,
-    }) => {
-      const org = await makeOrganization();
-      const user = await makeUser();
-      const team = await makeTeam(org.id, user.id);
-      await makeKnowledgeBase(org.id, { name: "Org Wide KB" });
-      await makeKnowledgeBase(org.id, {
-        name: "Restricted KB",
-        visibility: "team-scoped",
-        teamIds: [team.id],
-      });
-
-      const results = await KnowledgeBaseModel.findByOrganization({
-        organizationId: org.id,
-        viewerTeamIds: [],
-      });
-
-      expect(results.map((kb) => kb.name)).toEqual(["Org Wide KB"]);
-    });
-
-    test("includes team-scoped knowledge bases for matching team members", async ({
-      makeOrganization,
-      makeTeam,
-      makeUser,
-      makeKnowledgeBase,
-    }) => {
-      const org = await makeOrganization();
-      const user = await makeUser();
-      const team = await makeTeam(org.id, user.id);
-      await makeKnowledgeBase(org.id, {
-        name: "Restricted KB",
-        visibility: "team-scoped",
-        teamIds: [team.id],
-      });
-
-      const results = await KnowledgeBaseModel.findByOrganization({
-        organizationId: org.id,
-        viewerTeamIds: [team.id],
-      });
-
-      expect(results.map((kb) => kb.name)).toEqual(["Restricted KB"]);
     });
   });
 

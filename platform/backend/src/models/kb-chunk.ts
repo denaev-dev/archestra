@@ -47,6 +47,19 @@ class KbChunkModel {
     return result?.count ?? 0;
   }
 
+  static async updateAclByConnector(
+    connectorId: string,
+    acl: AclEntry[],
+  ): Promise<void> {
+    await db.execute(sql`
+      UPDATE ${schema.kbChunksTable} AS chunk
+      SET acl = ${JSON.stringify(acl)}::jsonb
+      FROM ${schema.kbDocumentsTable} AS document
+      WHERE chunk.document_id = document.id
+        AND document.connector_id = ${connectorId}
+    `);
+  }
+
   static async vectorSearch(params: {
     connectorIds: string[];
     queryEmbedding: number[];

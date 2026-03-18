@@ -290,10 +290,119 @@ describe("KbChunkModel", () => {
   });
 
   describe("vectorSearch", () => {
+    test("returns empty array when connectorIds is empty", async () => {
+      const results = await KbChunkModel.vectorSearch({
+        connectorIds: [],
+        queryEmbedding: [0.1, 0.2, 0.3],
+        dimensions: 1536,
+        userAcl: ["org:*"],
+      });
+
+      expect(results).toEqual([]);
+    });
+
+    test("returns empty array when userAcl is empty", async () => {
+      const results = await KbChunkModel.vectorSearch({
+        connectorIds: [crypto.randomUUID()],
+        queryEmbedding: [0.1, 0.2, 0.3],
+        dimensions: 1536,
+        userAcl: [],
+      });
+
+      expect(results).toEqual([]);
+    });
+
     test.skip("vectorSearch requires pgvector extension which is not available in PGlite test DB", async () => {});
   });
 
+  describe("fullTextSearch", () => {
+    test("returns matching chunks with document metadata and ACL filtering applied", async ({
+      makeOrganization,
+      makeKnowledgeBase,
+      makeKnowledgeBaseConnector,
+    }) => {
+      const org = await makeOrganization();
+      const kb = await makeKnowledgeBase(org.id);
+      const connector = await makeKnowledgeBaseConnector(kb.id, org.id, {
+        connectorType: "github",
+      });
+      const allowedDoc = await KbDocumentModel.create(
+        createDocumentData(connector.id, org.id, {
+          title: "Allowed Doc",
+          sourceUrl: "https://example.com/allowed",
+          metadata: { category: "allowed" },
+        }),
+      );
+      const blockedDoc = await KbDocumentModel.create(
+        createDocumentData(connector.id, org.id, {
+          title: "Blocked Doc",
+          sourceUrl: "https://example.com/blocked",
+          metadata: { category: "blocked" },
+        }),
+      );
+
+      await KbChunkModel.insertMany([
+        {
+          documentId: allowedDoc.id,
+          content: "apple banana apple",
+          chunkIndex: 0,
+          acl: ["team:alpha"],
+        },
+        {
+          documentId: blockedDoc.id,
+          content: "apple banana apple banana",
+          chunkIndex: 0,
+          acl: ["team:beta"],
+        },
+      ]);
+
+      const results = await KbChunkModel.fullTextSearch({
+        connectorIds: [connector.id],
+        queryText: "apple banana",
+        userAcl: ["team:alpha"],
+      });
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toMatchObject({
+        documentId: allowedDoc.id,
+        title: "Allowed Doc",
+        sourceUrl: "https://example.com/allowed",
+        metadata: { category: "allowed" },
+        connectorType: "github",
+        chunkIndex: 0,
+        content: "apple banana apple",
+      });
+      expect(results[0].score).toBeGreaterThan(0);
+    });
+
+    test("returns empty array when connectorIds is empty", async () => {
+      const results = await KbChunkModel.fullTextSearch({
+        connectorIds: [],
+        queryText: "apple banana",
+        userAcl: ["org:*"],
+      });
+
+      expect(results).toEqual([]);
+    });
+
+    test("returns empty array when userAcl is empty", async () => {
+      const results = await KbChunkModel.fullTextSearch({
+        connectorIds: [crypto.randomUUID()],
+        queryText: "apple banana",
+        userAcl: [],
+      });
+
+      expect(results).toEqual([]);
+    });
+  });
+
   describe("updateEmbeddings", () => {
+    test("returns without error when updates is empty", async () => {
+      await expect(
+        KbChunkModel.updateEmbeddings([], 1536),
+      ).resolves.toBeUndefined();
+    });
+
     test.skip("updateEmbeddings requires pgvector extension which is not available in PGlite test DB", async () => {});
   });
 });

@@ -1,15 +1,19 @@
 import { userHasPermission } from "@/auth/utils";
-import { TeamModel } from "@/models";
+import {
+  KbChunkModel,
+  KbDocumentModel,
+  KnowledgeBaseConnectorModel,
+  TeamModel,
+} from "@/models";
 import type {
   AclEntry,
   KnowledgeBase,
   KnowledgeBaseConnector,
-  KnowledgeBaseVisibility,
   KnowledgeSourceVisibility,
 } from "@/types";
 
 type VisibilityScopedKnowledgeSource = {
-  visibility: KnowledgeSourceVisibility | KnowledgeBaseVisibility;
+  visibility: KnowledgeSourceVisibility;
   teamIds: string[];
 };
 
@@ -19,7 +23,7 @@ export interface KnowledgeSourceAccessControlContext {
 }
 
 export function buildDocumentAccessControlList(params: {
-  visibility: KnowledgeBaseVisibility;
+  visibility: KnowledgeSourceVisibility;
   teamIds: string[];
   permissions?: {
     users?: string[];
@@ -32,45 +36,14 @@ export function buildDocumentAccessControlList(params: {
       return ["org:*"];
     case "team-scoped":
       return params.teamIds.map((id): AclEntry => `team:${id}`);
-    case "auto-sync-permissions": {
-      const acl: AclEntry[] = [];
-      if (params.permissions?.isPublic) {
-        acl.push("org:*");
-      }
-      if (params.permissions?.users) {
-        acl.push(
-          ...params.permissions.users.map(
-            (user): AclEntry => `user_email:${user}`,
-          ),
-        );
-      }
-      if (params.permissions?.groups) {
-        acl.push(
-          ...params.permissions.groups.map(
-            (group): AclEntry => `group:${group}`,
-          ),
-        );
-      }
-      if (acl.length === 0) {
-        acl.push("org:*");
-      }
-      return acl;
-    }
   }
 }
 
 export function buildUserAccessControlList(params: {
   userEmail: string;
   teamIds: string[];
-  visibility: KnowledgeBaseVisibility;
 }): AclEntry[] {
-  const acl: AclEntry[] = [];
-
-  if (params.visibility === "org-wide") {
-    acl.push("org:*");
-  }
-
-  acl.push(`user_email:${params.userEmail}`);
+  const acl: AclEntry[] = ["org:*", `user_email:${params.userEmail}`];
 
   for (const teamId of params.teamIds) {
     acl.push(`team:${teamId}`);
@@ -101,10 +74,10 @@ class KnowledgeSourceAccessControlService {
   }
 
   canAccessKnowledgeBase(
-    accessControl: KnowledgeSourceAccessControlContext,
-    knowledgeBase: KnowledgeBase,
+    _accessControl: KnowledgeSourceAccessControlContext,
+    _knowledgeBase: KnowledgeBase,
   ) {
-    return this.canAccessSource(accessControl, knowledgeBase);
+    return true;
   }
 
   canAccessConnector(
@@ -130,6 +103,31 @@ class KnowledgeSourceAccessControlService {
     return connectors.filter((connector) =>
       this.canAccessConnector(accessControl, connector),
     );
+  }
+
+  buildConnectorDocumentAccessControlList(params: {
+    connector: KnowledgeBaseConnector;
+  }): AclEntry[] {
+    return buildDocumentAccessControlList({
+      visibility: params.connector.visibility,
+      teamIds: params.connector.teamIds,
+    });
+  }
+
+  async refreshConnectorDocumentAccessControlLists(
+    connectorId: string,
+  ): Promise<void> {
+    const connector = await KnowledgeBaseConnectorModel.findById(connectorId);
+    if (!connector) {
+      return;
+    }
+
+    const acl = this.buildConnectorDocumentAccessControlList({ connector });
+
+    await Promise.all([
+      KbDocumentModel.updateAclByConnector(connectorId, acl),
+      KbChunkModel.updateAclByConnector(connectorId, acl),
+    ]);
   }
 
   private canAccessSource(

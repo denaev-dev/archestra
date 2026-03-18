@@ -6,6 +6,7 @@ import {
 } from "@shared";
 import { vi } from "vitest";
 import { queryService } from "@/knowledge-base";
+import { KbChunkModel, KbDocumentModel } from "@/models";
 import { beforeEach, describe, expect, test } from "@/test";
 import type { Agent, KnowledgeBase, KnowledgeBaseConnector } from "@/types";
 import { type ArchestraContext, executeArchestraTool } from ".";
@@ -241,10 +242,7 @@ describe("knowledge-management tool execution", () => {
         visibleKb.id,
         org.id,
       );
-      const hiddenKb = await makeKnowledgeBase(org.id, {
-        visibility: "team-scoped",
-        teamIds: [restrictedTeam.id],
-      });
+      const hiddenKb = await makeKnowledgeBase(org.id);
       await makeKnowledgeBaseConnector(hiddenKb.id, org.id, {
         visibility: "team-scoped",
         teamIds: [restrictedTeam.id],
@@ -297,10 +295,7 @@ describe("knowledge-management tool execution", () => {
 
       const restrictedTeamOwner = await makeUser();
       const restrictedTeam = await makeTeam(org.id, restrictedTeamOwner.id);
-      const hiddenKb = await makeKnowledgeBase(org.id, {
-        visibility: "team-scoped",
-        teamIds: [restrictedTeam.id],
-      });
+      const hiddenKb = await makeKnowledgeBase(org.id);
       await makeKnowledgeBaseConnector(hiddenKb.id, org.id, {
         visibility: "team-scoped",
         teamIds: [restrictedTeam.id],
@@ -324,7 +319,7 @@ describe("knowledge-management tool execution", () => {
 
       expect(result.isError).toBe(true);
       expect((result.content[0] as any).text).toContain(
-        "No visible knowledge sources found",
+        "No connectors found for the assigned knowledge bases or agent",
       );
     });
 
@@ -664,6 +659,58 @@ describe("knowledge-management tool execution", () => {
       );
       expect(verifyResult.isError).toBe(true);
       expect((verifyResult.content[0] as any).text).toContain("not found");
+    });
+
+    test("update_knowledge_connector refreshes document ACL when visibility changes", async ({
+      makeKnowledgeBase,
+      makeKnowledgeBaseConnector,
+      makeTeam,
+    }) => {
+      const kb = await makeKnowledgeBase(mockContext.organizationId!);
+      const connector = await makeKnowledgeBaseConnector(
+        kb.id,
+        mockContext.organizationId!,
+      );
+      const team = await makeTeam(
+        mockContext.organizationId!,
+        mockContext.userId!,
+        {
+          name: "Scoped Team",
+        },
+      );
+      const document = await KbDocumentModel.create({
+        organizationId: mockContext.organizationId!,
+        sourceId: "ext-1",
+        connectorId: connector.id,
+        title: "Doc 1",
+        content: "content",
+        contentHash: "hash-1",
+        acl: ["org:*"],
+      });
+      await KbChunkModel.insertMany([
+        {
+          documentId: document.id,
+          content: "chunk 1",
+          chunkIndex: 0,
+          acl: ["org:*"],
+        },
+      ]);
+
+      const result = await executeArchestraTool(
+        t("update_knowledge_connector"),
+        {
+          id: connector.id,
+          visibility: "team-scoped",
+          team_ids: [team.id],
+        },
+        mockContext,
+      );
+
+      expect(result.isError).toBe(false);
+      const refreshedDocument = await KbDocumentModel.findById(document.id);
+      const refreshedChunks = await KbChunkModel.findByDocument(document.id);
+      expect(refreshedDocument?.acl).toEqual([`team:${team.id}`]);
+      expect(refreshedChunks[0]?.acl).toEqual([`team:${team.id}`]);
     });
   });
 

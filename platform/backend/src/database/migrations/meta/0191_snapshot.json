@@ -1,5 +1,5 @@
 {
-  "id": "654fc190-6407-47bc-b4c2-b03e10b4d7df",
+  "id": "7a1eb5f3-0ac1-42f5-b36d-be0598d8916c",
   "prevId": "58563d79-37a5-4aad-8af7-494143cb1fae",
   "version": "7",
   "dialect": "postgresql",
@@ -3816,20 +3816,6 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
-        },
-        "visibility": {
-          "name": "visibility",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'org-wide'"
-        },
-        "team_ids": {
-          "name": "team_ids",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'[]'::jsonb"
         },
         "status": {
           "name": "status",

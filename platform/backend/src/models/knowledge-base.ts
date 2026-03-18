@@ -1,4 +1,4 @@
-import { and, count, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
+import { and, count, desc, eq, ilike, inArray, or } from "drizzle-orm";
 import db, { schema } from "@/database";
 import type {
   InsertKnowledgeBase,
@@ -12,16 +12,10 @@ class KnowledgeBaseModel {
     limit?: number;
     offset?: number;
     search?: string;
-    canReadAll?: boolean;
-    viewerTeamIds?: string[];
   }): Promise<KnowledgeBase[]> {
     const normalizedSearch = params.search?.trim();
     const filters = [
       eq(schema.knowledgeBasesTable.organizationId, params.organizationId),
-      buildVisibilityFilter({
-        canReadAll: params.canReadAll,
-        teamIds: params.viewerTeamIds,
-      }),
       ...(normalizedSearch
         ? [
             or(
@@ -102,16 +96,10 @@ class KnowledgeBaseModel {
   static async countByOrganization(params: {
     organizationId: string;
     search?: string;
-    canReadAll?: boolean;
-    viewerTeamIds?: string[];
   }): Promise<number> {
     const normalizedSearch = params.search?.trim();
     const filters = [
       eq(schema.knowledgeBasesTable.organizationId, params.organizationId),
-      buildVisibilityFilter({
-        canReadAll: params.canReadAll,
-        teamIds: params.viewerTeamIds,
-      }),
       ...(normalizedSearch
         ? [
             or(
@@ -135,26 +123,3 @@ class KnowledgeBaseModel {
 }
 
 export default KnowledgeBaseModel;
-
-function buildVisibilityFilter(params: {
-  canReadAll?: boolean;
-  teamIds?: string[];
-}) {
-  if (params.canReadAll) {
-    return undefined;
-  }
-
-  if (!params.teamIds || params.teamIds.length === 0) {
-    return sql`${schema.knowledgeBasesTable.visibility} != 'team-scoped'`;
-  }
-
-  const teamIds = sql.join(
-    params.teamIds.map((teamId) => sql`${teamId}`),
-    sql`, `,
-  );
-
-  return sql`(
-    ${schema.knowledgeBasesTable.visibility} != 'team-scoped'
-    OR ${schema.knowledgeBasesTable.teamIds} ?| ARRAY[${teamIds}]
-  )`;
-}

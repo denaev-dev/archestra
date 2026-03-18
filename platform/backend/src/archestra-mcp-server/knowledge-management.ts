@@ -150,8 +150,6 @@ const KnowledgeBaseOutputItemSchema = z.object({
     .nullable()
     .describe("The knowledge base description, if any."),
   status: z.string().describe("The knowledge base status."),
-  visibility: z.string().describe("The knowledge base visibility."),
-  teamIds: z.array(z.string()).describe("Team IDs with access."),
 });
 
 const KnowledgeBasesOutputSchema = z.object({
@@ -563,25 +561,9 @@ async function handleQueryKnowledgeSources(params: {
         TeamModel.getUserTeamIds(context.userId),
       ]);
       if (user?.email) {
-        const hasOrgWideKb = visibleKbs.some(
-          (kb) => kb.visibility === "org-wide",
-        );
-        const hasOrgWideConnector = visibleDirectConnectors.some(
-          (connector) => connector.visibility === "org-wide",
-        );
-        const visibility =
-          hasOrgWideKb || hasOrgWideConnector
-            ? "org-wide"
-            : visibleKbs.some((kb) => kb.visibility === "team-scoped") ||
-                visibleDirectConnectors.some(
-                  (connector) => connector.visibility === "team-scoped",
-                )
-              ? "team-scoped"
-              : "auto-sync-permissions";
         userAcl = buildUserAccessControlList({
           userEmail: user.email,
           teamIds,
-          visibility,
         });
       }
     }
@@ -639,17 +621,8 @@ async function handleGetKnowledgeBases(params: { context: ArchestraContext }) {
       return errorResult("Organization context not available");
     }
 
-    const access = context.userId
-      ? await knowledgeSourceAccessControlService.buildAccessControlContext({
-          userId: context.userId,
-          organizationId: context.organizationId,
-        })
-      : null;
-
     const kbs = await KnowledgeBaseModel.findByOrganization({
       organizationId: context.organizationId,
-      canReadAll: access?.canReadAll,
-      viewerTeamIds: access?.teamIds,
     });
     if (kbs.length === 0) {
       return structuredSuccessResult(
@@ -677,21 +650,8 @@ async function handleGetKnowledgeBase(params: {
       return errorResult("Organization context not available");
     }
 
-    const [kb, access] = await Promise.all([
-      KnowledgeBaseModel.findById(args.id),
-      context.userId
-        ? knowledgeSourceAccessControlService.buildAccessControlContext({
-            userId: context.userId,
-            organizationId: context.organizationId,
-          })
-        : null,
-    ]);
-    if (
-      !kb ||
-      kb.organizationId !== context.organizationId ||
-      (access &&
-        !knowledgeSourceAccessControlService.canAccessKnowledgeBase(access, kb))
-    ) {
+    const kb = await KnowledgeBaseModel.findById(args.id);
+    if (!kb || kb.organizationId !== context.organizationId) {
       return errorResult(`Knowledge base not found: ${args.id}`);
     }
     return structuredSuccessResult(
@@ -721,24 +681,8 @@ async function handleUpdateKnowledgeBase(params: {
       return errorResult("At least one field to update is required");
     }
 
-    const [existing, access] = await Promise.all([
-      KnowledgeBaseModel.findById(args.id),
-      context.userId
-        ? knowledgeSourceAccessControlService.buildAccessControlContext({
-            userId: context.userId,
-            organizationId: context.organizationId,
-          })
-        : null,
-    ]);
-    if (
-      !existing ||
-      existing.organizationId !== context.organizationId ||
-      (access &&
-        !knowledgeSourceAccessControlService.canAccessKnowledgeBase(
-          access,
-          existing,
-        ))
-    ) {
+    const existing = await KnowledgeBaseModel.findById(args.id);
+    if (!existing || existing.organizationId !== context.organizationId) {
       return errorResult(`Knowledge base not found: ${args.id}`);
     }
     const kb = await KnowledgeBaseModel.update(args.id, updates);
@@ -765,24 +709,8 @@ async function handleDeleteKnowledgeBase(params: {
       return errorResult("Organization context not available");
     }
 
-    const [existing, access] = await Promise.all([
-      KnowledgeBaseModel.findById(args.id),
-      context.userId
-        ? knowledgeSourceAccessControlService.buildAccessControlContext({
-            userId: context.userId,
-            organizationId: context.organizationId,
-          })
-        : null,
-    ]);
-    if (
-      !existing ||
-      existing.organizationId !== context.organizationId ||
-      (access &&
-        !knowledgeSourceAccessControlService.canAccessKnowledgeBase(
-          access,
-          existing,
-        ))
-    ) {
+    const existing = await KnowledgeBaseModel.findById(args.id);
+    if (!existing || existing.organizationId !== context.organizationId) {
       return errorResult(`Knowledge base not found: ${args.id}`);
     }
     await KnowledgeBaseModel.delete(args.id);
@@ -952,6 +880,11 @@ async function handleUpdateKnowledgeConnector(params: {
     if (!connector) {
       return errorResult(`Knowledge connector not found: ${args.id}`);
     }
+    if (updates.visibility !== undefined || updates.teamIds !== undefined) {
+      await knowledgeSourceAccessControlService.refreshConnectorDocumentAccessControlLists(
+        args.id,
+      );
+    }
     return structuredSuccessResult(
       { knowledgeConnector: connector },
       `Knowledge connector updated successfully.\n\n${JSON.stringify(connector, null, 2)}`,
@@ -1010,6 +943,9 @@ async function handleAssignKnowledgeConnectorToKnowledgeBase(params: {
       args.connector_id,
       args.knowledge_base_id,
     );
+    await knowledgeSourceAccessControlService.refreshConnectorDocumentAccessControlLists(
+      args.connector_id,
+    );
     return successResult(
       `Knowledge connector ${args.connector_id} assigned to knowledge base ${args.knowledge_base_id}`,
     );
@@ -1036,6 +972,9 @@ async function handleUnassignKnowledgeConnectorFromKnowledgeBase(params: {
     await KnowledgeBaseConnectorModel.unassignFromKnowledgeBase(
       args.connector_id,
       args.knowledge_base_id,
+    );
+    await knowledgeSourceAccessControlService.refreshConnectorDocumentAccessControlLists(
+      args.connector_id,
     );
     return successResult(
       `Knowledge connector ${args.connector_id} unassigned from knowledge base ${args.knowledge_base_id}`,

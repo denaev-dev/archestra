@@ -5,10 +5,7 @@ import {
 } from "drizzle-zod";
 import { z } from "zod";
 import { schema } from "@/database";
-import {
-  KnowledgeBaseVisibilitySchema,
-  KnowledgeSourceVisibilitySchema,
-} from "./knowledge-base";
+import { KnowledgeSourceVisibilitySchema } from "./knowledge-base";
 import {
   ConnectorCheckpointSchema,
   ConnectorConfigSchema,
@@ -20,30 +17,16 @@ import {
 
 export const SelectKnowledgeBaseSchema = createSelectSchema(
   schema.knowledgeBasesTable,
-  {
-    visibility: KnowledgeBaseVisibilitySchema,
-    teamIds: z.array(z.string()),
-  },
 );
 export const InsertKnowledgeBaseSchema = createInsertSchema(
   schema.knowledgeBasesTable,
-  {
-    visibility: KnowledgeBaseVisibilitySchema.optional(),
-    teamIds: z.array(z.string()).optional(),
-  },
 ).omit({ id: true, createdAt: true, updatedAt: true });
 export const UpdateKnowledgeBaseSchema = createUpdateSchema(
   schema.knowledgeBasesTable,
-  {
-    visibility: KnowledgeBaseVisibilitySchema.optional(),
-    teamIds: z.array(z.string()).optional(),
-  },
 ).pick({
   name: true,
   description: true,
   status: true,
-  visibility: true,
-  teamIds: true,
 });
 
 export type KnowledgeBase = z.infer<typeof SelectKnowledgeBaseSchema>;

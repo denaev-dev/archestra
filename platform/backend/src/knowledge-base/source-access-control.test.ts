@@ -1,3 +1,4 @@
+import { KbChunkModel, KbDocumentModel } from "@/models";
 import { describe, expect, test } from "@/test";
 import { knowledgeSourceAccessControlService } from "./source-access-control";
 
@@ -47,10 +48,7 @@ describe("knowledgeSourceAccessControlService", () => {
     const user = await makeUser();
     await makeMember(user.id, org.id, { role: "member" });
     const team = await makeTeam(org.id, user.id);
-    const knowledgeBase = await makeKnowledgeBase(org.id, {
-      visibility: "team-scoped",
-      teamIds: [team.id],
-    });
+    const knowledgeBase = await makeKnowledgeBase(org.id);
     const connector = await makeKnowledgeBaseConnector(
       knowledgeBase.id,
       org.id,
@@ -71,7 +69,7 @@ describe("knowledgeSourceAccessControlService", () => {
         access,
         knowledgeBase,
       ),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       knowledgeSourceAccessControlService.canAccessConnector(access, connector),
     ).toBe(false);
@@ -89,10 +87,7 @@ describe("knowledgeSourceAccessControlService", () => {
     const admin = await makeUser();
     await makeMember(admin.id, org.id, { role: "admin" });
     const team = await makeTeam(org.id, admin.id);
-    const knowledgeBase = await makeKnowledgeBase(org.id, {
-      visibility: "team-scoped",
-      teamIds: [team.id],
-    });
+    const knowledgeBase = await makeKnowledgeBase(org.id);
     const connector = await makeKnowledgeBaseConnector(
       knowledgeBase.id,
       org.id,
@@ -118,5 +113,77 @@ describe("knowledgeSourceAccessControlService", () => {
     expect(
       knowledgeSourceAccessControlService.canAccessConnector(access, connector),
     ).toBe(true);
+  });
+
+  test("builds connector document ACL from connector and assigned knowledge bases", async ({
+    makeOrganization,
+    makeKnowledgeBase,
+    makeKnowledgeBaseConnector,
+    makeTeam,
+    makeUser,
+  }) => {
+    const org = await makeOrganization();
+    const teamOwner = await makeUser();
+    const connectorTeam = await makeTeam(org.id, teamOwner.id, {
+      name: "Connector Team",
+    });
+    const knowledgeBase = await makeKnowledgeBase(org.id);
+    const connector = await makeKnowledgeBaseConnector(
+      knowledgeBase.id,
+      org.id,
+      {
+        visibility: "team-scoped",
+        teamIds: [connectorTeam.id],
+      },
+    );
+
+    const acl =
+      knowledgeSourceAccessControlService.buildConnectorDocumentAccessControlList(
+        {
+          connector,
+        },
+      );
+
+    expect(acl).toEqual([`team:${connectorTeam.id}`]);
+  });
+
+  test("refreshes connector document ACLs across documents and chunks", async ({
+    makeOrganization,
+    makeKnowledgeBase,
+    makeKnowledgeBaseConnector,
+  }) => {
+    const org = await makeOrganization();
+    const knowledgeBase = await makeKnowledgeBase(org.id);
+    const connector = await makeKnowledgeBaseConnector(
+      knowledgeBase.id,
+      org.id,
+    );
+    const document = await KbDocumentModel.create({
+      organizationId: org.id,
+      sourceId: "ext-1",
+      connectorId: connector.id,
+      title: "Doc 1",
+      content: "content",
+      contentHash: "hash-1",
+      acl: [],
+    });
+    await KbChunkModel.insertMany([
+      {
+        documentId: document.id,
+        content: "chunk 1",
+        chunkIndex: 0,
+        acl: [],
+      },
+    ]);
+
+    await knowledgeSourceAccessControlService.refreshConnectorDocumentAccessControlLists(
+      connector.id,
+    );
+
+    const refreshedDocument = await KbDocumentModel.findById(document.id);
+    const refreshedChunks = await KbChunkModel.findByDocument(document.id);
+
+    expect(refreshedDocument?.acl).toEqual(["org:*"]);
+    expect(refreshedChunks[0]?.acl).toEqual(["org:*"]);
   });
 });

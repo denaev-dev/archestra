@@ -374,14 +374,16 @@ describe("KnowledgeSettingsPage", () => {
       const modelTrigger = screen
         .getAllByRole("combobox")
         .find((el) => el.textContent?.includes("Select embedding model"));
-      expect(modelTrigger).toBeDefined();
-      fireEvent.click(modelTrigger!);
-      fireEvent.click(screen.getByRole("button", { name: /text-embedding-3-small/i }));
+      if (!modelTrigger) {
+        expect.fail("Embedding model combobox not found");
+      }
+      fireEvent.click(modelTrigger);
+      fireEvent.click(
+        screen.getByRole("button", { name: /text-embedding-3-small/i }),
+      );
 
       expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
-      expect(
-        screen.getByText("Select dimensions..."),
-      ).toBeInTheDocument();
+      expect(screen.getByText("Select dimensions...")).toBeInTheDocument();
     });
   });
 

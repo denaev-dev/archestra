@@ -5,7 +5,7 @@ import db, { schema } from "@/database";
 import { describe, expect, test } from "@/test";
 
 const migrationSql = fs.readFileSync(
-  path.join(__dirname, "0191_stale_masque.sql"),
+  path.join(__dirname, "0191_uneven_pepper_potts.sql"),
   "utf-8",
 );
 

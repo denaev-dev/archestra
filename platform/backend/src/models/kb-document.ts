@@ -1,6 +1,11 @@
 import { and, count, desc, eq, inArray } from "drizzle-orm";
 import db, { schema } from "@/database";
-import type { InsertKbDocument, KbDocument, UpdateKbDocument } from "@/types";
+import type {
+  AclEntry,
+  InsertKbDocument,
+  KbDocument,
+  UpdateKbDocument,
+} from "@/types";
 
 class KbDocumentModel {
   static async findById(id: string): Promise<KbDocument | null> {
@@ -159,6 +164,18 @@ class KbDocumentModel {
     const result = await db
       .delete(schema.kbDocumentsTable)
       .where(eq(schema.kbDocumentsTable.organizationId, organizationId));
+
+    return result.rowCount ?? 0;
+  }
+
+  static async updateAclByConnector(
+    connectorId: string,
+    acl: AclEntry[],
+  ): Promise<number> {
+    const result = await db
+      .update(schema.kbDocumentsTable)
+      .set({ acl })
+      .where(eq(schema.kbDocumentsTable.connectorId, connectorId));
 
     return result.rowCount ?? 0;
   }

@@ -21,6 +21,7 @@ import {
   extractErrorMessage,
 } from "./connectors/base-connector";
 import { getConnector } from "./connectors/registry";
+import { knowledgeSourceAccessControlService } from "./source-access-control";
 
 /**
  * Service that orchestrates the sync of data from external connectors
@@ -46,7 +47,10 @@ class ConnectorSyncService {
     }
 
     // Load credentials from secrets manager
-    const credentials = await this.loadCredentials(connector.secretId, log);
+    const [credentials, documentAcl] = await Promise.all([
+      this.loadCredentials(connector.secretId, log),
+      this.buildDocumentAccessControlList(connector.id),
+    ]);
 
     // Get the connector implementation
     const connectorImpl = getConnector(connector.connectorType);
@@ -138,6 +142,7 @@ class ConnectorSyncService {
               connectorId,
               connectorType: connector.connectorType,
               organizationId: connector.organizationId,
+              acl: documentAcl,
               log: runLog,
             });
             if (result.ingested) {
@@ -347,9 +352,11 @@ class ConnectorSyncService {
     connectorId: string;
     connectorType: string;
     organizationId: string;
+    acl: AclEntry[];
     log: pino.Logger;
   }): Promise<{ ingested: boolean; documentId: string | null }> {
-    const { doc, connectorId, connectorType, organizationId, log } = params;
+    const { doc, connectorId, connectorType, organizationId, acl, log } =
+      params;
 
     const hashInput = doc.metadata
       ? doc.content +
@@ -383,6 +390,7 @@ class ConnectorSyncService {
         content: doc.content,
         contentHash,
         sourceUrl: doc.sourceUrl ?? null,
+        acl,
         metadata: doc.metadata,
         embeddingStatus: "pending",
       });
@@ -395,7 +403,7 @@ class ConnectorSyncService {
         content: doc.content,
         metadata: doc.metadata,
         connectorType,
-        acl: existing.acl as AclEntry[],
+        acl,
         log,
       });
 
@@ -418,7 +426,7 @@ class ConnectorSyncService {
       content: doc.content,
       contentHash,
       sourceUrl: doc.sourceUrl,
-      acl: [],
+      acl,
       metadata: doc.metadata,
     });
 
@@ -428,7 +436,7 @@ class ConnectorSyncService {
       content: doc.content,
       metadata: doc.metadata,
       connectorType,
-      acl: [],
+      acl,
       log,
     });
 
@@ -496,6 +504,19 @@ class ConnectorSyncService {
       email: (data.email as string) || "",
       apiToken: (data.apiToken as string) || "",
     };
+  }
+
+  private async buildDocumentAccessControlList(
+    connectorId: string,
+  ): Promise<AclEntry[]> {
+    const connector = await KnowledgeBaseConnectorModel.findById(connectorId);
+    if (!connector) {
+      throw new Error(`Connector not found: ${connectorId}`);
+    }
+
+    return knowledgeSourceAccessControlService.buildConnectorDocumentAccessControlList(
+      { connector },
+    );
   }
 }
 

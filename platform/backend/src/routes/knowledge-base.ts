@@ -30,7 +30,6 @@ import {
   ConnectorTypeSchema,
   constructResponseSchema,
   DeleteObjectResponseSchema,
-  KnowledgeBaseVisibilitySchema,
   KnowledgeSourceVisibilitySchema,
   SelectConnectorRunListSchema,
   SelectConnectorRunSchema,
@@ -89,14 +88,10 @@ const knowledgeBaseRoutes: FastifyPluginAsyncZod = async (fastify) => {
           limit,
           offset,
           search,
-          canReadAll: access.canReadAll,
-          viewerTeamIds: access.teamIds,
         }),
         KnowledgeBaseModel.countByOrganization({
           organizationId,
           search,
-          canReadAll: access.canReadAll,
-          viewerTeamIds: access.teamIds,
         }),
       ]);
 
@@ -173,8 +168,6 @@ const knowledgeBaseRoutes: FastifyPluginAsyncZod = async (fastify) => {
         body: z.object({
           name: z.string().min(1),
           description: z.string().optional(),
-          visibility: KnowledgeBaseVisibilitySchema.optional(),
-          teamIds: z.array(z.string()).optional(),
         }),
         response: constructResponseSchema(SelectKnowledgeBaseSchema),
       },
@@ -186,8 +179,6 @@ const knowledgeBaseRoutes: FastifyPluginAsyncZod = async (fastify) => {
         ...(body.description !== undefined && {
           description: body.description,
         }),
-        ...(body.visibility && { visibility: body.visibility }),
-        ...(body.teamIds && { teamIds: body.teamIds }),
       });
 
       return reply.send(kg);
@@ -226,8 +217,6 @@ const knowledgeBaseRoutes: FastifyPluginAsyncZod = async (fastify) => {
         body: z.object({
           name: z.string().min(1).optional(),
           description: z.string().nullable().optional(),
-          visibility: KnowledgeBaseVisibilitySchema.optional(),
-          teamIds: z.array(z.string()).optional(),
         }),
         response: constructResponseSchema(SelectKnowledgeBaseSchema),
       },
@@ -593,6 +582,12 @@ const knowledgeBaseRoutes: FastifyPluginAsyncZod = async (fastify) => {
         throw new ApiError(404, "Connector not found");
       }
 
+      if (body.visibility !== undefined || body.teamIds !== undefined) {
+        await knowledgeSourceAccessControlService.refreshConnectorDocumentAccessControlLists(
+          id,
+        );
+      }
+
       return reply.send(updated);
     },
   );
@@ -812,6 +807,10 @@ const knowledgeBaseRoutes: FastifyPluginAsyncZod = async (fastify) => {
         await KnowledgeBaseConnectorModel.assignToKnowledgeBase(id, kbId);
       }
 
+      await knowledgeSourceAccessControlService.refreshConnectorDocumentAccessControlLists(
+        id,
+      );
+
       return reply.send({ success: true });
     },
   );
@@ -844,6 +843,10 @@ const knowledgeBaseRoutes: FastifyPluginAsyncZod = async (fastify) => {
       if (!success) {
         throw new ApiError(404, "Assignment not found");
       }
+
+      await knowledgeSourceAccessControlService.refreshConnectorDocumentAccessControlLists(
+        id,
+      );
 
       return reply.send({ success: true });
     },
@@ -988,14 +991,6 @@ async function findKnowledgeBaseOrThrow(params: {
 }) {
   const kg = await KnowledgeBaseModel.findById(params.id);
   if (!kg || kg.organizationId !== params.organizationId) {
-    throw new ApiError(404, "Knowledge base not found");
-  }
-  const access =
-    await knowledgeSourceAccessControlService.buildAccessControlContext({
-      userId: params.userId,
-      organizationId: params.organizationId,
-    });
-  if (!knowledgeSourceAccessControlService.canAccessKnowledgeBase(access, kg)) {
     throw new ApiError(404, "Knowledge base not found");
   }
   return kg;
