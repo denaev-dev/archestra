@@ -244,10 +244,6 @@ interface ChatApiKeyFormProps {
    */
   disableProvider?: boolean;
   /**
-   * Restrict selectable providers to this list.
-   */
-  allowedProviders?: CreateChatApiKeyBody["provider"][];
-  /**
    * Hide the scope, team, and primary key fields (e.g. for org-level settings).
    */
   hideScopeAndPrimary?: boolean;
@@ -267,7 +263,6 @@ export function ChatApiKeyForm({
   isPending = false,
   geminiVertexAiEnabled = false,
   disableProvider = false,
-  allowedProviders,
   hideScopeAndPrimary = false,
 }: ChatApiKeyFormProps) {
   const byosEnabled = useFeature("byosEnabled");
@@ -287,14 +282,6 @@ export function ChatApiKeyForm({
   const hasApiKeyChanged = apiKey !== PLACEHOLDER_KEY && apiKey !== "";
 
   const providerConfig = PROVIDER_CONFIG[provider];
-  const allowedProviderSet = useMemo(
-    () =>
-      new Set<CreateChatApiKeyBody["provider"]>(
-        allowedProviders ??
-          (Object.keys(PROVIDER_CONFIG) as CreateChatApiKeyBody["provider"][]),
-      ),
-    [allowedProviders],
-  );
 
   // Determine if we should show the "configured" styling
   const showConfiguredStyling = isEditMode && !hasApiKeyChanged;
@@ -337,17 +324,6 @@ export function ChatApiKeyForm({
     if (isEditMode) return;
     form.setValue("isPrimary", !hasAnyKeyForProvider);
   }, [hasAnyKeyForProvider, isEditMode, form]);
-
-  useEffect(() => {
-    if (allowedProviderSet.has(provider)) {
-      return;
-    }
-
-    const firstAllowedProvider = Array.from(allowedProviderSet)[0];
-    if (firstAllowedProvider) {
-      form.setValue("provider", firstAllowedProvider);
-    }
-  }, [allowedProviderSet, form, provider]);
 
   // Clean vault secret values when changing scope
   useEffect(() => {
@@ -399,21 +375,14 @@ export function ChatApiKeyForm({
                   options={Object.entries(PROVIDER_CONFIG)
                     .sort(([, a], [, b]) => a.name.localeCompare(b.name))
                     .map(([key, config]) => {
-                      const providerKey =
-                        key as CreateChatApiKeyBody["provider"];
                       const isGeminiDisabledByVertexAi =
-                        providerKey === "gemini" && geminiVertexAiEnabled;
-                      const isAllowedProvider =
-                        allowedProviderSet.has(providerKey);
+                        key === "gemini" && geminiVertexAiEnabled;
 
                       return {
-                        value: providerKey,
+                        value: key,
                         icon: config.icon,
                         name: config.name,
-                        disabled:
-                          !isAllowedProvider ||
-                          !config.enabled ||
-                          isGeminiDisabledByVertexAi,
+                        disabled: !config.enabled || isGeminiDisabledByVertexAi,
                         showComingSoon: !config.enabled,
                         showGeminiVertexAiBadge: isGeminiDisabledByVertexAi,
                       };
