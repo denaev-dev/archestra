@@ -596,6 +596,8 @@ export default function ChatPage() {
     const modelInfo = chatModelsRef.current.find((m) => m.id === model);
     const provider = modelInfo?.provider;
 
+    saveModelOverride(model);
+
     updateConversationMutateRef.current({
       id: conversationRef.current.id,
       selectedModel: model,
@@ -614,6 +616,7 @@ export default function ChatPage() {
       if (providerModels && providerModels.length > 0) {
         const bestModel =
           providerModels.find((m) => m.isBest) ?? providerModels[0];
+        saveModelOverride(bestModel.id);
         updateConversationMutateRef.current({
           id: conversation.id,
           chatApiKeyId: apiKeyId,
