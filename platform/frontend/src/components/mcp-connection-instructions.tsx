@@ -530,6 +530,9 @@ export function McpConnectionInstructions({
             <TabsTrigger value="static-token" className="flex-1">
               Static Token
             </TabsTrigger>
+            <TabsTrigger value="enterprise-sso" className="flex-1">
+              Enterprise SSO
+            </TabsTrigger>
             <TabsTrigger value="oauth" className="flex-1">
               OAuth 2.1
             </TabsTrigger>
@@ -537,16 +540,27 @@ export function McpConnectionInstructions({
           <p className="text-xs text-muted-foreground">
             For external identity providers, use{" "}
             {mcpAuthDocsUrl ? (
-              <a
-                href={`${mcpAuthDocsUrl}#external-idp-jwks`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-foreground"
-              >
-                JWKS authentication
-              </a>
+              <>
+                <a
+                  href={`${mcpAuthDocsUrl}#enterprise-managed-authorization`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-foreground"
+                >
+                  enterprise-managed authorization
+                </a>
+                {" or "}
+                <a
+                  href={`${mcpAuthDocsUrl}#external-idp-jwks`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-foreground"
+                >
+                  JWKS authentication
+                </a>
+              </>
             ) : (
-              "JWKS authentication"
+              "enterprise-managed authorization or JWKS authentication"
             )}
           </p>
         </div>
@@ -684,6 +698,19 @@ export function McpConnectionInstructions({
               </div>
             </CodeBlock>
           </div>
+        </TabsContent>
+
+        <TabsContent value="enterprise-sso" className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Use this when your MCP client signs users into your enterprise
+            identity provider and supports the MCP
+            enterprise-managed-authorization flow. The client should obtain an
+            ID-JAG from your IdP and exchange it with the gateway&apos;s token
+            endpoint automatically. You only need the MCP Gateway URL in the
+            client configuration.
+          </p>
+
+          <OAuthConfigBlock mcpUrl={mcpUrl} />
         </TabsContent>
 
         {/* OAuth 2.1 Tab */}

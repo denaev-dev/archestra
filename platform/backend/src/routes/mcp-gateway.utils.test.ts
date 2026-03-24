@@ -9,6 +9,7 @@ import {
   ToolModel,
   UserTokenModel,
 } from "@/models";
+import { MCP_RESOURCE_REFERENCE_PREFIX } from "@/services/enterprise-managed-authorization";
 import type { JwksValidationResult } from "@/services/jwks-validator";
 import { describe, expect, test } from "@/test";
 
@@ -517,6 +518,37 @@ describe("validateMCPGatewayToken", () => {
       expect(result?.userId).toBe(user.id);
       expect(result?.isUserToken).toBe(true);
       expect(result?.organizationId).toBe(org.id);
+    });
+
+    test("validateOAuthToken returns null when token is bound to another MCP resource", async ({
+      makeUser,
+      makeOrganization,
+      makeMember,
+      makeOAuthClient,
+      makeOAuthAccessToken,
+      makeAgent,
+    }) => {
+      const user = await makeUser();
+      const org = await makeOrganization();
+      await makeMember(user.id, org.id, { role: "admin" });
+
+      const client = await makeOAuthClient({ userId: user.id });
+      const otherAgent = await makeAgent({ organizationId: org.id });
+      const targetAgent = await makeAgent({ organizationId: org.id });
+
+      const rawToken = `test-bound-resource-token-${crypto.randomUUID()}`;
+      const tokenHash = createHash("sha256")
+        .update(rawToken)
+        .digest("base64url");
+
+      await makeOAuthAccessToken(client.clientId, user.id, {
+        token: tokenHash,
+        referenceId: `${MCP_RESOURCE_REFERENCE_PREFIX}${otherAgent.id}`,
+      });
+
+      const result = await validateOAuthToken(targetAgent.id, rawToken);
+
+      expect(result).toBeNull();
     });
 
     test("validateOAuthToken returns valid result when refresh token is not revoked", async ({

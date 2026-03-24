@@ -3,7 +3,7 @@ title: "Authentication"
 category: MCP
 order: 4
 description: "How authentication works for MCP clients and upstream MCP servers"
-lastUpdated: 2026-02-11
+lastUpdated: 2026-03-24
 ---
 
 <!--
@@ -14,7 +14,7 @@ Archestra's MCP Gateway handles authentication at two layers: it authenticates c
 
 ## Gateway Authentication
 
-The MCP Gateway supports two authentication methods for incoming client connections.
+The MCP Gateway supports four incoming authentication patterns.
 
 ### OAuth 2.1
 
@@ -33,6 +33,40 @@ Endpoint discovery is automatic. The gateway exposes standard well-known endpoin
 ### Bearer Token
 
 For direct API integrations, clients can authenticate using a static Bearer token with the header `Authorization: Bearer archestra_<token>`. Tokens can be scoped to a specific user, team, or organization. You can create and manage tokens in **Settings > Tokens**.
+
+### Enterprise-Managed Authorization
+
+This option implements the MCP [Enterprise-Managed Authorization](https://modelcontextprotocol.io/extensions/auth/enterprise-managed-authorization) profile for organizations that already use a corporate IdP to sign users into MCP clients. It is not Okta-specific. Any identity provider can work as long as it can:
+
+- authenticate the user to the MCP client
+- perform RFC 8693 token exchange to issue an ID-JAG
+- sign that ID-JAG as a JWT that Archestra can validate through OIDC discovery or a JWKS endpoint
+
+In this flow, the MCP client does not send the user's enterprise JWT directly to the gateway. Instead:
+
+1. The user signs in to the MCP client with the enterprise IdP
+2. The MCP client exchanges that identity assertion with the IdP for an ID-JAG
+3. The MCP client sends the ID-JAG to Archestra's token endpoint using the JWT bearer grant
+4. Archestra validates the ID-JAG against the configured IdP and returns an MCP access token
+5. The MCP client calls the gateway with that MCP access token
+
+Archestra supports the second leg of the flow generically at `POST /api/auth/oauth2/token` with:
+
+- `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer`
+- `assertion=<id-jag>`
+- normal OAuth client authentication for the MCP client (`client_secret_basic`, `client_secret_post`, or `none` for public clients)
+
+#### Requirements
+
+- The MCP Gateway must be linked to an **OIDC** Identity Provider in Archestra
+- The IdP-issued ID-JAG must be a JWT with header `typ=oauth-id-jag+jwt`
+- The ID-JAG `aud` claim must match Archestra's OAuth issuer
+- The ID-JAG `resource` claim must point to the target MCP Gateway URL (`/v1/mcp/<gateway-id>`)
+- The ID-JAG `client_id` claim must match the authenticated MCP client
+- The ID-JAG `scope` must include `mcp`
+- The ID-JAG should include an `email` claim that matches an existing Archestra user account
+
+Archestra binds the access token it issues to the specific MCP Gateway in the `resource` claim, so that token cannot be replayed against a different gateway.
 
 ### External IdP JWKS
 

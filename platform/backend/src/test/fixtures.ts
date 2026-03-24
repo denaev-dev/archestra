@@ -800,6 +800,7 @@ async function makeOAuthAccessToken(
     expiresAt?: Date;
     scopes?: string[];
     refreshId?: string;
+    referenceId?: string | null;
   } = {},
 ) {
   const id = crypto.randomUUID();
@@ -813,6 +814,7 @@ async function makeOAuthAccessToken(
       expiresAt: overrides.expiresAt ?? new Date(Date.now() + 3600000),
       scopes: overrides.scopes ?? ["mcp"],
       refreshId: overrides.refreshId ?? null,
+      referenceId: overrides.referenceId ?? null,
       createdAt: new Date(),
     })
     .returning();

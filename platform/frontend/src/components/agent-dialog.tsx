@@ -1980,20 +1980,21 @@ export function AgentDialog({
                         </div>
                       )}
 
-                      {/* Identity Provider for JWKS Auth (MCP Gateway only) */}
+                      {/* Identity Provider for enterprise-managed/JWKS auth (MCP Gateway only) */}
                       {agentType === "mcp_gateway" &&
                         identityProviders.length > 0 && (
                           <div className="space-y-2">
-                            <Label>Identity Provider (JWKS Auth)</Label>
+                            <Label>Identity Provider (Enterprise/JWKS)</Label>
                             <p className="text-sm text-muted-foreground">
                               Optionally select an Identity Provider to validate
-                              incoming JWT tokens via JWKS. When configured, MCP
-                              clients can authenticate using JWTs issued by this
-                              IdP.{" "}
+                              incoming enterprise assertions or direct JWT
+                              bearer tokens issued by this IdP. When configured,
+                              MCP clients can use either enterprise-managed
+                              authorization or direct JWKS authentication.{" "}
                               <a
                                 href={getDocsUrl(
                                   DocsPage.McpAuthentication,
-                                  "external-idp-jwks",
+                                  "enterprise-managed-authorization",
                                 )}
                                 target="_blank"
                                 rel="noopener noreferrer"
