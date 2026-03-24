@@ -34,9 +34,9 @@ Endpoint discovery is automatic. The gateway exposes standard well-known endpoin
 
 For direct API integrations, clients can authenticate using a static Bearer token with the header `Authorization: Bearer archestra_<token>`. Tokens can be scoped to a specific user, team, or organization. You can create and manage tokens in **Settings > Tokens**.
 
-### Enterprise-Managed Authorization
+### Enterprise-Managed Authorization (Identity Assertion JWT Authorization Grant, ID-JAG)
 
-This option implements the MCP [Enterprise-Managed Authorization](https://modelcontextprotocol.io/extensions/auth/enterprise-managed-authorization) profile for organizations that already use a corporate IdP to sign users into MCP clients. It is not Okta-specific. Any identity provider can work as long as it can:
+This option implements the MCP [Enterprise-Managed Authorization](https://modelcontextprotocol.io/extensions/auth/enterprise-managed-authorization) profile using an [Identity Assertion JWT Authorization Grant (ID-JAG)](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-identity-assertion-authz-grant). It is designed for organizations that already use a corporate IdP to sign users into MCP clients. The identity provider must be able to:
 
 - authenticate the user to the MCP client
 - perform RFC 8693 token exchange to issue an ID-JAG
@@ -234,3 +234,25 @@ When an MCP Gateway is configured with an [External IdP](#external-idp-jwks), th
 This pattern is useful when your MCP server needs to enforce its own access control based on IdP claims (roles, groups, etc.), or when the server is also deployed outside of Archestra and needs to authenticate users independently.
 
 See [Building Enterprise-Ready MCP Servers with JWKS and Identity Providers](https://archestra.ai/blog/enterprise-mcp-servers-jwks) for a full walkthrough with code examples.
+
+## ID-JAG vs JWKS
+
+Enterprise-Managed Authorization and JWKS-based authentication both rely on enterprise-issued JWTs, but they solve different problems.
+
+**ID-JAG** is a token exchange pattern. The MCP client first obtains an enterprise-issued identity assertion, exchanges it for an ID-JAG, and then exchanges that ID-JAG with Archestra for an MCP access token. Archestra validates the ID-JAG and issues a new gateway token scoped to the target MCP Gateway.
+
+**JWKS authentication** is direct JWT validation. The MCP client sends the enterprise JWT directly to Archestra, and Archestra validates that JWT against the IdP's JWKS endpoint on each request.
+
+Use **ID-JAG** when:
+
+- your MCP client participates in enterprise-managed authorization
+- you want Archestra to mint its own MCP access token for the gateway
+- you want the resulting gateway token bound to a specific MCP resource
+
+Use **JWKS** when:
+
+- your MCP client already has a usable bearer JWT from the enterprise IdP
+- you want direct JWT validation without a token exchange step
+- you want the original enterprise JWT propagated to upstream MCP servers
+
+In short: **ID-JAG** exchanges an enterprise assertion for an Archestra-issued MCP token, while **JWKS** validates and forwards the enterprise JWT directly.
