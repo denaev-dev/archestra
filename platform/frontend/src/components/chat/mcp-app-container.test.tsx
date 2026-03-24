@@ -38,7 +38,14 @@ vi.mock("next-themes", () => ({
 }));
 
 vi.mock("@/lib/config", () => ({
-  getMcpSandboxBaseUrl: () => "http://localhost:9000",
+  getMcpSandboxBaseUrl: () => ({
+    baseUrl: "http://127.0.0.1:9000",
+    hasCrossOrigin: true,
+  }),
+}));
+
+vi.mock("@/lib/config.query", () => ({
+  useFeature: () => null,
 }));
 
 // ── Import component under test after mocks ───────────────────────────────────
@@ -86,7 +93,7 @@ describe("McpAppSection", () => {
     expect(iframe).toBeInTheDocument();
   });
 
-  it("sets correct sandbox attribute without allow-same-origin", async () => {
+  it("sets correct sandbox attribute with allow-same-origin when cross-origin", async () => {
     await act(async () => {
       render(
         <McpAppSection
@@ -101,7 +108,8 @@ describe("McpAppSection", () => {
     const sandbox = iframe?.getAttribute("sandbox");
     expect(sandbox).toContain("allow-scripts");
     expect(sandbox).toContain("allow-forms");
-    expect(sandbox).not.toContain("allow-same-origin");
+    // With cross-origin (localhost swap or domain mode), allow-same-origin is set
+    expect(sandbox).toContain("allow-same-origin");
   });
 
   it("does not show loading spinner once sandbox iframe is rendered", async () => {

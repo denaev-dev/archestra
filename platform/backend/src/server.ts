@@ -537,22 +537,12 @@ const loadSandboxHtml = (): string | null => {
 
 const sandboxHtml = loadSandboxHtml();
 
-/** CSP query param schema — strict to prevent injection via malformed objects. */
-const SandboxCspSchema = z
-  .object({
-    connectDomains: z.array(z.string().max(253)).max(20).optional(),
-    resourceDomains: z.array(z.string().max(253)).max(20).optional(),
-    frameDomains: z.array(z.string().max(253)).max(20).optional(),
-    baseUriDomains: z.array(z.string().max(253)).max(20).optional(),
-  })
-  .strict();
-
 /**
  * Register the sandbox proxy route on the main Fastify instance.
  *
- * Serves the sandbox proxy HTML under /_sandbox/ with dynamic CSP headers.
- * Isolation comes from the iframe sandbox attribute (no allow-same-origin)
- * set by the frontend, giving the iframe an opaque origin.
+ * Serves the sandbox proxy HTML under /_sandbox/ with frame-ancestors header.
+ * CSP for guest content is handled entirely by the proxy HTML (meta tag injection).
+ * Isolation comes from cross-origin (localhost swap or domain) or opaque origin fallback.
  */
 const registerSandboxRoute = (
   fastify: ReturnType<typeof createFastifyInstance>,
@@ -569,37 +559,31 @@ const registerSandboxRoute = (
 
   fastify.get(
     "/_sandbox/mcp-sandbox-proxy.html",
-    {
-      schema: {
-        querystring: z.object({
-          csp: z.string().max(4096).optional(),
-        }),
-      },
-    },
     async (request, reply) => {
-      const { csp: cspParam } = request.query as { csp?: string };
-
-      let cspConfig: McpUiResourceCsp | undefined;
-      if (cspParam) {
-        try {
-          const parsed = JSON.parse(cspParam);
-          cspConfig = SandboxCspSchema.parse(parsed);
-        } catch {
-          request.log.warn("Invalid CSP query param — ignoring");
+      // When a sandbox domain is configured, validate the Host header matches
+      // *.{domain} to prevent the sandbox route from being abused on the main origin.
+      if (config.mcpSandbox.domain) {
+        const host = request.hostname;
+        if (!host.endsWith(`.${config.mcpSandbox.domain}`)) {
+          return reply.status(403).send("Invalid sandbox host");
         }
       }
 
-      // Set CSP via HTTP header — tamper-proof unlike meta tags.
       // frame-ancestors restricts which origins can embed this sandbox iframe.
-      // When allowedOrigins is configured, restrict framing to those origins.
-      // When empty (no ARCHESTRA_FRONTEND_URL set), allow any ancestor — matching
-      // the permissive CORS behaviour used for dev/open deployments.
+      // This is the only CSP directive set via HTTP header — it cannot be set via meta tag.
+      // Guest content CSP is handled by the proxy HTML (meta tag injection from sandbox-resource-ready message).
+      const frameAncestorsList = [...config.mcpSandbox.allowedOrigins];
+      if (config.mcpSandbox.domain) {
+        frameAncestorsList.push(`*.${config.mcpSandbox.domain}`);
+      }
       const frameAncestors =
-        config.mcpSandbox.allowedOrigins.length > 0
-          ? config.mcpSandbox.allowedOrigins.join(" ")
+        frameAncestorsList.length > 0
+          ? frameAncestorsList.join(" ")
           : "*";
-      const cspHeader = `${buildCspHeader(cspConfig)}; frame-ancestors ${frameAncestors}`;
-      void reply.header("Content-Security-Policy", cspHeader);
+      void reply.header(
+        "Content-Security-Policy",
+        `frame-ancestors ${frameAncestors}`,
+      );
 
       // Prevent caching to ensure fresh CSP on each load
       void reply.header("Cache-Control", "no-cache, no-store, must-revalidate");

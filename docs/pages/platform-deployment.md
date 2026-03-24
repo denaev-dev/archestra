@@ -596,6 +596,11 @@ The following environment variables can be used to configure Archestra Platform.
   - Highly recommended for production.
   - If users access the platform via a LAN IP (e.g., `http://192.168.1.5:3000`), set this to that URL
 
+- **`ARCHESTRA_MCP_SANDBOX_DOMAIN`** - Wildcard domain for MCP App sandbox isolation. Gives each MCP server a unique subdomain origin, enabling localStorage, CORS, and OAuth for MCP Apps. Not needed for local development (automatic localhost swap provides isolation).
+  - Example: `mcp.example.com`
+  - Requires wildcard DNS (`*.mcp.example.com`) and wildcard TLS certificate pointing to the backend
+  - See [MCP Apps Sandbox](#mcp-apps-sandbox) for setup instructions
+
 - **`ARCHESTRA_GLOBAL_TOOL_POLICY`** - Controls how tool invocation is treated across the LLM proxy.
   - Default: `permissive`
   - Values: `permissive` or `restrictive`
@@ -777,9 +782,45 @@ These environment variables set the default base URL for each LLM provider. Per-
 
 ### MCP Apps Sandbox
 
-The MCP App sandbox proxy is served from the main backend server under `/_sandbox/`. No separate port or configuration is needed. Iframe isolation is enforced via the `sandbox` attribute (opaque origin) and CSP headers.
+MCP Apps run inside sandboxed iframes with cross-origin isolation, CSP enforcement, and a double-iframe architecture. The sandbox proxy is served from the main backend under `/_sandbox/` — no separate port or service is needed.
 
-Origin restriction for the sandbox is driven by **`ARCHESTRA_FRONTEND_URL`** and **`ARCHESTRA_AUTH_ADDITIONAL_TRUSTED_ORIGINS`** (the same variables that control CORS and trusted origins for the main backend). When either variable is set, only those origins may embed the sandbox iframe and communicate with it via `postMessage`. When neither is set (local development), all origins are accepted.
+#### How It Works by Environment
+
+| Environment | Isolation method | Config needed | MCP App capabilities |
+|---|---|---|---|
+| **Local dev / Quickstart** (`localhost`) | `localhost` ↔ `127.0.0.1` origin swap (same port, different origin) | None | Full (localStorage, CORS, etc.) |
+| **Production with sandbox domain** | Dedicated subdomain per MCP server | `ARCHESTRA_MCP_SANDBOX_DOMAIN` + wildcard DNS/TLS | Full |
+| **Production without sandbox domain** | Opaque origin (iframe `sandbox` attribute) | None | Limited (no localStorage, no origin-restricted CORS) |
+
+**Local development and Quickstart** work out of the box with no configuration. The platform automatically swaps `localhost` to `127.0.0.1` (or vice versa) to create a different origin on the same port. This gives MCP Apps full browser API access while maintaining security isolation.
+
+**Production deployments** can optionally configure `ARCHESTRA_MCP_SANDBOX_DOMAIN` for full MCP App functionality. Without it, MCP Apps still render and function, but cannot use `localStorage`, cookies, or APIs that check `Access-Control-Allow-Origin` against a specific origin. Most MCP Apps work fine without it.
+
+#### Configuring a Sandbox Domain (Production)
+
+Set `ARCHESTRA_MCP_SANDBOX_DOMAIN` when MCP Apps need persistent state or origin-restricted API access.
+
+1. Choose a subdomain for the sandbox (e.g., `mcp.example.com`)
+
+2. Create a **wildcard DNS record**:
+   ```
+   *.mcp.example.com → <backend IP or load balancer>
+   ```
+
+3. Obtain a **wildcard TLS certificate** for `*.mcp.example.com` (e.g., via Let's Encrypt DNS challenge, or your CA)
+
+4. Configure the reverse proxy (nginx, Caddy, etc.) to route `*.mcp.example.com` to the backend (port 9000), applying the wildcard certificate
+
+5. Set the environment variable:
+   ```yaml
+   ARCHESTRA_MCP_SANDBOX_DOMAIN: mcp.example.com
+   ```
+
+Each MCP server automatically gets a unique hash-based subdomain (e.g., `a1b2c3d4.mcp.example.com`). The backend validates the `Host` header on sandbox requests to prevent abuse.
+
+#### Origin Restrictions
+
+The sandbox inherits origin restrictions from `ARCHESTRA_FRONTEND_URL` and `ARCHESTRA_AUTH_ADDITIONAL_TRUSTED_ORIGINS` (the same variables that control CORS). When set, only those origins can embed the sandbox iframe. When neither is set (local dev), all origins are accepted.
 
 ### MCP Server Orchestrator
 

@@ -13,11 +13,16 @@ import type React from "react";
 import { Component, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { getMcpSandboxBaseUrl } from "@/lib/config";
+import { useFeature } from "@/lib/config.query";
 import { cn } from "@/lib/utils";
 
-import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-
-type McpCallToolResult = CallToolResult;
+/** MCP CallToolResult — defined inline to avoid direct @modelcontextprotocol/sdk dependency. */
+type McpCallToolResult = {
+  content: Array<{ type: string; text?: string; [key: string]: unknown }>;
+  structuredContent?: Record<string, unknown>;
+  _meta?: Record<string, unknown>;
+  isError?: boolean;
+};
 
 /**
  * Shape of MCP tool output stored by the backend in the AI SDK's tool result.
@@ -469,6 +474,7 @@ function SandboxIframe({
   toolResult,
   onError,
   onSizeChanged,
+  useDedicatedOrigin,
 }: {
   html: string;
   sandboxUrl: URL;
@@ -479,6 +485,8 @@ function SandboxIframe({
   toolResult?: McpCallToolResult;
   onError?: (error: Error) => void;
   onSizeChanged?: (size: { width?: number; height?: number }) => void;
+  /** When true, sandbox iframe uses allow-same-origin (dedicated subdomain provides isolation). */
+  useDedicatedOrigin?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -504,8 +512,14 @@ function SandboxIframe({
     iframe.style.height = "600px";
     iframe.style.border = "none";
     iframe.style.backgroundColor = "transparent";
-    // No allow-same-origin → opaque origin for security isolation
-    iframe.setAttribute("sandbox", "allow-scripts allow-forms allow-popups");
+    // With dedicated subdomain: allow-same-origin is safe (different origin from backend).
+    // Without: no allow-same-origin → opaque origin for security isolation.
+    iframe.setAttribute(
+      "sandbox",
+      useDedicatedOrigin
+        ? "allow-scripts allow-same-origin allow-forms allow-popups"
+        : "allow-scripts allow-forms allow-popups",
+    );
     iframe.src = sandboxUrl.href;
     iframeRef.current = iframe;
 
@@ -601,7 +615,9 @@ function SandboxIframe({
   // Send tool result when available
   useEffect(() => {
     if (!ready || !initialized || !toolResult) return;
-    appBridge.sendToolResult(toolResult);
+    // Cast needed: our McpCallToolResult is looser than the SDK's strict union type
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    appBridge.sendToolResult(toolResult as any);
   }, [ready, initialized, toolResult, appBridge]);
 
   return (
@@ -969,18 +985,22 @@ const McpAppView = function McpAppView({
     };
   }, []);
 
-  // Build sandbox URL with CSP query param for HTTP header-based CSP enforcement
+  // Build sandbox URL with CSP query param for HTTP header-based CSP enforcement.
+  // Three modes: domain subdomain, localhost swap (Inspector pattern), or opaque origin fallback.
+  const mcpSandboxDomain = useFeature("mcpSandboxDomain");
+  const sandboxResult = useMemo(
+    () => getMcpSandboxBaseUrl(mcpSandboxDomain, serverPrefix),
+    [mcpSandboxDomain, serverPrefix],
+  );
   const sandboxUrl = useMemo(() => {
     if (!appResource) return null;
-    const url = new URL(
-      `${getMcpSandboxBaseUrl()}/_sandbox/mcp-sandbox-proxy.html`,
+    // CSP is passed via sendSandboxResourceReady message, not URL query params.
+    // The proxy HTML builds and injects CSP as a meta tag into the guest HTML.
+    return new URL(
+      `${sandboxResult.baseUrl}/_sandbox/mcp-sandbox-proxy.html`,
       window.location.origin,
     );
-    if (appResource.csp) {
-      url.searchParams.set("csp", JSON.stringify(appResource.csp));
-    }
-    return url;
-  }, [appResource]);
+  }, [appResource, sandboxResult.baseUrl]);
 
   return (
     <div>
@@ -1018,6 +1038,7 @@ const McpAppView = function McpAppView({
               height: size.height ?? 0,
             });
           }}
+          useDedicatedOrigin={sandboxResult.hasCrossOrigin}
         />
       )}
     </div>

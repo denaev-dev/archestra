@@ -1251,11 +1251,12 @@ export async function fetchToolUiResource({
     };
     const uiMeta = (content as { _meta?: { ui?: ContentUiMeta } })._meta?.ui;
 
-    if (uiMeta?.domain) {
+    if (uiMeta?.domain && !config.mcpSandbox.domain) {
       logger.warn(
         { toolName, uri, domain: uiMeta.domain },
         "MCP server requested stable origin via _meta.ui.domain but sandbox uses opaque origin. " +
-          "OAuth callbacks and origin-restricted APIs will not work for this app.",
+          "OAuth callbacks and origin-restricted APIs will not work for this app. " +
+          "Set ARCHESTRA_MCP_SANDBOX_DOMAIN to enable per-server origins.",
       );
     }
 

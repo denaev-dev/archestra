@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="color-scheme" content="light dark">
-  <!-- CSP is set via HTTP headers by serve.ts (based on ?csp= query param).
-       The inner iframe inherits this CSP since we use document.write(). -->
+  <!-- CSP is set via HTTP headers by server.ts for cross-origin modes (localhost swap, domain).
+       For opaque-origin fallback (srcdoc), CSP is injected as a meta tag into the HTML. -->
   <title>MCP-UI Proxy</title>
   <style>
     html,
@@ -48,6 +48,108 @@ function buildAllowAttribute(permissions) {
   return allowList.join("; ");
 }
 
+/**
+ * Sanitize a CSP domain value to prevent injection.
+ * Only allows valid hostnames, wildcard subdomains, scheme-prefixed domains, and optional ports.
+ */
+function sanitizeDomain(d) {
+  if (typeof d !== "string") return "";
+  return d.replace(/['"<>;]/g, "");
+}
+
+/**
+ * Build CSP string from _meta.ui.csp metadata (Inspector pattern).
+ * No 'self' — doesn't work in srcdoc iframes (refers to about:srcdoc).
+ * Uses 'unsafe-inline' for scripts/styles since all widget code is inline.
+ */
+function buildCSP(csp) {
+  if (!csp) {
+    return [
+      "default-src 'none'",
+      "script-src 'unsafe-inline'",
+      "style-src 'unsafe-inline'",
+      "img-src data: blob:",
+      "font-src data: blob:",
+      "media-src data: blob:",
+      "connect-src 'none'",
+      "frame-src 'none'",
+      "object-src 'none'",
+      "base-uri 'none'",
+    ].join("; ");
+  }
+
+  var connectDomains = (csp.connectDomains || []).map(sanitizeDomain).filter(Boolean);
+  var resourceDomains = (csp.resourceDomains || []).map(sanitizeDomain).filter(Boolean);
+  var frameDomains = (csp.frameDomains || []).map(sanitizeDomain).filter(Boolean);
+  var baseUriDomains = (csp.baseUriDomains || []).map(sanitizeDomain).filter(Boolean);
+
+  var connectSrc = connectDomains.length > 0 ? connectDomains.join(" ") : "'none'";
+  var resourceSrc = resourceDomains.length > 0
+    ? ["data:", "blob:", ...resourceDomains].join(" ")
+    : "data: blob:";
+  var frameSrc = frameDomains.length > 0 ? frameDomains.join(" ") : "'none'";
+  var baseUri = baseUriDomains.length > 0 ? baseUriDomains.join(" ") : "'none'";
+
+  return [
+    "default-src 'none'",
+    "script-src 'unsafe-inline' " + resourceSrc,
+    "style-src 'unsafe-inline' " + resourceSrc,
+    "img-src " + resourceSrc,
+    "font-src " + resourceSrc,
+    "media-src " + resourceSrc,
+    "connect-src " + connectSrc,
+    "frame-src " + frameSrc,
+    "object-src 'none'",
+    "base-uri " + baseUri,
+  ].join("; ");
+}
+
+/**
+ * Build CSP violation listener script (Inspector pattern).
+ * Forwards securitypolicyviolation events to the host via postMessage
+ * so violations can be surfaced for debugging.
+ */
+function buildViolationListenerScript() {
+  return '<script>\
+document.addEventListener("securitypolicyviolation", function(e) {\
+  var violation = {\
+    type: "mcp-apps:csp-violation",\
+    directive: e.violatedDirective,\
+    blockedUri: e.blockedURI,\
+    sourceFile: e.sourceFile || null,\
+    lineNumber: e.lineNumber || null,\
+    effectiveDirective: e.effectiveDirective,\
+    timestamp: Date.now()\
+  };\
+  window.parent.postMessage(violation, "*");\
+});\
+<\/script>';
+}
+
+/**
+ * Inject CSP meta tag and violation listener into HTML (Inspector pattern).
+ * Used for srcdoc loading where HTTP headers aren't available.
+ */
+function injectCSP(html, cspValue) {
+  var cspMeta = '<meta http-equiv="Content-Security-Policy" content="' + cspValue + '">';
+  var violationListener = buildViolationListenerScript();
+  var injection = cspMeta + violationListener;
+
+  if (html.includes("<head>")) {
+    return html.replace("<head>", "<head>" + injection);
+  } else if (html.includes("<HEAD>")) {
+    return html.replace("<HEAD>", "<HEAD>" + injection);
+  } else if (html.includes("<html>")) {
+    return html.replace("<html>", "<html><head>" + injection + "</head>");
+  } else if (html.includes("<HTML>")) {
+    return html.replace("<HTML>", "<HTML><head>" + injection + "</head>");
+  } else if (html.includes("<!DOCTYPE") || html.includes("<!doctype")) {
+    return html.replace(/(<!DOCTYPE[^>]*>|<!doctype[^>]*>)/i, "$1<head>" + injection + "</head>");
+  } else {
+    return injection + html;
+  }
+}
+
 // Injected at serve time by server.ts. Empty array = allow any origin (open/dev deployment).
 const ALLOWED_ORIGINS = __ARCHESTRA_ALLOWED_ORIGINS__;
 
@@ -80,8 +182,8 @@ if (!EXPECTED_HOST_ORIGIN) {
 }
 
 // Detect opaque origin (sandbox without allow-same-origin on this iframe).
-// With opaque origin, new URL(location.href).origin still returns the URL's origin,
-// but window.origin and postMessage event.origin are "null" (the string).
+// With localhost swap or domain mode, this is false (real cross-origin).
+// With production fallback (no domain, not localhost), this is true (opaque).
 const OWN_ORIGIN = window.origin;
 const IS_OPAQUE_ORIGIN = OWN_ORIGIN === "null";
 
@@ -100,13 +202,14 @@ const IS_OPAQUE_ORIGIN = OWN_ORIGIN === "null";
 }
 
 // Double-iframe sandbox architecture: THIS file is the outer sandbox proxy
-// iframe with an opaque origin (single-port setup, no allow-same-origin).
-// It creates an inner iframe for untrusted HTML content.
+// iframe on a different origin from the host. It creates an inner iframe
+// for untrusted HTML content.
 const inner = document.createElement("iframe");
 inner.style = "width:100%; height:100%; border:none;";
-// allow-same-origin on the inner iframe makes it inherit the outer's origin.
-// With opaque origin, this means both share the same unique opaque origin —
-// enabling document.write() access while keeping both isolated from the host.
+// allow-same-origin on the inner iframe lets it retain its inherited origin.
+// In cross-origin modes (localhost swap, domain), both outer and inner share
+// the sandbox origin — enabling document.write() access.
+// In opaque mode, both share the opaque origin.
 inner.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms");
 // Note: allow attribute is set later when receiving sandbox-resource-ready notification
 // based on the permissions requested by the app
@@ -122,26 +225,16 @@ const PROXY_READY_NOTIFICATION =
 //
 //   Host (parent window) ↔ Sandbox (outer frame) ↔ View (inner iframe)
 //
-// Reason: the parent window and inner iframe have different origins and can't
-// communicate directly, so the outer iframe forwards messages in both
-// directions to connect them.
-//
-// Special case: The "ui/notifications/sandbox-proxy-ready" message is
-// intercepted here (not relayed) because the Sandbox uses it to configure and
-// load the inner iframe with the view HTML content.
-//
-// Security: CSP is enforced via HTTP headers on sandbox.html (set by serve.ts
-// based on ?csp= query param). This is tamper-proof unlike meta tags.
+// Special case: The "sandbox-resource-ready" message is intercepted here
+// (not relayed) because the Sandbox uses it to configure and load the
+// inner iframe with the view HTML content.
 
 window.addEventListener("message", async (event) => {
   if (event.source === window.parent) {
-    if(location.hostname === "localhost") {
+    if(location.hostname === "localhost" || location.hostname === "127.0.0.1") {
       console.debug('[Sandbox] Message from parent:', event.data)
     }
     // Validate that messages from parent come from the expected host origin.
-    // This prevents malicious pages from sending messages to this sandbox.
-    // In open/dev mode (no referrer, no ALLOWED_ORIGINS), EXPECTED_HOST_ORIGIN
-    // is null — skip origin check and accept any origin.
     if (EXPECTED_HOST_ORIGIN && event.origin !== EXPECTED_HOST_ORIGIN) {
       console.error(
         "[Sandbox] Rejecting message from unexpected origin:",
@@ -153,7 +246,7 @@ window.addEventListener("message", async (event) => {
     }
 
     if (event.data && event.data.method === RESOURCE_READY_NOTIFICATION) {
-      const { html, sandbox, permissions } = event.data.params;
+      const { html, sandbox, csp, permissions } = event.data.params;
       if (typeof sandbox === "string") {
         // Only allow known-safe sandbox tokens to prevent a compromised MCP
         // server from injecting e.g. allow-top-navigation to escape the sandbox.
@@ -167,48 +260,49 @@ window.addEventListener("message", async (event) => {
       // Set Permission Policy allow attribute if permissions are requested
       const allowAttribute = buildAllowAttribute(permissions);
       if (allowAttribute) {
-        // console.log("[Sandbox] Setting allow attribute:", allowAttribute);
         inner.setAttribute("allow", allowAttribute);
       }
       if (typeof html === "string") {
-        // Use document.write instead of srcdoc (which the CesiumJS Map won't work with)
-        const doc = inner.contentDocument || inner.contentWindow?.document;
-        if (doc) {
-          doc.open();
-          doc.write(html);
-          doc.close();
+        // Inject CSP as meta tag + violation listener into the HTML (Inspector pattern).
+        // One code path for all modes — CSP is always in the HTML, not HTTP headers.
+        const processedHtml = injectCSP(html, buildCSP(csp));
+
+        if (IS_OPAQUE_ORIGIN) {
+          // Opaque origin (production fallback): use srcdoc
+          inner.srcdoc = processedHtml;
         } else {
-          // Fallback to srcdoc if document is not accessible
-          console.warn("[Sandbox] document.write not available, falling back to srcdoc");
-          inner.srcdoc = html;
+          // Cross-origin (localhost swap or domain mode): document.write
+          try {
+            const doc = inner.contentDocument || inner.contentWindow?.document;
+            if (doc) {
+              doc.open();
+              doc.write(processedHtml);
+              doc.close();
+            } else {
+              inner.srcdoc = processedHtml;
+            }
+          } catch {
+            inner.srcdoc = processedHtml;
+          }
         }
       }
     } else {
       if (inner && inner.contentWindow) {
-        // With opaque origin, postMessage targetOrigin cannot be a specific origin
-        // (opaque origins are unique and unmatchable). Use "*" — safe because the
-        // inner iframe is sandboxed and shares our opaque origin.
+        // With opaque origin, postMessage targetOrigin cannot be a specific origin.
+        // Use "*" — safe because the inner iframe is sandboxed.
         inner.contentWindow.postMessage(event.data, IS_OPAQUE_ORIGIN ? "*" : OWN_ORIGIN);
       }
     }
   } else if (event.source === inner.contentWindow) {
-    if(location.hostname === "localhost") {
-      console.debug('[Sandbox] Message from inner iframe:', event.data)
+    // Message filtering (Inspector pattern): only forward JSON-RPC 2.0 messages
+    // and CSP violations. Prevents noise from browser extensions or widget internals
+    // from reaching PostMessageTransport and causing parse errors.
+    var data = event.data;
+    if (data && typeof data === "object") {
+      if (data.jsonrpc === "2.0" || data.type === "mcp-apps:csp-violation") {
+        window.parent.postMessage(data, EXPECTED_HOST_ORIGIN || "*");
+      }
     }
-    // With opaque origin, event.origin from the inner iframe is "null" (the string).
-    // Both outer and inner share the same opaque origin, so "null" === "null" is valid.
-    if (event.origin !== OWN_ORIGIN) {
-      console.error(
-        "[Sandbox] Rejecting message from inner iframe with unexpected origin:",
-        event.origin,
-        "expected:",
-        OWN_ORIGIN
-      );
-      return;
-    }
-    // Relay messages from inner frame to parent window.
-    // Use specific origin when available; fall back to "*" in open/dev mode.
-    window.parent.postMessage(event.data, EXPECTED_HOST_ORIGIN || "*");
   }
 });
 
