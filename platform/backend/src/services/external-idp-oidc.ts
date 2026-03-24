@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { LRUCacheManager } from "@/cache-manager";
 import db, { schema as dbSchema } from "@/database";
 import logger from "@/logging";
 
@@ -73,12 +74,11 @@ export function parseJsonField<T>(value: unknown): T | null {
 // Internal helpers
 // =============================================================================
 
-/**
- * Cache for OIDC discovery results (issuer → jwks_uri).
- * Bounded to MAX_OIDC_DISCOVERY_CACHE_SIZE entries with LRU-style eviction.
- */
 const MAX_OIDC_DISCOVERY_CACHE_SIZE = 100;
-const oidcDiscoveryCache = new Map<string, string>();
+const oidcDiscoveryCache = new LRUCacheManager<string>({
+  maxSize: MAX_OIDC_DISCOVERY_CACHE_SIZE,
+  defaultTtl: 0,
+});
 const oidcDiscoveryInflight = new Map<string, Promise<string | null>>();
 
 async function fetchOidcJwksUrl(issuerUrl: string): Promise<string | null> {
@@ -104,10 +104,6 @@ async function fetchOidcJwksUrl(issuerUrl: string): Promise<string | null> {
       return null;
     }
 
-    if (oidcDiscoveryCache.size >= MAX_OIDC_DISCOVERY_CACHE_SIZE) {
-      const oldestKey = oidcDiscoveryCache.keys().next().value;
-      if (oldestKey) oidcDiscoveryCache.delete(oldestKey);
-    }
     oidcDiscoveryCache.set(issuerUrl, jwksUri);
     return jwksUri;
   } catch (error) {

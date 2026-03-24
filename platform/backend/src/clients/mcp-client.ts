@@ -31,6 +31,7 @@ import {
   parseFullToolName,
 } from "@shared";
 import QuickLRU from "quick-lru";
+import { LRUCacheManager } from "@/cache-manager";
 import config from "@/config";
 import { McpServerRuntimeManager } from "@/k8s/mcp-server-runtime";
 import logger from "@/logging";
@@ -178,11 +179,18 @@ type CachedResource = {
 };
 
 class McpClient {
+  private static readonly TOOL_NAME_CACHE_MAX_ENTRIES = 1_000;
+  private static readonly SECRETS_CACHE_MAX_ENTRIES = 1_000;
+  private static readonly SECRETS_CACHE_TTL_MS = 30_000;
+
   private clients = new Map<string, Client>();
   private activeConnections = new Map<string, Client>();
   private connectionLimiter = new ConnectionLimiter();
   // Cache of actual tool names per connection key: lowercased name -> original cased name
-  private toolNameCache = new Map<string, Map<string, string>>();
+  private toolNameCache = new LRUCacheManager<Map<string, string>>({
+    maxSize: McpClient.TOOL_NAME_CACHE_MAX_ENTRIES,
+    defaultTtl: 0,
+  });
   // Per-connectionKey lock to prevent thundering-herd when multiple concurrent
   // calls (e.g. browser stream ticks) detect a stale session simultaneously.
   // Only the first caller performs cleanup + retry; others wait and reuse.
@@ -201,17 +209,13 @@ class McpClient {
   });
   // Short-lived cache for MCP server secrets to avoid N+1 queries when multiple
   // tool calls hit the same MCP server within a batch or concurrent request window.
-  // Key: targetMcpServerId, Value: { result, expiresAt }
-  private secretsCache = new Map<
-    string,
-    {
-      result:
-        | { secrets: Record<string, unknown>; secretId?: string }
-        | { error: CommonToolResult };
-      expiresAt: number;
-    }
-  >();
-  private static readonly SECRETS_CACHE_TTL_MS = 30_000;
+  private secretsCache = new LRUCacheManager<{
+    secrets: Record<string, unknown>;
+    secretId?: string;
+  }>({
+    maxSize: McpClient.SECRETS_CACHE_MAX_ENTRIES,
+    defaultTtl: McpClient.SECRETS_CACHE_TTL_MS,
+  });
 
   /**
    * Close a cached session for a specific (catalogId, targetMcpServerId, agentId, conversationId).
@@ -818,10 +822,9 @@ class McpClient {
     | { secrets: Record<string, unknown>; secretId?: string }
     | { error: CommonToolResult }
   > {
-    const now = Date.now();
     const cached = this.secretsCache.get(targetMcpServerId);
-    if (cached && cached.expiresAt > now) {
-      return cached.result;
+    if (cached) {
+      return cached;
     }
 
     const result = await this.fetchSecretsForMcpServer(
@@ -832,10 +835,7 @@ class McpClient {
 
     // Only cache successful results (not errors) so transient failures can be retried
     if (!("error" in result)) {
-      this.secretsCache.set(targetMcpServerId, {
-        result,
-        expiresAt: now + McpClient.SECRETS_CACHE_TTL_MS,
-      });
+      this.secretsCache.set(targetMcpServerId, result);
     }
 
     return result;
