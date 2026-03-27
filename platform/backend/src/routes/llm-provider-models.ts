@@ -8,8 +8,8 @@ import { z } from "zod";
 import { modelsDevClient } from "@/clients/models-dev-client";
 import logger from "@/logging";
 import {
-  ApiKeyModelModel,
   LlmProviderApiKeyModel,
+  LlmProviderApiKeyModelLinkModel,
   ModelModel,
   TeamModel,
 } from "@/models";
@@ -92,7 +92,8 @@ const llmModelsRoutes: FastifyPluginAsyncZod = async (fastify) => {
         apiKeyId && accessibleKeyIds.includes(apiKeyId)
           ? [apiKeyId]
           : accessibleKeyIds;
-      const dbModels = await ApiKeyModelModel.getModelsForApiKeyIds(apiKeyIds);
+      const dbModels =
+        await LlmProviderApiKeyModelLinkModel.getModelsForApiKeyIds(apiKeyIds);
 
       logger.info(
         {
@@ -161,7 +162,7 @@ const llmModelsRoutes: FastifyPluginAsyncZod = async (fastify) => {
     },
     async (_, reply) => {
       const modelsWithApiKeys =
-        await ApiKeyModelModel.getAllModelsWithApiKeys();
+        await LlmProviderApiKeyModelLinkModel.getAllModelsWithApiKeys();
 
       const linkedModelIds = new Set(
         modelsWithApiKeys.map((item) => item.model.id),

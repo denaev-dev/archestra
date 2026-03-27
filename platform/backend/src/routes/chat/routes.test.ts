@@ -19,9 +19,9 @@ vi.mock("@/clients/llm-client", async (importOriginal) => {
   };
 });
 
-// Mock ApiKeyModelModel for fast model DB lookup
+// Mock LlmProviderApiKeyModelLinkModel for fast model DB lookup
 const mockGetFastestModel = vi.hoisted(() => vi.fn());
-vi.mock("@/models/api-key-model", () => ({
+vi.mock("@/models/llm-provider-api-key-model", () => ({
   default: { getFastestModel: mockGetFastestModel },
 }));
 

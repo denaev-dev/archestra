@@ -10,8 +10,8 @@ import { resolveProviderApiKey } from "@/clients/llm-client";
 import config, { getProviderEnvApiKey } from "@/config";
 import logger from "@/logging";
 import {
-  ApiKeyModelModel,
   LlmProviderApiKeyModel,
+  LlmProviderApiKeyModelLinkModel,
   OrganizationModel,
 } from "@/models";
 
@@ -46,7 +46,8 @@ export async function resolveSmartDefaultLlm(params: {
     });
 
     if (chatApiKeyId) {
-      const bestModel = await ApiKeyModelModel.getBestModel(chatApiKeyId);
+      const bestModel =
+        await LlmProviderApiKeyModelLinkModel.getBestModel(chatApiKeyId);
       if (bestModel) {
         return { provider, apiKey, modelName: bestModel.modelId, baseUrl };
       }
@@ -55,7 +56,9 @@ export async function resolveSmartDefaultLlm(params: {
     // Fallback: check system keys (e.g., Vertex AI using ADC without an API key)
     const systemKey = await LlmProviderApiKeyModel.findSystemKey(provider);
     if (systemKey) {
-      const bestModel = await ApiKeyModelModel.getBestModel(systemKey.id);
+      const bestModel = await LlmProviderApiKeyModelLinkModel.getBestModel(
+        systemKey.id,
+      );
       if (bestModel) {
         return {
           provider,
@@ -143,7 +146,8 @@ export async function resolveFastModelName(
   }
 
   try {
-    const fastestModel = await ApiKeyModelModel.getFastestModel(chatApiKeyId);
+    const fastestModel =
+      await LlmProviderApiKeyModelLinkModel.getFastestModel(chatApiKeyId);
     if (fastestModel) {
       logger.debug(
         { provider, chatApiKeyId, modelId: fastestModel.modelId },

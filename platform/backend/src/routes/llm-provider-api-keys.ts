@@ -12,8 +12,8 @@ import { hasPermission, userHasPermission } from "@/auth";
 import { isVertexAiEnabled } from "@/clients/gemini-client";
 import logger from "@/logging";
 import {
-  ApiKeyModelModel,
   LlmProviderApiKeyModel,
+  LlmProviderApiKeyModelLinkModel,
   ModelModel,
   OrganizationModel,
   TeamModel,
@@ -143,7 +143,7 @@ const llmProviderApiKeyRoutes: FastifyPluginAsyncZod = async (fastify) => {
       }
 
       const bestModelsByApiKeyId =
-        await ApiKeyModelModel.getBestModelsForApiKeys(
+        await LlmProviderApiKeyModelLinkModel.getBestModelsForApiKeys(
           apiKeys.map((key) => key.id),
         );
 

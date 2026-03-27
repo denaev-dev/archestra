@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import ApiKeyModelModel from "@/models/api-key-model";
+import LlmProviderApiKeyModelLinkModel from "@/models/llm-provider-api-key-model";
 import ModelModel from "@/models/model";
 import type { FastifyInstanceWithZod } from "@/server";
 import { createFastifyInstance } from "@/server";
@@ -106,9 +106,12 @@ describe("GET /api/chat-api-keys/available", () => {
     });
 
     const getBestModelsForApiKeysSpy = vi
-      .spyOn(ApiKeyModelModel, "getBestModelsForApiKeys")
+      .spyOn(LlmProviderApiKeyModelLinkModel, "getBestModelsForApiKeys")
       .mockResolvedValue(new Map([[apiKey.id, model]]));
-    const getBestModelSpy = vi.spyOn(ApiKeyModelModel, "getBestModel");
+    const getBestModelSpy = vi.spyOn(
+      LlmProviderApiKeyModelLinkModel,
+      "getBestModel",
+    );
 
     const response = await app.inject({
       method: "GET",

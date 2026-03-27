@@ -1,7 +1,7 @@
 import { vi } from "vitest";
 import {
-  ApiKeyModelModel,
   LlmProviderApiKeyModel,
+  LlmProviderApiKeyModelLinkModel,
   OrganizationModel,
 } from "@/models";
 import { beforeEach, describe, expect, test } from "@/test";
@@ -52,9 +52,11 @@ describe("resolveConversationLlmSelectionForAgent", () => {
       id: "key-anthropic",
       provider: "anthropic",
     } as never);
-    vi.spyOn(ApiKeyModelModel, "getBestModel").mockResolvedValue({
-      modelId: "claude-3-5-sonnet",
-    } as never);
+    vi.spyOn(LlmProviderApiKeyModelLinkModel, "getBestModel").mockResolvedValue(
+      {
+        modelId: "claude-3-5-sonnet",
+      } as never,
+    );
 
     const result = await resolveConversationLlmSelectionForAgent({
       agent: {

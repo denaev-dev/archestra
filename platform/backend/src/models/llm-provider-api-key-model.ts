@@ -7,7 +7,7 @@ import type { LlmProviderApiKey, Model } from "@/types";
  * Model class for the api_key_models join table.
  * Manages the many-to-many relationship between chat_api_keys and models.
  */
-class ApiKeyModelModel {
+class LlmProviderApiKeyModelLinkModel {
   /**
    * Link multiple models to an API key.
    * This performs a bulk insert, ignoring duplicates.
@@ -31,7 +31,7 @@ class ApiKeyModelModel {
       }));
 
       await db
-        .insert(schema.apiKeyModelsTable)
+        .insert(schema.llmProviderApiKeyModelsTable)
         .values(values)
         .onConflictDoNothing();
     }
@@ -45,12 +45,12 @@ class ApiKeyModelModel {
       .select({
         model: schema.modelsTable,
       })
-      .from(schema.apiKeyModelsTable)
+      .from(schema.llmProviderApiKeyModelsTable)
       .innerJoin(
         schema.modelsTable,
-        eq(schema.apiKeyModelsTable.modelId, schema.modelsTable.id),
+        eq(schema.llmProviderApiKeyModelsTable.modelId, schema.modelsTable.id),
       )
-      .where(eq(schema.apiKeyModelsTable.apiKeyId, apiKeyId));
+      .where(eq(schema.llmProviderApiKeyModelsTable.apiKeyId, apiKeyId));
 
     return results.map((r) => r.model);
   }
@@ -65,15 +65,15 @@ class ApiKeyModelModel {
       .select({
         apiKey: schema.llmProviderApiKeysTable,
       })
-      .from(schema.apiKeyModelsTable)
+      .from(schema.llmProviderApiKeyModelsTable)
       .innerJoin(
         schema.llmProviderApiKeysTable,
         eq(
-          schema.apiKeyModelsTable.apiKeyId,
+          schema.llmProviderApiKeyModelsTable.apiKeyId,
           schema.llmProviderApiKeysTable.id,
         ),
       )
-      .where(eq(schema.apiKeyModelsTable.modelId, modelId));
+      .where(eq(schema.llmProviderApiKeyModelsTable.modelId, modelId));
 
     return results.map((r) => r.apiKey);
   }
@@ -95,8 +95,8 @@ class ApiKeyModelModel {
     await db.transaction(async (tx) => {
       // Delete existing links for this API key
       await tx
-        .delete(schema.apiKeyModelsTable)
-        .where(eq(schema.apiKeyModelsTable.apiKeyId, apiKeyId));
+        .delete(schema.llmProviderApiKeyModelsTable)
+        .where(eq(schema.llmProviderApiKeyModelsTable.apiKeyId, apiKeyId));
 
       // Insert new links
       if (models.length > 0) {
@@ -129,7 +129,7 @@ class ApiKeyModelModel {
         const BATCH_SIZE = 500;
         for (let i = 0; i < values.length; i += BATCH_SIZE) {
           const batch = values.slice(i, i + BATCH_SIZE);
-          await tx.insert(schema.apiKeyModelsTable).values(batch);
+          await tx.insert(schema.llmProviderApiKeyModelsTable).values(batch);
         }
       }
     });
@@ -160,23 +160,23 @@ class ApiKeyModelModel {
     const relationships = await db
       .select({
         model: schema.modelsTable,
-        isFastest: schema.apiKeyModelsTable.isFastest,
-        isBest: schema.apiKeyModelsTable.isBest,
+        isFastest: schema.llmProviderApiKeyModelsTable.isFastest,
+        isBest: schema.llmProviderApiKeyModelsTable.isBest,
         apiKeyId: schema.llmProviderApiKeysTable.id,
         apiKeyName: schema.llmProviderApiKeysTable.name,
         apiKeyProvider: schema.llmProviderApiKeysTable.provider,
         apiKeyScope: schema.llmProviderApiKeysTable.scope,
         apiKeyIsSystem: schema.llmProviderApiKeysTable.isSystem,
       })
-      .from(schema.apiKeyModelsTable)
+      .from(schema.llmProviderApiKeyModelsTable)
       .innerJoin(
         schema.modelsTable,
-        eq(schema.apiKeyModelsTable.modelId, schema.modelsTable.id),
+        eq(schema.llmProviderApiKeyModelsTable.modelId, schema.modelsTable.id),
       )
       .innerJoin(
         schema.llmProviderApiKeysTable,
         eq(
-          schema.apiKeyModelsTable.apiKeyId,
+          schema.llmProviderApiKeyModelsTable.apiKeyId,
           schema.llmProviderApiKeysTable.id,
         ),
       )
@@ -246,11 +246,11 @@ class ApiKeyModelModel {
 
     const results = await db
       .select({
-        apiKeyId: schema.apiKeyModelsTable.apiKeyId,
-        modelId: schema.apiKeyModelsTable.modelId,
+        apiKeyId: schema.llmProviderApiKeyModelsTable.apiKeyId,
+        modelId: schema.llmProviderApiKeyModelsTable.modelId,
       })
-      .from(schema.apiKeyModelsTable)
-      .where(inArray(schema.apiKeyModelsTable.apiKeyId, apiKeyIds));
+      .from(schema.llmProviderApiKeyModelsTable)
+      .where(inArray(schema.llmProviderApiKeyModelsTable.apiKeyId, apiKeyIds));
 
     const map = new Map<string, string[]>();
     for (const result of results) {
@@ -268,8 +268,8 @@ class ApiKeyModelModel {
    */
   static async deleteLinksForApiKey(apiKeyId: string): Promise<void> {
     await db
-      .delete(schema.apiKeyModelsTable)
-      .where(eq(schema.apiKeyModelsTable.apiKeyId, apiKeyId));
+      .delete(schema.llmProviderApiKeyModelsTable)
+      .where(eq(schema.llmProviderApiKeyModelsTable.apiKeyId, apiKeyId));
   }
 
   /**
@@ -278,8 +278,8 @@ class ApiKeyModelModel {
   static async getModelCountForApiKey(apiKeyId: string): Promise<number> {
     const [result] = await db
       .select({ count: sql<number>`count(*)::int` })
-      .from(schema.apiKeyModelsTable)
-      .where(eq(schema.apiKeyModelsTable.apiKeyId, apiKeyId));
+      .from(schema.llmProviderApiKeyModelsTable)
+      .where(eq(schema.llmProviderApiKeyModelsTable.apiKeyId, apiKeyId));
 
     return result?.count ?? 0;
   }
@@ -301,20 +301,21 @@ class ApiKeyModelModel {
     const results = await db
       .select({
         model: schema.modelsTable,
-        isBest: sql<boolean>`bool_or(${schema.apiKeyModelsTable.isBest})`.as(
-          "is_best_agg",
-        ),
+        isBest:
+          sql<boolean>`bool_or(${schema.llmProviderApiKeyModelsTable.isBest})`.as(
+            "is_best_agg",
+          ),
         isFastest:
-          sql<boolean>`bool_or(${schema.apiKeyModelsTable.isFastest})`.as(
+          sql<boolean>`bool_or(${schema.llmProviderApiKeyModelsTable.isFastest})`.as(
             "is_fastest_agg",
           ),
       })
-      .from(schema.apiKeyModelsTable)
+      .from(schema.llmProviderApiKeyModelsTable)
       .innerJoin(
         schema.modelsTable,
-        eq(schema.apiKeyModelsTable.modelId, schema.modelsTable.id),
+        eq(schema.llmProviderApiKeyModelsTable.modelId, schema.modelsTable.id),
       )
-      .where(inArray(schema.apiKeyModelsTable.apiKeyId, apiKeyIds))
+      .where(inArray(schema.llmProviderApiKeyModelsTable.apiKeyId, apiKeyIds))
       .groupBy(schema.modelsTable.id)
       .orderBy(
         asc(schema.modelsTable.provider),
@@ -334,15 +335,15 @@ class ApiKeyModelModel {
   static async getBestModel(apiKeyId: string): Promise<Model | null> {
     const [result] = await db
       .select({ model: schema.modelsTable })
-      .from(schema.apiKeyModelsTable)
+      .from(schema.llmProviderApiKeyModelsTable)
       .innerJoin(
         schema.modelsTable,
-        eq(schema.apiKeyModelsTable.modelId, schema.modelsTable.id),
+        eq(schema.llmProviderApiKeyModelsTable.modelId, schema.modelsTable.id),
       )
       .where(
         and(
-          eq(schema.apiKeyModelsTable.apiKeyId, apiKeyId),
-          eq(schema.apiKeyModelsTable.isBest, true),
+          eq(schema.llmProviderApiKeyModelsTable.apiKeyId, apiKeyId),
+          eq(schema.llmProviderApiKeyModelsTable.isBest, true),
         ),
       )
       .limit(1);
@@ -351,7 +352,7 @@ class ApiKeyModelModel {
       return result.model;
     }
 
-    return ApiKeyModelModel.getFirstModelForApiKey(apiKeyId);
+    return LlmProviderApiKeyModelLinkModel.getFirstModelForApiKey(apiKeyId);
   }
 
   /**
@@ -367,22 +368,22 @@ class ApiKeyModelModel {
 
     const bestModels = await db
       .select({
-        apiKeyId: schema.apiKeyModelsTable.apiKeyId,
+        apiKeyId: schema.llmProviderApiKeyModelsTable.apiKeyId,
         model: schema.modelsTable,
       })
-      .from(schema.apiKeyModelsTable)
+      .from(schema.llmProviderApiKeyModelsTable)
       .innerJoin(
         schema.modelsTable,
-        eq(schema.apiKeyModelsTable.modelId, schema.modelsTable.id),
+        eq(schema.llmProviderApiKeyModelsTable.modelId, schema.modelsTable.id),
       )
       .where(
         and(
-          inArray(schema.apiKeyModelsTable.apiKeyId, apiKeyIds),
-          eq(schema.apiKeyModelsTable.isBest, true),
+          inArray(schema.llmProviderApiKeyModelsTable.apiKeyId, apiKeyIds),
+          eq(schema.llmProviderApiKeyModelsTable.isBest, true),
         ),
       )
       .orderBy(
-        asc(schema.apiKeyModelsTable.apiKeyId),
+        asc(schema.llmProviderApiKeyModelsTable.apiKeyId),
         asc(schema.modelsTable.modelId),
       );
 
@@ -401,17 +402,19 @@ class ApiKeyModelModel {
 
     const fallbackModels = await db
       .select({
-        apiKeyId: schema.apiKeyModelsTable.apiKeyId,
+        apiKeyId: schema.llmProviderApiKeyModelsTable.apiKeyId,
         model: schema.modelsTable,
       })
-      .from(schema.apiKeyModelsTable)
+      .from(schema.llmProviderApiKeyModelsTable)
       .innerJoin(
         schema.modelsTable,
-        eq(schema.apiKeyModelsTable.modelId, schema.modelsTable.id),
+        eq(schema.llmProviderApiKeyModelsTable.modelId, schema.modelsTable.id),
       )
-      .where(inArray(schema.apiKeyModelsTable.apiKeyId, missingApiKeyIds))
+      .where(
+        inArray(schema.llmProviderApiKeyModelsTable.apiKeyId, missingApiKeyIds),
+      )
       .orderBy(
-        asc(schema.apiKeyModelsTable.apiKeyId),
+        asc(schema.llmProviderApiKeyModelsTable.apiKeyId),
         asc(schema.modelsTable.modelId),
       );
 
@@ -431,15 +434,15 @@ class ApiKeyModelModel {
   static async getFastestModel(apiKeyId: string): Promise<Model | null> {
     const [result] = await db
       .select({ model: schema.modelsTable })
-      .from(schema.apiKeyModelsTable)
+      .from(schema.llmProviderApiKeyModelsTable)
       .innerJoin(
         schema.modelsTable,
-        eq(schema.apiKeyModelsTable.modelId, schema.modelsTable.id),
+        eq(schema.llmProviderApiKeyModelsTable.modelId, schema.modelsTable.id),
       )
       .where(
         and(
-          eq(schema.apiKeyModelsTable.apiKeyId, apiKeyId),
-          eq(schema.apiKeyModelsTable.isFastest, true),
+          eq(schema.llmProviderApiKeyModelsTable.apiKeyId, apiKeyId),
+          eq(schema.llmProviderApiKeyModelsTable.isFastest, true),
         ),
       )
       .limit(1);
@@ -448,7 +451,7 @@ class ApiKeyModelModel {
       return result.model;
     }
 
-    return ApiKeyModelModel.getFirstModelForApiKey(apiKeyId);
+    return LlmProviderApiKeyModelLinkModel.getFirstModelForApiKey(apiKeyId);
   }
 
   /**
@@ -457,12 +460,12 @@ class ApiKeyModelModel {
   static async getFirstModelForApiKey(apiKeyId: string): Promise<Model | null> {
     const [result] = await db
       .select({ model: schema.modelsTable })
-      .from(schema.apiKeyModelsTable)
+      .from(schema.llmProviderApiKeyModelsTable)
       .innerJoin(
         schema.modelsTable,
-        eq(schema.apiKeyModelsTable.modelId, schema.modelsTable.id),
+        eq(schema.llmProviderApiKeyModelsTable.modelId, schema.modelsTable.id),
       )
-      .where(eq(schema.apiKeyModelsTable.apiKeyId, apiKeyId))
+      .where(eq(schema.llmProviderApiKeyModelsTable.apiKeyId, apiKeyId))
       .orderBy(asc(schema.modelsTable.modelId))
       .limit(1);
 
@@ -470,7 +473,7 @@ class ApiKeyModelModel {
   }
 }
 
-export default ApiKeyModelModel;
+export default LlmProviderApiKeyModelLinkModel;
 
 // ============================================================================
 // Helper functions

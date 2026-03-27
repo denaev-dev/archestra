@@ -1,8 +1,8 @@
 import { isSupportedProvider, type SupportedProvider } from "@shared";
 import { detectProviderFromModel } from "@/clients/llm-client";
 import {
-  ApiKeyModelModel,
   LlmProviderApiKeyModel,
+  LlmProviderApiKeyModelLinkModel,
   OrganizationModel,
 } from "@/models";
 import { resolveSmartDefaultLlmForChat } from "@/utils/llm-resolution";
@@ -72,7 +72,9 @@ async function resolveAgentSelection(
         };
       }
 
-      const bestModel = await ApiKeyModelModel.getBestModel(apiKey.id);
+      const bestModel = await LlmProviderApiKeyModelLinkModel.getBestModel(
+        apiKey.id,
+      );
       if (bestModel) {
         return {
           chatApiKeyId: apiKey.id,

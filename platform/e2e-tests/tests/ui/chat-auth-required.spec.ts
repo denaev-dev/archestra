@@ -104,7 +104,7 @@ test.describe("Chat - Auth Required Tool", () => {
         name: "Auth UI Test Anthropic Key",
         provider: "anthropic",
         apiKey: "test-anthropic-key",
-        scope: "org_wide",
+        scope: "org",
       },
     });
     const chatApiKey = await chatApiKeyResponse.json();

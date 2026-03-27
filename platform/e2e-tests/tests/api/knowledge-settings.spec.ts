@@ -61,7 +61,7 @@ test.describe("Knowledge Settings API", () => {
         name: "Embedding Lock Test Key",
         provider: "openai",
         apiKey: "sk-openai-embedding-lock-test",
-        scope: "org_wide",
+        scope: "org",
       },
     });
     const chatApiKey = await createKeyResponse.json();
@@ -119,7 +119,7 @@ test.describe("Knowledge Settings API", () => {
         name: "Embedding Delete Protection Key",
         provider: "openai",
         apiKey: "sk-openai-delete-protection-test",
-        scope: "org_wide",
+        scope: "org",
       },
     });
     const chatApiKey = await createKeyResponse.json();
@@ -169,7 +169,7 @@ test.describe("Knowledge Settings API", () => {
         name: "Reranker Delete Protection Key",
         provider: "openai",
         apiKey: "sk-openai-reranker-delete-test",
-        scope: "org_wide",
+        scope: "org",
       },
     });
     const chatApiKey = await createKeyResponse.json();
@@ -215,7 +215,7 @@ test.describe("Knowledge Settings API", () => {
         name: "Anthropic Key For Embedding Test",
         provider: "anthropic",
         apiKey: "sk-ant-embedding-provider-test",
-        scope: "org_wide",
+        scope: "org",
       },
     });
     const chatApiKey = await createKeyResponse.json();

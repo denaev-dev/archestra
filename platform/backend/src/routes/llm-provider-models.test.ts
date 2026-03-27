@@ -1,6 +1,6 @@
 import { vi } from "vitest";
-import ApiKeyModelModel from "@/models/api-key-model";
 import LlmProviderApiKeyModel from "@/models/llm-provider-api-key";
+import LlmProviderApiKeyModelLinkModel from "@/models/llm-provider-api-key-model";
 import ModelModel from "@/models/model";
 import { getSecretValueForLlmProviderApiKey } from "@/secrets-manager";
 import type { FastifyInstanceWithZod } from "@/server";
@@ -120,7 +120,7 @@ describe("chat model routes", () => {
       lastSyncedAt: new Date(),
     });
 
-    await ApiKeyModelModel.syncModelsForApiKey(
+    await LlmProviderApiKeyModelLinkModel.syncModelsForApiKey(
       apiKey.id,
       [
         { id: chatModel.id, modelId: chatModel.modelId },

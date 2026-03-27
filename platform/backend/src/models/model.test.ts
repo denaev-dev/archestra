@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@/test";
-import ApiKeyModelModel from "./api-key-model";
+import LlmProviderApiKeyModelLinkModel from "./llm-provider-api-key-model";
 import ModelModel from "./model";
 
 describe("ModelModel", () => {
@@ -595,7 +595,7 @@ describe("ModelModel", () => {
       const apiKey = await makeLlmProviderApiKey(org.id, secret.id, {
         provider: "openai",
       });
-      await ApiKeyModelModel.syncModelsForApiKey(
+      await LlmProviderApiKeyModelLinkModel.syncModelsForApiKey(
         apiKey.id,
         [{ id: linkedModel.id, modelId: linkedModel.modelId }],
         "openai",

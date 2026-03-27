@@ -20,6 +20,18 @@ async function runMigration() {
   }
 }
 
+async function runScopeDataMigration() {
+  const match = migrationSql.match(
+    /UPDATE "chat_api_keys"[\s\S]*?WHERE "scope" = 'org_wide';/m,
+  );
+
+  if (!match) {
+    throw new Error("chat_api_keys scope update statement not found in 0197");
+  }
+
+  await db.execute(sql.raw(match[0].trim()));
+}
+
 async function insertRole(params: {
   organizationId: string;
   roleId: string;
@@ -135,5 +147,46 @@ describe("0197 migration: split llmProvider RBAC resource", () => {
       "update",
     ]);
     expect(permission.llmModel.sort()).toEqual(["read", "update"]);
+  });
+
+  test("updates legacy org_wide LLM provider API key scopes to org", async ({
+    makeOrganization,
+  }) => {
+    const org = await makeOrganization();
+
+    await db.execute(
+      sql.raw(`
+      INSERT INTO "chat_api_keys" (
+        "id",
+        "organization_id",
+        "name",
+        "provider",
+        "scope",
+        "is_primary",
+        "created_at",
+        "updated_at"
+      ) VALUES (
+        '00000000-0000-0000-0000-000000000197',
+        '${org.id}',
+        'Legacy Org Key',
+        'anthropic',
+        'org_wide',
+        true,
+        now(),
+        now()
+      );
+    `),
+    );
+
+    await runScopeDataMigration();
+
+    const [apiKey] = await db
+      .select({ scope: schema.llmProviderApiKeysTable.scope })
+      .from(schema.llmProviderApiKeysTable)
+      .where(
+        sql`${schema.llmProviderApiKeysTable.id} = '00000000-0000-0000-0000-000000000197'`,
+      );
+
+    expect(apiKey.scope).toBe("org");
   });
 });

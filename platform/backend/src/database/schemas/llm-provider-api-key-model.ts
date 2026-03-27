@@ -20,7 +20,7 @@ import modelsTable from "./model";
  * Models themselves remain in the database even if all linked API keys are removed
  * (for metadata retention).
  */
-const apiKeyModelsTable = pgTable(
+const llmProviderApiKeyModelsTable = pgTable(
   "api_key_models",
   {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -49,4 +49,4 @@ const apiKeyModelsTable = pgTable(
   }),
 );
 
-export default apiKeyModelsTable;
+export default llmProviderApiKeyModelsTable;

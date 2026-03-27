@@ -2,7 +2,10 @@ import { vi } from "vitest";
 import { isVertexAiEnabled } from "@/clients/gemini-client";
 import { resolveProviderApiKey } from "@/clients/llm-client";
 import config from "@/config";
-import { ApiKeyModelModel, LlmProviderApiKeyModel } from "@/models";
+import {
+  LlmProviderApiKeyModel,
+  LlmProviderApiKeyModelLinkModel,
+} from "@/models";
 import { beforeEach, describe, expect, test } from "@/test";
 import {
   resolveFastModelName,
@@ -81,12 +84,13 @@ describe("resolveSmartDefaultLlm", () => {
       }
       return NO_KEY;
     });
-    vi.spyOn(ApiKeyModelModel, "getBestModel").mockImplementation(
-      async (apiKeyId) => {
-        if (apiKeyId === "key-123") return MOCK_MODEL;
-        return null;
-      },
-    );
+    vi.spyOn(
+      LlmProviderApiKeyModelLinkModel,
+      "getBestModel",
+    ).mockImplementation(async (apiKeyId) => {
+      if (apiKeyId === "key-123") return MOCK_MODEL;
+      return null;
+    });
 
     const result = await resolveSmartDefaultLlm({ organizationId: org.id });
 
@@ -117,19 +121,20 @@ describe("resolveSmartDefaultLlm", () => {
       },
     );
 
-    vi.spyOn(ApiKeyModelModel, "getBestModel").mockImplementation(
-      async (apiKeyId) => {
-        if (apiKeyId === "system-key-gemini") {
-          return {
-            ...MOCK_MODEL,
-            id: "model-gemini",
-            modelId: "gemini-2.5-pro",
-            provider: "gemini",
-          };
-        }
-        return null;
-      },
-    );
+    vi.spyOn(
+      LlmProviderApiKeyModelLinkModel,
+      "getBestModel",
+    ).mockImplementation(async (apiKeyId) => {
+      if (apiKeyId === "system-key-gemini") {
+        return {
+          ...MOCK_MODEL,
+          id: "model-gemini",
+          modelId: "gemini-2.5-pro",
+          provider: "gemini",
+        };
+      }
+      return null;
+    });
 
     const result = await resolveSmartDefaultLlm({ organizationId: org.id });
 
@@ -167,20 +172,21 @@ describe("resolveSmartDefaultLlm", () => {
       return NO_KEY;
     });
 
-    vi.spyOn(ApiKeyModelModel, "getBestModel").mockImplementation(
-      async (apiKeyId) => {
-        if (apiKeyId === "ant-key-id") return null; // no models for anthropic
-        if (apiKeyId === "openai-key-id") {
-          return {
-            ...MOCK_MODEL,
-            id: "model-2",
-            modelId: "gpt-4o",
-            provider: "openai",
-          };
-        }
-        return null;
-      },
-    );
+    vi.spyOn(
+      LlmProviderApiKeyModelLinkModel,
+      "getBestModel",
+    ).mockImplementation(async (apiKeyId) => {
+      if (apiKeyId === "ant-key-id") return null; // no models for anthropic
+      if (apiKeyId === "openai-key-id") {
+        return {
+          ...MOCK_MODEL,
+          id: "model-2",
+          modelId: "gpt-4o",
+          provider: "openai",
+        };
+      }
+      return null;
+    });
 
     const result = await resolveSmartDefaultLlm({ organizationId: org.id });
 
@@ -209,7 +215,9 @@ describe("resolveSmartDefaultLlm", () => {
       }
       return NO_KEY;
     });
-    vi.spyOn(ApiKeyModelModel, "getBestModel").mockResolvedValue(MOCK_MODEL);
+    vi.spyOn(LlmProviderApiKeyModelLinkModel, "getBestModel").mockResolvedValue(
+      MOCK_MODEL,
+    );
 
     const result = await resolveSmartDefaultLlm({ organizationId: org.id });
 
@@ -276,7 +284,9 @@ describe("resolveSmartDefaultLlm", () => {
       },
     );
 
-    vi.spyOn(ApiKeyModelModel, "getBestModel").mockResolvedValue(null);
+    vi.spyOn(LlmProviderApiKeyModelLinkModel, "getBestModel").mockResolvedValue(
+      null,
+    );
 
     const result = await resolveSmartDefaultLlm({ organizationId: org.id });
 
@@ -311,12 +321,13 @@ describe("resolveSmartDefaultLlmForChat", () => {
       }
       return NO_KEY;
     });
-    vi.spyOn(ApiKeyModelModel, "getBestModel").mockImplementation(
-      async (apiKeyId) => {
-        if (apiKeyId === "key-123") return MOCK_MODEL;
-        return null;
-      },
-    );
+    vi.spyOn(
+      LlmProviderApiKeyModelLinkModel,
+      "getBestModel",
+    ).mockImplementation(async (apiKeyId) => {
+      if (apiKeyId === "key-123") return MOCK_MODEL;
+      return null;
+    });
 
     const result = await resolveSmartDefaultLlmForChat({
       organizationId: org.id,
@@ -403,12 +414,13 @@ describe("resolveSmartDefaultLlmForChat", () => {
       }
       return NO_KEY;
     });
-    vi.spyOn(ApiKeyModelModel, "getBestModel").mockImplementation(
-      async (apiKeyId) => {
-        if (apiKeyId === "key-123") return MOCK_MODEL;
-        return null;
-      },
-    );
+    vi.spyOn(
+      LlmProviderApiKeyModelLinkModel,
+      "getBestModel",
+    ).mockImplementation(async (apiKeyId) => {
+      if (apiKeyId === "key-123") return MOCK_MODEL;
+      return null;
+    });
 
     const originalApiKey = config.chat.openai.apiKey;
     config.chat.openai.apiKey = "sk-env-openai-key";
@@ -443,7 +455,10 @@ describe("resolveFastModelName", () => {
   });
 
   test("returns fastest model from DB when chatApiKeyId is provided", async () => {
-    vi.spyOn(ApiKeyModelModel, "getFastestModel").mockResolvedValue({
+    vi.spyOn(
+      LlmProviderApiKeyModelLinkModel,
+      "getFastestModel",
+    ).mockResolvedValue({
       ...MOCK_MODEL,
       modelId: "claude-haiku-3-5",
     });
@@ -451,11 +466,16 @@ describe("resolveFastModelName", () => {
     const result = await resolveFastModelName("anthropic", "key-123");
 
     expect(result).toBe("claude-haiku-3-5");
-    expect(ApiKeyModelModel.getFastestModel).toHaveBeenCalledWith("key-123");
+    expect(
+      LlmProviderApiKeyModelLinkModel.getFastestModel,
+    ).toHaveBeenCalledWith("key-123");
   });
 
   test("falls back to hardcoded model when DB has no fastest model", async () => {
-    vi.spyOn(ApiKeyModelModel, "getFastestModel").mockResolvedValue(null);
+    vi.spyOn(
+      LlmProviderApiKeyModelLinkModel,
+      "getFastestModel",
+    ).mockResolvedValue(null);
 
     const result = await resolveFastModelName("openai", "key-456");
 
@@ -463,9 +483,10 @@ describe("resolveFastModelName", () => {
   });
 
   test("falls back to hardcoded model when DB lookup throws", async () => {
-    vi.spyOn(ApiKeyModelModel, "getFastestModel").mockRejectedValue(
-      new Error("DB connection failed"),
-    );
+    vi.spyOn(
+      LlmProviderApiKeyModelLinkModel,
+      "getFastestModel",
+    ).mockRejectedValue(new Error("DB connection failed"));
 
     const result = await resolveFastModelName("openai", "key-789");
 

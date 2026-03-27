@@ -46,7 +46,7 @@ async function createChatApiKey(
       name: uniqueName,
       provider,
       apiKey: opts?.apiKey ?? "sk-e2e-test-key-for-wiremock",
-      scope: "org_wide",
+      scope: "org",
       baseUrl: opts?.baseUrl ?? null,
     },
   });
@@ -306,7 +306,7 @@ test.describe("Virtual API Keys - CRUD API", () => {
       data: {
         name: uniqueName,
         provider: "ollama",
-        scope: "org_wide",
+        scope: "org",
       },
     });
     const chatApiKey = (await createResp.json()) as {

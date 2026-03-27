@@ -15,8 +15,8 @@ import config from "@/config";
 import logger from "@/logging";
 import {
   AgentModel,
-  ApiKeyModelModel,
   LlmProviderApiKeyModel,
+  LlmProviderApiKeyModelLinkModel,
   McpServerModel,
   TeamModel,
   UserModel,
@@ -524,7 +524,9 @@ async function resolveModelForAgent(params: {
       }
 
       // Priority 2: Key without model — use best model for that key
-      const bestModel = await ApiKeyModelModel.getBestModel(agent.llmApiKeyId);
+      const bestModel = await LlmProviderApiKeyModelLinkModel.getBestModel(
+        agent.llmApiKeyId,
+      );
       if (bestModel) {
         logger.debug(
           {
@@ -554,7 +556,7 @@ async function resolveModelForAgent(params: {
     const keyModels = await Promise.all(
       availableKeys.map(async (key) => ({
         apiKey: key,
-        model: await ApiKeyModelModel.getBestModel(key.id),
+        model: await LlmProviderApiKeyModelLinkModel.getBestModel(key.id),
       })),
     );
 

@@ -1,6 +1,6 @@
 import type { SupportedProvider } from "@shared";
 import { vi } from "vitest";
-import ApiKeyModelModel from "@/models/api-key-model";
+import LlmProviderApiKeyModelLinkModel from "@/models/llm-provider-api-key-model";
 import ModelModel from "@/models/model";
 import { modelFetchers } from "@/routes/chat/model-fetchers";
 import { afterEach, describe, expect, test } from "@/test";
@@ -94,9 +94,8 @@ describe("ModelSyncService", () => {
     expect(geminiAsGemini).toBeNull();
 
     // Verify all 3 models are linked to the API key
-    const linkedModels = await ApiKeyModelModel.getModelsForApiKeyIds([
-      apiKey.id,
-    ]);
+    const linkedModels =
+      await LlmProviderApiKeyModelLinkModel.getModelsForApiKeyIds([apiKey.id]);
     expect(linkedModels).toHaveLength(3);
     expect(linkedModels.every((m) => m.model.provider === "openai")).toBe(true);
   });

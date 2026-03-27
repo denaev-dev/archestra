@@ -3,7 +3,11 @@ import { isBedrockIamAuthEnabled } from "@/clients/bedrock-credentials";
 import { isVertexAiEnabled } from "@/clients/gemini-client";
 import { modelsDevClient } from "@/clients/models-dev-client";
 import logger from "@/logging";
-import { ApiKeyModelModel, LlmProviderApiKeyModel, ModelModel } from "@/models";
+import {
+  LlmProviderApiKeyModel,
+  LlmProviderApiKeyModelLinkModel,
+  ModelModel,
+} from "@/models";
 import { fetchBedrockModelsViaIam } from "@/routes/chat/model-fetchers/bedrock";
 import { fetchGeminiModelsViaVertexAi } from "@/routes/chat/model-fetchers/gemini";
 import { buildModelsToUpsert } from "@/services/model-sync";
@@ -163,7 +167,11 @@ class SystemKeyManager {
 
     if (models.length === 0) {
       logger.info({ provider, apiKeyId }, "No models returned from provider");
-      await ApiKeyModelModel.syncModelsForApiKey(apiKeyId, [], provider);
+      await LlmProviderApiKeyModelLinkModel.syncModelsForApiKey(
+        apiKeyId,
+        [],
+        provider,
+      );
       return;
     }
 
@@ -195,7 +203,7 @@ class SystemKeyManager {
       id: m.id,
       modelId: m.modelId,
     }));
-    await ApiKeyModelModel.syncModelsForApiKey(
+    await LlmProviderApiKeyModelLinkModel.syncModelsForApiKey(
       apiKeyId,
       modelsWithIds,
       provider,

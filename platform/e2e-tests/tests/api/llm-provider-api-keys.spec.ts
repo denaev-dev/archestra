@@ -110,14 +110,14 @@ test.describe("LLM Provider API Keys CRUD", () => {
         name: "Org Wide Test Key",
         provider: "anthropic",
         apiKey: "sk-ant-org-wide-test-key",
-        scope: "org_wide",
+        scope: "org",
       },
     });
 
     expect(response.ok()).toBe(true);
     const apiKey = await response.json();
 
-    expect(apiKey.scope).toBe("org_wide");
+    expect(apiKey.scope).toBe("org");
 
     // Cleanup
     await makeApiRequest({
@@ -544,7 +544,7 @@ test.describe("LLM Provider API Keys Team Scope", () => {
 test.describe("LLM Provider API Keys Scope Update", () => {
   test.describe.configure({ mode: "serial" });
 
-  test("should update scope from personal to org_wide", async ({
+  test("should update scope from personal to org", async ({
     request,
     makeApiRequest,
   }) => {
@@ -566,19 +566,19 @@ test.describe("LLM Provider API Keys Scope Update", () => {
     });
     const createdKey = await createResponse.json();
 
-    // Update scope to org_wide
+    // Update scope to org
     const updateResponse = await makeApiRequest({
       request,
       method: "patch",
       urlSuffix: `/api/chat-api-keys/${createdKey.id}`,
       data: {
-        scope: "org_wide",
+        scope: "org",
       },
     });
 
     expect(updateResponse.ok()).toBe(true);
     const updatedKey = await updateResponse.json();
-    expect(updatedKey.scope).toBe("org_wide");
+    expect(updatedKey.scope).toBe("org");
     expect(updatedKey.userId).toBeNull();
 
     // Cleanup

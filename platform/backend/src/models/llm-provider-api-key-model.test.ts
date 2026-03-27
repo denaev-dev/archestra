@@ -1,11 +1,12 @@
 import { describe, expect, test } from "@/test";
-import ApiKeyModelModel from "./api-key-model";
+import LlmProviderApiKeyModelLinkModel from "./llm-provider-api-key-model";
 import ModelModel from "./model";
 
-describe("ApiKeyModelModel", () => {
+describe("LlmProviderApiKeyModelLinkModel", () => {
   describe("getBestModelsForApiKeys", () => {
     test("returns an empty map for empty input", async () => {
-      const bestModels = await ApiKeyModelModel.getBestModelsForApiKeys([]);
+      const bestModels =
+        await LlmProviderApiKeyModelLinkModel.getBestModelsForApiKeys([]);
 
       expect(bestModels).toEqual(new Map());
     });
@@ -65,7 +66,7 @@ describe("ApiKeyModelModel", () => {
         lastSyncedAt: new Date(),
       });
 
-      await ApiKeyModelModel.syncModelsForApiKey(
+      await LlmProviderApiKeyModelLinkModel.syncModelsForApiKey(
         bestMarkedKey.id,
         [
           { id: fallbackFirstModel.id, modelId: fallbackFirstModel.modelId },
@@ -73,15 +74,16 @@ describe("ApiKeyModelModel", () => {
         ],
         "openai",
       );
-      await ApiKeyModelModel.linkModelsToApiKey(fallbackKey.id, [
+      await LlmProviderApiKeyModelLinkModel.linkModelsToApiKey(fallbackKey.id, [
         fallbackSecondModel.id,
         fallbackFirstModel.id,
       ]);
 
-      const bestModels = await ApiKeyModelModel.getBestModelsForApiKeys([
-        bestMarkedKey.id,
-        fallbackKey.id,
-      ]);
+      const bestModels =
+        await LlmProviderApiKeyModelLinkModel.getBestModelsForApiKeys([
+          bestMarkedKey.id,
+          fallbackKey.id,
+        ]);
 
       expect(bestModels.get(bestMarkedKey.id)?.id).toBe(bestCandidateModel.id);
       expect(bestModels.get(fallbackKey.id)?.id).toBe(fallbackFirstModel.id);
@@ -93,7 +95,8 @@ describe("ApiKeyModelModel", () => {
       makeOrganization,
     }) => {
       await makeOrganization();
-      const result = await ApiKeyModelModel.getAllModelsWithApiKeys();
+      const result =
+        await LlmProviderApiKeyModelLinkModel.getAllModelsWithApiKeys();
       expect(result).toEqual([]);
     });
 
@@ -125,9 +128,12 @@ describe("ApiKeyModelModel", () => {
         lastSyncedAt: new Date(),
       });
 
-      await ApiKeyModelModel.linkModelsToApiKey(apiKey.id, [model.id]);
+      await LlmProviderApiKeyModelLinkModel.linkModelsToApiKey(apiKey.id, [
+        model.id,
+      ]);
 
-      const result = await ApiKeyModelModel.getAllModelsWithApiKeys();
+      const result =
+        await LlmProviderApiKeyModelLinkModel.getAllModelsWithApiKeys();
       expect(result).toHaveLength(1);
       expect(result[0].model.id).toBe(model.id);
       expect(result[0].apiKeys).toHaveLength(1);
@@ -159,7 +165,9 @@ describe("ApiKeyModelModel", () => {
         completionPricePerToken: "0.000015",
         lastSyncedAt: new Date(),
       });
-      await ApiKeyModelModel.linkModelsToApiKey(apiKey.id, [linkedModel.id]);
+      await LlmProviderApiKeyModelLinkModel.linkModelsToApiKey(apiKey.id, [
+        linkedModel.id,
+      ]);
 
       // Create an orphaned model (no API key link)
       await ModelModel.create({
@@ -176,7 +184,8 @@ describe("ApiKeyModelModel", () => {
         lastSyncedAt: new Date(),
       });
 
-      const result = await ApiKeyModelModel.getAllModelsWithApiKeys();
+      const result =
+        await LlmProviderApiKeyModelLinkModel.getAllModelsWithApiKeys();
 
       // Only the linked model should be returned
       expect(result).toHaveLength(1);
@@ -209,10 +218,13 @@ describe("ApiKeyModelModel", () => {
         completionPricePerToken: "0.000015",
         lastSyncedAt: new Date(),
       });
-      await ApiKeyModelModel.linkModelsToApiKey(apiKey.id, [model.id]);
+      await LlmProviderApiKeyModelLinkModel.linkModelsToApiKey(apiKey.id, [
+        model.id,
+      ]);
 
       // Verify model is visible before deletion
-      let result = await ApiKeyModelModel.getAllModelsWithApiKeys();
+      let result =
+        await LlmProviderApiKeyModelLinkModel.getAllModelsWithApiKeys();
       expect(result).toHaveLength(1);
 
       // Delete the API key (cascade deletes api_key_models entries)
@@ -220,7 +232,7 @@ describe("ApiKeyModelModel", () => {
       await LlmProviderApiKeyModel.delete(apiKey.id);
 
       // Model should no longer appear since it has no linked API keys
-      result = await ApiKeyModelModel.getAllModelsWithApiKeys();
+      result = await LlmProviderApiKeyModelLinkModel.getAllModelsWithApiKeys();
       expect(result).toHaveLength(0);
 
       // But the model itself still exists in the models table

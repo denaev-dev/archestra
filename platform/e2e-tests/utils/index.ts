@@ -1,5 +1,5 @@
 export * from "./auth";
-export * from "./chat-settings";
+export * from "./llm-provider-api-keys";
 export * from "./chat-ui";
 export * from "./dialogs";
 export * from "./mcp-catalog";
