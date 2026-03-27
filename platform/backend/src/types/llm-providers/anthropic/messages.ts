@@ -42,33 +42,37 @@ const ImageBlockParamSchema = z.object({
   cache_control: z.any().nullable().optional(),
 });
 
-const DocumentBlockParamSchema = z.object({
-  type: z.enum(["document"]),
-  source: z.union([
-    z.object({
-      type: z.enum(["base64"]),
-      media_type: z.enum(["application/pdf"]),
-      data: z.string(),
-    }),
-    z.object({
-      type: z.enum(["text"]),
-      media_type: z.enum(["text/plain"]),
-      data: z.string(),
-    }),
-    z.object({
-      type: z.enum(["url"]),
-      url: z.string().url(),
-    }),
-  ]),
-  title: z.string().optional(),
-  context: z.string().optional(),
-  citations: z
-    .object({
-      enabled: z.boolean(),
-    })
-    .optional(),
-  cache_control: z.any().nullable().optional(),
-});
+const DocumentBlockParamSchema = z
+  .object({
+    type: z.enum(["document"]),
+    source: z.union([
+      z.object({
+        type: z.enum(["base64"]),
+        media_type: z.enum(["application/pdf"]),
+        data: z.string(),
+      }),
+      z.object({
+        type: z.enum(["text"]),
+        media_type: z.enum(["text/plain"]),
+        data: z.string(),
+      }),
+      z.object({
+        type: z.enum(["url"]),
+        url: z.string().url(),
+      }),
+    ]),
+    title: z.string().optional(),
+    context: z.string().optional(),
+    citations: z
+      .object({
+        enabled: z.boolean(),
+      })
+      .optional(),
+    cache_control: z.any().nullable().optional(),
+  })
+  .describe(
+    'Anthropic Messages API request document content block. This models a user `content` item with `type: "document"` and the currently-supported inline sources we accept here: URL PDFs, base64 PDFs, and inline plain-text documents. Reference: https://docs.anthropic.com/en/docs/build-with-claude/citations#document-types',
+  );
 
 // const SearchResultBlockParamSchema = z.any();
 const ToolUseBlockParamSchema = z.object({
