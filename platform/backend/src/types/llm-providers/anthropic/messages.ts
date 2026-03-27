@@ -42,6 +42,14 @@ const ImageBlockParamSchema = z.object({
   cache_control: z.any().nullable().optional(),
 });
 
+const ContentBlockSourceSchema = z.object({
+  type: z.enum(["content"]),
+  content: z.union([
+    z.string(),
+    z.array(z.union([TextBlockParamSchema, ImageBlockParamSchema])),
+  ]),
+});
+
 const DocumentBlockParamSchema = z
   .object({
     type: z.enum(["document"]),
@@ -60,18 +68,20 @@ const DocumentBlockParamSchema = z
         type: z.enum(["url"]),
         url: z.string().url(),
       }),
+      ContentBlockSourceSchema,
     ]),
-    title: z.string().optional(),
-    context: z.string().optional(),
+    title: z.string().nullable().optional(),
+    context: z.string().nullable().optional(),
     citations: z
       .object({
         enabled: z.boolean(),
       })
+      .nullable()
       .optional(),
     cache_control: z.any().nullable().optional(),
   })
   .describe(
-    'Anthropic Messages API request document content block. This models a user `content` item with `type: "document"` and the currently-supported inline sources we accept here: URL PDFs, base64 PDFs, and inline plain-text documents. API reference: https://platform.claude.com/docs/en/api/messages',
+    'Anthropic Messages API request `DocumentBlockParam`. This models a user `content` item with `type: "document"` and supports the source union exposed by Anthropic: `Base64PDFSource | PlainTextSource | ContentBlockSource | URLPDFSource`. API reference: https://platform.claude.com/docs/en/api/messages#document_block_param',
   );
 
 // const SearchResultBlockParamSchema = z.any();
