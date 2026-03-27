@@ -8,13 +8,3 @@ export const ResourceVisibilityScopeSchema = z.enum([
 export type ResourceVisibilityScope = z.infer<
   typeof ResourceVisibilityScopeSchema
 >;
-
-export const ResourceVisibilityScopeFilterSchema = z.enum([
-  "personal",
-  "team",
-  "org",
-  "built_in",
-]);
-export type ResourceVisibilityScopeFilter = z.infer<
-  typeof ResourceVisibilityScopeFilterSchema
->;

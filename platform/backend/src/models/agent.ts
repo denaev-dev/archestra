@@ -30,9 +30,9 @@ import logger from "@/logging";
 import type {
   Agent,
   AgentScope,
+  AgentScopeFilter,
   AgentType,
   InsertAgent,
-  ResourceVisibilityScopeFilter,
   SortingQuery,
   UpdateAgent,
 } from "@/types";
@@ -582,7 +582,7 @@ class AgentModel {
       name?: string;
       agentType?: AgentType;
       agentTypes?: AgentType[];
-      scope?: ResourceVisibilityScopeFilter;
+      scope?: AgentScopeFilter;
       teamIds?: string[];
       authorIds?: string[];
       excludeAuthorIds?: string[];

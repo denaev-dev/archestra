@@ -24,6 +24,10 @@ export type ModelWithApiKeys =
   archestraApiTypes.GetModelsWithApiKeysResponses["200"][number];
 export type LinkedApiKey = ModelWithApiKeys["apiKeys"][number];
 
+/**
+ * Fetch available chat models from all configured providers.
+ * When apiKeyId is provided, only returns models linked to that specific key.
+ */
 export function useLlmModels(params?: LlmModelsParams) {
   const apiKeyId = params?.apiKeyId;
   return useQuery({
@@ -38,13 +42,21 @@ export function useLlmModels(params?: LlmModelsParams) {
       }
       return data ?? [];
     },
+    // Keep showing previous models while fetching for a new apiKeyId,
+    // preventing display name flicker (e.g. "Claude Opus 4.1" → raw ID → back).
     placeholderData: keepPreviousData,
   });
 }
 
+/**
+ * Get models grouped by provider for UI display.
+ * Returns models grouped by provider with loading/error states.
+ * When apiKeyId is provided, only returns models linked to that specific key.
+ */
 export function useLlmModelsByProvider(params?: LlmModelsParams) {
   const query = useLlmModels(params);
 
+  // Memoize to prevent creating new object reference on every render
   const modelsByProvider = useMemo(() => {
     if (!query.data) return {} as Record<SupportedProvider, LlmModel[]>;
     return query.data.reduce(
@@ -80,6 +92,10 @@ export function useModelsWithApiKeys() {
   });
 }
 
+/**
+ * Update model details (pricing + modalities).
+ * Set prices to null to reset to default pricing.
+ */
 export function useUpdateModel() {
   const queryClient = useQueryClient();
   return useMutation({

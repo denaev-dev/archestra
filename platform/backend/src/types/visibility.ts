@@ -1,8 +1,2 @@
-export type {
-  ResourceVisibilityScope,
-  ResourceVisibilityScopeFilter,
-} from "@shared";
-export {
-  ResourceVisibilityScopeFilterSchema,
-  ResourceVisibilityScopeSchema,
-} from "@shared";
+export type { ResourceVisibilityScope } from "@shared";
+export { ResourceVisibilityScopeSchema } from "@shared";
