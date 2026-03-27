@@ -27,7 +27,7 @@ describe("chat tool execution", () => {
       makeOrganization,
       makeMember,
       makeSecret,
-      makeChatApiKey,
+      makeLlmProviderApiKey,
     }) => {
       const org = await makeOrganization();
       const user = await makeUser();
@@ -35,9 +35,13 @@ describe("chat tool execution", () => {
       userId = user.id;
       organizationId = org.id;
       const secret = await makeSecret();
-      const orgWideApiKey = await makeChatApiKey(organizationId, secret.id, {
-        provider: "openai",
-      });
+      const orgWideApiKey = await makeLlmProviderApiKey(
+        organizationId,
+        secret.id,
+        {
+          provider: "openai",
+        },
+      );
       vi.spyOn(ChatApiKeyModel, "findById").mockImplementation(async (id) => {
         if (id === orgWideApiKey.id) {
           return orgWideApiKey;
@@ -170,12 +174,16 @@ describe("chat tool execution", () => {
     makeAgent,
     makeConversation,
     makeSecret,
-    makeChatApiKey,
+    makeLlmProviderApiKey,
   }) => {
     const secret = await makeSecret();
-    const targetApiKey = await makeChatApiKey(organizationId, secret.id, {
-      provider: "anthropic",
-    });
+    const targetApiKey = await makeLlmProviderApiKey(
+      organizationId,
+      secret.id,
+      {
+        provider: "anthropic",
+      },
+    );
     vi.spyOn(ChatApiKeyModel, "findById").mockImplementation(async (id) => {
       if (id === targetApiKey.id) {
         return targetApiKey;
@@ -294,12 +302,16 @@ describe("chat tool execution", () => {
     makeAgent,
     makeConversation,
     makeSecret,
-    makeChatApiKey,
+    makeLlmProviderApiKey,
   }) => {
     const secret = await makeSecret();
-    const defaultApiKey = await makeChatApiKey(organizationId, secret.id, {
-      provider: "openai",
-    });
+    const defaultApiKey = await makeLlmProviderApiKey(
+      organizationId,
+      secret.id,
+      {
+        provider: "openai",
+      },
+    );
     vi.spyOn(ChatApiKeyModel, "findById").mockImplementation(async (id) => {
       if (id === defaultApiKey.id) {
         return defaultApiKey;
@@ -370,7 +382,7 @@ describe("chat tool execution", () => {
     makeTeam,
     makeTeamMember,
     makeSecret,
-    makeChatApiKey,
+    makeLlmProviderApiKey,
   }) => {
     // Create a separate non-admin member for this test
     const memberOrg = await makeOrganization();
@@ -378,7 +390,7 @@ describe("chat tool execution", () => {
     await makeMember(memberUser.id, memberOrg.id, { role: "member" });
 
     const secret = await makeSecret();
-    const apiKey = await makeChatApiKey(memberOrg.id, secret.id, {
+    const apiKey = await makeLlmProviderApiKey(memberOrg.id, secret.id, {
       provider: "openai",
     });
     vi.spyOn(ChatApiKeyModel, "findById").mockImplementation(async (id) => {

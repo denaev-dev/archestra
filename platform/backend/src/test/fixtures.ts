@@ -85,7 +85,7 @@ interface TestFixtures {
   makeConversation: typeof makeConversation;
   makeInteraction: typeof makeInteraction;
   makeSecret: typeof makeSecret;
-  makeChatApiKey: typeof makeChatApiKey;
+  makeLlmProviderApiKey: typeof makeLlmProviderApiKey;
   makeIdentityProvider: typeof makeIdentityProvider;
   makeOAuthClient: typeof makeOAuthClient;
   makeOAuthAccessToken: typeof makeOAuthAccessToken;
@@ -688,7 +688,7 @@ async function makeSecret(
  * Creates a test chat API key in the database.
  * Used for testing features that require LLM API keys (e.g., auto-policy configuration).
  */
-async function makeChatApiKey(
+async function makeLlmProviderApiKey(
   organizationId: string,
   secretId: string,
   overrides: Partial<
@@ -1030,8 +1030,8 @@ export const test = baseTest.extend<TestFixtures>({
   makeSecret: async ({}, use) => {
     await use(makeSecret);
   },
-  makeChatApiKey: async ({}, use) => {
-    await use(makeChatApiKey);
+  makeLlmProviderApiKey: async ({}, use) => {
+    await use(makeLlmProviderApiKey);
   },
   makeIdentityProvider: async ({}, use) => {
     await use(makeIdentityProvider);

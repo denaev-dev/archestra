@@ -15,6 +15,12 @@ import { schema } from "@/database";
 import { SuggestedPromptInputSchema } from "./agent-suggested-prompt";
 import { AgentLabelWithDetailsSchema } from "./label";
 import { SelectToolSchema } from "./tool";
+import {
+  type ResourceVisibilityScope,
+  type ResourceVisibilityScopeFilter,
+  ResourceVisibilityScopeFilterSchema,
+  ResourceVisibilityScopeSchema,
+} from "./visibility";
 
 /**
  * Agent type:
@@ -31,17 +37,12 @@ export const AgentTypeSchema = z.enum([
 ]);
 export type AgentType = z.infer<typeof AgentTypeSchema>;
 
-export const AgentScopeSchema = z.enum(["personal", "team", "org"]);
-export type AgentScope = z.infer<typeof AgentScopeSchema>;
+export const AgentScopeSchema = ResourceVisibilityScopeSchema;
+export type AgentScope = ResourceVisibilityScope;
 
 /** Scope filter for API queries — includes "built_in" as a virtual scope for filtering */
-export const AgentScopeFilterSchema = z.enum([
-  "personal",
-  "team",
-  "org",
-  "built_in",
-]);
-export type AgentScopeFilter = z.infer<typeof AgentScopeFilterSchema>;
+export const AgentScopeFilterSchema = ResourceVisibilityScopeFilterSchema;
+export type AgentScopeFilter = ResourceVisibilityScopeFilter;
 
 // Built-in agent config — discriminated union by name
 // Policy Configuration Subagent config

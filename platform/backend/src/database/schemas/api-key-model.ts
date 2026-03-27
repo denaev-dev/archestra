@@ -6,7 +6,7 @@ import {
   unique,
   uuid,
 } from "drizzle-orm/pg-core";
-import chatApiKeysTable from "./chat-api-key";
+import llmProviderApiKeysTable from "./llm-provider-api-key";
 import modelsTable from "./model";
 
 /**
@@ -26,7 +26,7 @@ const apiKeyModelsTable = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     apiKeyId: uuid("api_key_id")
       .notNull()
-      .references(() => chatApiKeysTable.id, { onDelete: "cascade" }),
+      .references(() => llmProviderApiKeysTable.id, { onDelete: "cascade" }),
     modelId: uuid("model_id")
       .notNull()
       .references(() => modelsTable.id, { onDelete: "cascade" }),

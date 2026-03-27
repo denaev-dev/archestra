@@ -123,13 +123,13 @@ import {
 } from "@/lib/agent-tools.query";
 import { useHasPermissions } from "@/lib/auth/auth.query";
 import { useChatProfileMcpTools } from "@/lib/chat/chat.query";
-import { useModelsByProvider } from "@/lib/chat/chat-models.query";
-import { useAvailableChatApiKeys } from "@/lib/chat/chat-settings.query";
 import config from "@/lib/config/config";
 import { useFeature } from "@/lib/config/config.query";
 import { useAppName } from "@/lib/hooks/use-app-name";
 import { useConnectors } from "@/lib/knowledge/connector.query";
 import { useKnowledgeBases } from "@/lib/knowledge/knowledge-base.query";
+import { useModelsByProvider } from "@/lib/llm-models.query";
+import { useAvailableLlmProviderApiKeys } from "@/lib/llm-provider-api-keys.query";
 import { cn } from "@/lib/utils";
 import {
   getDescriptionPlaceholder,
@@ -536,7 +536,7 @@ export function AgentDialog({
   });
   const connectors = connectorsData ?? [];
   const agentLlmApiKeyId = agent?.llmApiKeyId;
-  const { data: availableApiKeys = [] } = useAvailableChatApiKeys({
+  const { data: availableApiKeys = [] } = useAvailableLlmProviderApiKeys({
     includeKeyId: agentLlmApiKeyId ?? undefined,
   });
   const { modelsByProvider } = useModelsByProvider();
@@ -711,7 +711,7 @@ export function AgentDialog({
   }, [open, agentId, currentDelegationIds]);
 
   // LLM Configuration: computed values and bidirectional auto-linking
-  // (same reactive pattern as prompt input: ChatApiKeySelector + onProviderChange)
+  // (same reactive pattern as prompt input: LlmProviderApiKeySelector + onProviderChange)
   const selectedApiKey = useMemo(
     () => availableApiKeys.find((k) => k.id === llmApiKeyId),
     [availableApiKeys, llmApiKeyId],
@@ -742,7 +742,7 @@ export function AgentDialog({
   const lastAutoSelectedProviderRef = useRef<string | null>(null);
 
   // Reactive Model → Key: auto-select key when provider changes
-  // (mirrors ChatApiKeySelector's auto-select useEffect in prompt input)
+  // (mirrors LlmProviderApiKeySelector's auto-select useEffect in prompt input)
   useEffect(() => {
     // Don't auto-select if no model/provider is set
     if (!currentLlmProvider) {

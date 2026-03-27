@@ -4,7 +4,7 @@ import ChatApiKeyModel from "./chat-api-key";
 
 describe("ChatApiKeyModel", () => {
   describe("create", () => {
-    test("can create a personal chat API key", async ({
+    test("can create a personal LLM provider API key", async ({
       makeOrganization,
       makeUser,
     }) => {
@@ -29,7 +29,7 @@ describe("ChatApiKeyModel", () => {
       expect(apiKey.teamId).toBeNull();
     });
 
-    test("can create a team chat API key", async ({
+    test("can create a team LLM provider API key", async ({
       makeOrganization,
       makeUser,
       makeTeam,
@@ -51,7 +51,7 @@ describe("ChatApiKeyModel", () => {
       expect(apiKey.userId).toBeNull();
     });
 
-    test("can create an org-wide chat API key", async ({
+    test("can create an org-wide LLM provider API key", async ({
       makeOrganization,
     }) => {
       const org = await makeOrganization();
@@ -177,7 +177,7 @@ describe("ChatApiKeyModel", () => {
   });
 
   describe("findById", () => {
-    test("can find a chat API key by ID", async ({
+    test("can find an LLM provider API key by ID", async ({
       makeOrganization,
       makeUser,
     }) => {
@@ -207,7 +207,7 @@ describe("ChatApiKeyModel", () => {
   });
 
   describe("findByOrganizationId", () => {
-    test("can find all chat API keys for an organization", async ({
+    test("can find all LLM provider API keys for an organization", async ({
       makeOrganization,
       makeUser,
     }) => {

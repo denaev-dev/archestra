@@ -61,12 +61,15 @@ class ApiKeyModelModel {
   static async getApiKeysForModel(modelId: string): Promise<ChatApiKey[]> {
     const results = await db
       .select({
-        apiKey: schema.chatApiKeysTable,
+        apiKey: schema.llmProviderApiKeysTable,
       })
       .from(schema.apiKeyModelsTable)
       .innerJoin(
-        schema.chatApiKeysTable,
-        eq(schema.apiKeyModelsTable.apiKeyId, schema.chatApiKeysTable.id),
+        schema.llmProviderApiKeysTable,
+        eq(
+          schema.apiKeyModelsTable.apiKeyId,
+          schema.llmProviderApiKeysTable.id,
+        ),
       )
       .where(eq(schema.apiKeyModelsTable.modelId, modelId));
 
@@ -157,11 +160,11 @@ class ApiKeyModelModel {
         model: schema.modelsTable,
         isFastest: schema.apiKeyModelsTable.isFastest,
         isBest: schema.apiKeyModelsTable.isBest,
-        apiKeyId: schema.chatApiKeysTable.id,
-        apiKeyName: schema.chatApiKeysTable.name,
-        apiKeyProvider: schema.chatApiKeysTable.provider,
-        apiKeyScope: schema.chatApiKeysTable.scope,
-        apiKeyIsSystem: schema.chatApiKeysTable.isSystem,
+        apiKeyId: schema.llmProviderApiKeysTable.id,
+        apiKeyName: schema.llmProviderApiKeysTable.name,
+        apiKeyProvider: schema.llmProviderApiKeysTable.provider,
+        apiKeyScope: schema.llmProviderApiKeysTable.scope,
+        apiKeyIsSystem: schema.llmProviderApiKeysTable.isSystem,
       })
       .from(schema.apiKeyModelsTable)
       .innerJoin(
@@ -169,8 +172,11 @@ class ApiKeyModelModel {
         eq(schema.apiKeyModelsTable.modelId, schema.modelsTable.id),
       )
       .innerJoin(
-        schema.chatApiKeysTable,
-        eq(schema.apiKeyModelsTable.apiKeyId, schema.chatApiKeysTable.id),
+        schema.llmProviderApiKeysTable,
+        eq(
+          schema.apiKeyModelsTable.apiKeyId,
+          schema.llmProviderApiKeysTable.id,
+        ),
       )
       .orderBy(
         asc(schema.modelsTable.provider),

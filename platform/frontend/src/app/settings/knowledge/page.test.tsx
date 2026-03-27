@@ -81,18 +81,18 @@ let mockApiKeys: Array<{
   scope: string;
 }> = [];
 
-vi.mock("@/lib/chat/chat-settings.query", () => ({
-  useAvailableChatApiKeys: () => ({
+vi.mock("@/lib/llm-provider-api-keys.query", () => ({
+  useAvailableLlmProviderApiKeys: () => ({
     data: mockApiKeys,
     isPending: false,
   }),
-  useCreateChatApiKey: () => ({
+  useCreateLlmProviderApiKey: () => ({
     mutateAsync: vi.fn(),
     isPending: false,
   }),
 }));
 
-vi.mock("@/lib/chat/chat-models.query", () => ({
+vi.mock("@/lib/llm-models.query", () => ({
   useChatModels: () => ({
     data: [
       { id: "gpt-4o", provider: "openai", displayName: "GPT-4o" },

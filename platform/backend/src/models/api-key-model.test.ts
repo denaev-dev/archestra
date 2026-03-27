@@ -13,15 +13,15 @@ describe("ApiKeyModelModel", () => {
     test("returns best-marked models and falls back to the first linked model", async ({
       makeOrganization,
       makeSecret,
-      makeChatApiKey,
+      makeLlmProviderApiKey,
     }) => {
       const org = await makeOrganization();
       const secret = await makeSecret();
 
-      const bestMarkedKey = await makeChatApiKey(org.id, secret.id, {
+      const bestMarkedKey = await makeLlmProviderApiKey(org.id, secret.id, {
         provider: "openai",
       });
-      const fallbackKey = await makeChatApiKey(org.id, secret.id, {
+      const fallbackKey = await makeLlmProviderApiKey(org.id, secret.id, {
         provider: "openai",
       });
 
@@ -100,13 +100,13 @@ describe("ApiKeyModelModel", () => {
     test("returns models that have linked API keys", async ({
       makeOrganization,
       makeSecret,
-      makeChatApiKey,
+      makeLlmProviderApiKey,
     }) => {
       const org = await makeOrganization();
       const secret = await makeSecret();
 
       // Create an API key
-      const apiKey = await makeChatApiKey(org.id, secret.id, {
+      const apiKey = await makeLlmProviderApiKey(org.id, secret.id, {
         provider: "openai",
       });
 
@@ -137,13 +137,13 @@ describe("ApiKeyModelModel", () => {
     test("excludes orphaned models with no linked API keys", async ({
       makeOrganization,
       makeSecret,
-      makeChatApiKey,
+      makeLlmProviderApiKey,
     }) => {
       const org = await makeOrganization();
       const secret = await makeSecret();
 
       // Create an API key and a linked model
-      const apiKey = await makeChatApiKey(org.id, secret.id, {
+      const apiKey = await makeLlmProviderApiKey(org.id, secret.id, {
         provider: "openai",
       });
       const linkedModel = await ModelModel.create({
@@ -187,13 +187,13 @@ describe("ApiKeyModelModel", () => {
     test("orphaned models appear after API key deletion due to cascade", async ({
       makeOrganization,
       makeSecret,
-      makeChatApiKey,
+      makeLlmProviderApiKey,
     }) => {
       const org = await makeOrganization();
       const secret = await makeSecret();
 
       // Create API key and link a model
-      const apiKey = await makeChatApiKey(org.id, secret.id, {
+      const apiKey = await makeLlmProviderApiKey(org.id, secret.id, {
         provider: "anthropic",
       });
       const model = await ModelModel.create({

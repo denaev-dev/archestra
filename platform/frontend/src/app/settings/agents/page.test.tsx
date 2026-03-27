@@ -27,7 +27,7 @@ vi.mock("next/link", () => ({
   }) => <a href={href}>{children}</a>,
 }));
 
-vi.mock("@/components/chat-api-key-form", () => ({
+vi.mock("@/components/llm-provider-api-key-form", () => ({
   PROVIDER_CONFIG: {
     vertex_ai: {
       icon: "/vertex.svg",
@@ -135,7 +135,7 @@ vi.mock("@/lib/agent.query", () => ({
   }),
 }));
 
-vi.mock("@/lib/chat/chat-models.query", () => ({
+vi.mock("@/lib/llm-models.query", () => ({
   useChatModels: () => ({
     data: [
       {
@@ -148,8 +148,8 @@ vi.mock("@/lib/chat/chat-models.query", () => ({
   }),
 }));
 
-vi.mock("@/lib/chat/chat-settings.query", () => ({
-  useAvailableChatApiKeys: () => ({
+vi.mock("@/lib/llm-provider-api-keys.query", () => ({
+  useAvailableLlmProviderApiKeys: () => ({
     data: mockApiKeys,
   }),
 }));

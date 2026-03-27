@@ -44,13 +44,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { resolveAutoSelectedModel } from "@/lib/chat/use-chat-preferences";
 import {
   type ChatModel,
   type ModelCapabilities,
   useModelsByProvider,
-} from "@/lib/chat/chat-models.query";
-import { useSyncChatModels } from "@/lib/chat/chat-settings.query";
-import { resolveAutoSelectedModel } from "@/lib/chat/use-chat-preferences";
+  useSyncChatModels,
+} from "@/lib/llm-models.query";
 import { cn } from "@/lib/utils";
 
 /** Modalities that can be filtered (excludes "text" since all models support it) */

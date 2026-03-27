@@ -184,7 +184,7 @@ export async function installLocalCatalogItem(params: {
   await waitForMcpServerToolsDiscovered(params.page, params.catalogItemName);
 }
 
-async function installTeamCatalogItemConnection(params: {
+async function _installTeamCatalogItemConnection(params: {
   page: Page;
   catalogItemName: string;
   teamName: string;

@@ -25,11 +25,11 @@ describe("ModelSyncService", () => {
   test("stores models with the API key's provider, not detected provider", async ({
     makeOrganization,
     makeSecret,
-    makeChatApiKey,
+    makeLlmProviderApiKey,
   }) => {
     const org = await makeOrganization();
     const secret = await makeSecret({ secret: { apiKey: "test-key" } });
-    const apiKey = await makeChatApiKey(org.id, secret.id, {
+    const apiKey = await makeLlmProviderApiKey(org.id, secret.id, {
       provider: "openai",
     });
 
@@ -104,11 +104,11 @@ describe("ModelSyncService", () => {
   test("forceRefresh resets custom pricing, normal sync preserves it", async ({
     makeOrganization,
     makeSecret,
-    makeChatApiKey,
+    makeLlmProviderApiKey,
   }) => {
     const org = await makeOrganization();
     const secret = await makeSecret({ secret: { apiKey: "test-key" } });
-    const apiKey = await makeChatApiKey(org.id, secret.id, {
+    const apiKey = await makeLlmProviderApiKey(org.id, secret.id, {
       provider: "openai",
     });
 
@@ -175,13 +175,13 @@ describe("ModelSyncService", () => {
   test("infers Gemini modalities and backfills missing values without overwriting user edits", async ({
     makeOrganization,
     makeSecret,
-    makeChatApiKey,
+    makeLlmProviderApiKey,
   }) => {
     const org = await makeOrganization();
     const secret = await makeSecret({
       secret: { apiKey: "vertex-placeholder" },
     });
-    const apiKey = await makeChatApiKey(org.id, secret.id, {
+    const apiKey = await makeLlmProviderApiKey(org.id, secret.id, {
       provider: "gemini",
     });
 

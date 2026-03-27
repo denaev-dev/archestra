@@ -98,8 +98,8 @@ vi.mock("@/components/chat/agent-tools-display", () => ({
   AgentToolsDisplay: () => <div data-testid="agent-tools-display" />,
 }));
 
-vi.mock("@/components/chat/chat-api-key-selector", () => ({
-  ChatApiKeySelector: () => <div data-testid="chat-api-key-selector" />,
+vi.mock("@/components/chat/llm-provider-api-key-selector", () => ({
+  LlmProviderApiKeySelector: () => <div data-testid="chat-api-key-selector" />,
 }));
 
 vi.mock("@/components/chat/chat-tools-display", () => ({
