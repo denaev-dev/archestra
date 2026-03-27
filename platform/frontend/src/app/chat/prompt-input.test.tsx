@@ -245,7 +245,7 @@ describe("ArchestraPromptInput", () => {
         <ArchestraPromptInput
           {...defaultProps}
           allowFileUploads={true}
-          inputModalities={["text"]}
+          inputModalities={null}
         />,
       );
 
@@ -259,6 +259,23 @@ describe("ArchestraPromptInput", () => {
       const tooltip = screen.getByTestId("tooltip-content");
       expect(tooltip).toHaveTextContent(
         "This model does not support file uploads",
+      );
+    });
+
+    it("should render enabled file upload button for text-only models", () => {
+      render(
+        <ArchestraPromptInput
+          {...defaultProps}
+          allowFileUploads={true}
+          inputModalities={["text"]}
+        />,
+      );
+
+      expect(
+        screen.getByTestId(E2eTestId.ChatFileUploadButton),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId("tooltip-content")).toHaveTextContent(
+        "Supports: text files, CSVs",
       );
     });
 

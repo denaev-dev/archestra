@@ -66,6 +66,27 @@ export const ModelOutputModalitySchema = z.enum(["text", "image", "audio"]);
 
 export type ModelInputModality = z.infer<typeof ModelInputModalitySchema>;
 export type ModelOutputModality = z.infer<typeof ModelOutputModalitySchema>;
+export type SupportedChatUploadMimeType =
+  | "application/csv"
+  | "application/pdf"
+  | "application/vnd.ms-excel"
+  | "audio/flac"
+  | "audio/mpeg"
+  | "audio/mp3"
+  | "audio/ogg"
+  | "audio/wav"
+  | "audio/webm"
+  | "image/gif"
+  | "image/jpeg"
+  | "image/png"
+  | "image/svg+xml"
+  | "image/webp"
+  | "text/csv"
+  | "text/plain"
+  | "video/avi"
+  | "video/mp4"
+  | "video/quicktime"
+  | "video/webm";
 
 // ============================================================================
 // File Type Utilities
@@ -77,9 +98,17 @@ export type ModelOutputModality = z.infer<typeof ModelOutputModalitySchema>;
  * Note: "text" modality doesn't typically allow file uploads (text is entered directly).
  * The other modalities map to specific file types that models can process.
  */
-const MODALITY_TO_MIME_TYPES: Record<ModelInputModality, string[] | null> = {
-  // Text doesn't enable file uploads - text is entered directly
-  text: null,
+const MODALITY_TO_MIME_TYPES: Record<
+  ModelInputModality,
+  SupportedChatUploadMimeType[] | null
+> = {
+  // Text-capable models can accept plain text and CSV documents.
+  text: [
+    "text/plain",
+    "text/csv",
+    "application/csv",
+    "application/vnd.ms-excel",
+  ],
   // Image formats commonly supported by vision models
   image: [
     "image/jpeg",
@@ -101,6 +130,14 @@ const MODALITY_TO_MIME_TYPES: Record<ModelInputModality, string[] | null> = {
   video: ["video/mp4", "video/webm", "video/quicktime", "video/avi"],
   // PDF documents for document understanding models
   pdf: ["application/pdf"],
+};
+
+const MODALITY_TO_FILE_TYPE_DESCRIPTION: Record<ModelInputModality, string> = {
+  text: "text files, CSVs",
+  image: "images",
+  audio: "audio",
+  video: "video",
+  pdf: "PDFs",
 };
 
 /**
@@ -132,22 +169,23 @@ export function getAcceptedFileTypes(
     return undefined;
   }
 
-  const mimeTypes: string[] = [];
+  const mimeTypes = new Set<SupportedChatUploadMimeType>();
 
   for (const modality of modalities) {
     const types = MODALITY_TO_MIME_TYPES[modality];
     if (types) {
-      mimeTypes.push(...types);
+      for (const type of types) {
+        mimeTypes.add(type);
+      }
     }
   }
 
   // If no MIME types were collected (e.g., only "text" modality), return undefined
-  if (mimeTypes.length === 0) {
+  if (mimeTypes.size === 0) {
     return undefined;
   }
 
-  // Remove duplicates and join
-  return [...new Set(mimeTypes)].join(",");
+  return [...mimeTypes].join(",");
 }
 
 /**
@@ -183,20 +221,12 @@ export function getSupportedFileTypesDescription(
     return null;
   }
 
-  const supportedTypes: string[] = [];
-
-  if (modalities.includes("image")) {
-    supportedTypes.push("images");
-  }
-  if (modalities.includes("pdf")) {
-    supportedTypes.push("PDFs");
-  }
-  if (modalities.includes("audio")) {
-    supportedTypes.push("audio");
-  }
-  if (modalities.includes("video")) {
-    supportedTypes.push("video");
-  }
+  const supportedTypes = modalities
+    .filter((modality) => {
+      const types = MODALITY_TO_MIME_TYPES[modality];
+      return types !== null && types.length > 0;
+    })
+    .map((modality) => MODALITY_TO_FILE_TYPE_DESCRIPTION[modality]);
 
   if (supportedTypes.length === 0) {
     return null;

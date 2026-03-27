@@ -41,7 +41,35 @@ const ImageBlockParamSchema = z.object({
   }),
   cache_control: z.any().nullable().optional(),
 });
-// const DocumentBlockParamSchema = z.any();
+
+const DocumentBlockParamSchema = z.object({
+  type: z.enum(["document"]),
+  source: z.union([
+    z.object({
+      type: z.enum(["base64"]),
+      media_type: z.enum(["application/pdf"]),
+      data: z.string(),
+    }),
+    z.object({
+      type: z.enum(["text"]),
+      media_type: z.enum(["text/plain"]),
+      data: z.string(),
+    }),
+    z.object({
+      type: z.enum(["url"]),
+      url: z.string().url(),
+    }),
+  ]),
+  title: z.string().optional(),
+  context: z.string().optional(),
+  citations: z
+    .object({
+      enabled: z.boolean(),
+    })
+    .optional(),
+  cache_control: z.any().nullable().optional(),
+});
+
 // const SearchResultBlockParamSchema = z.any();
 const ToolUseBlockParamSchema = z.object({
   id: z.string(),
@@ -61,8 +89,8 @@ const ToolResultBlockParamSchema = z.object({
         z.union([
           TextBlockParamSchema,
           ImageBlockParamSchema,
+          DocumentBlockParamSchema,
           // SearchResultBlockParamSchema,
-          // DocumentBlockParamSchema,
         ]),
       ),
     ])
@@ -75,7 +103,7 @@ const ToolResultBlockParamSchema = z.object({
 const ContentBlockParamSchema = z.union([
   TextBlockParamSchema,
   ImageBlockParamSchema,
-  // DocumentBlockParamSchema,
+  DocumentBlockParamSchema,
   // SearchResultBlockParamSchema,
   ToolUseBlockParamSchema,
   ToolResultBlockParamSchema,

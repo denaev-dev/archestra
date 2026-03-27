@@ -28,12 +28,62 @@ vi.mock("@/models/api-key-model", () => ({
 import { archestraMcpBranding } from "@/archestra-mcp-server";
 import { createDirectLLMModel } from "@/clients/llm-client";
 import {
+  __test,
   buildChatStopConditions,
   buildTitlePrompt,
   extractFirstMessages,
   generateConversationTitle,
   getChatStopToolNames,
 } from "./routes.chat";
+
+describe("prepareMessagesForProvider", () => {
+  it("normalizes csv files to text/plain for anthropic", () => {
+    const messages = __test.prepareMessagesForProvider({
+      provider: "anthropic",
+      messages: [
+        {
+          role: "user",
+          parts: [
+            {
+              type: "file",
+              mediaType: "text/csv",
+              filename: "report.csv",
+              url: "data:text/csv;base64,YSxiLGM=",
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(messages[0].parts?.[0]).toMatchObject({
+      type: "file",
+      mediaType: "text/plain",
+      filename: "report.csv",
+      url: "data:text/plain;base64,YSxiLGM=",
+    });
+  });
+
+  it("leaves non-anthropic file parts unchanged", () => {
+    const message = {
+      role: "user" as const,
+      parts: [
+        {
+          type: "file",
+          mediaType: "text/csv",
+          filename: "report.csv",
+          url: "data:text/csv;base64,YSxiLGM=",
+        },
+      ],
+    };
+
+    const messages = __test.prepareMessagesForProvider({
+      provider: "openai",
+      messages: [message],
+    });
+
+    expect(messages[0]).toBe(message);
+  });
+});
 
 describe("extractFirstMessages", () => {
   it("extracts first user message from parts", () => {

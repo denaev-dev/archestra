@@ -3,6 +3,7 @@
 import type { ChatStatus, FileUIPart } from "ai";
 import {
   CornerDownLeftIcon,
+  FileTextIcon,
   ImageIcon,
   Loader2Icon,
   MicIcon,
@@ -68,6 +69,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  getAttachmentFallbackLabel,
+  isCsvAttachment,
+  isPlainTextAttachment,
+} from "@/lib/chat/chat-attachment-display";
 import { cn } from "@/lib/utils";
 
 // ============================================================================
@@ -116,6 +122,7 @@ function getMediaType(file: File): string {
     // Documents
     pdf: "application/pdf",
     // Text
+    csv: "text/csv",
     txt: "text/plain",
     json: "application/json",
     xml: "application/xml",
@@ -336,8 +343,15 @@ export function PromptInputAttachment({
   const mediaType =
     data.mediaType?.startsWith("image/") && data.url ? "image" : "file";
   const isImage = mediaType === "image";
+  const isTextDocument =
+    isCsvAttachment(data.mediaType, filename) ||
+    isPlainTextAttachment(data.mediaType, filename);
 
-  const attachmentLabel = filename || (isImage ? "Image" : "Attachment");
+  const attachmentLabel =
+    filename ||
+    (isImage
+      ? "Image"
+      : getAttachmentFallbackLabel({ mediaType: data.mediaType, filename }));
 
   return (
     <PromptInputHoverCard>
@@ -359,6 +373,10 @@ export function PromptInputAttachment({
                 src={data.url}
                 width={20}
               />
+            ) : isTextDocument ? (
+              <div className="flex size-5 items-center justify-center text-muted-foreground">
+                <FileTextIcon className="size-3" />
+              </div>
             ) : (
               <div className="flex size-5 items-center justify-center text-muted-foreground">
                 <PaperclipIcon className="size-3" />
@@ -399,7 +417,7 @@ export function PromptInputAttachment({
           <div className="flex items-center gap-2.5">
             <div className="min-w-0 flex-1 space-y-1 px-0.5">
               <h4 className="truncate font-semibold text-sm leading-none">
-                {filename || (isImage ? "Image" : "Attachment")}
+                {attachmentLabel}
               </h4>
               {data.mediaType && (
                 <p className="truncate font-mono text-muted-foreground text-xs">

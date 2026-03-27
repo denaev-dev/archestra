@@ -56,6 +56,7 @@ import {
 import {
   ApiError,
   type ChatMessage,
+  type ChatMessagePart,
   constructResponseSchema,
   DeleteObjectResponseSchema,
   ErrorResponsesSchema,
@@ -295,12 +296,16 @@ const chatRoutes: FastifyPluginAsyncZod = async (fastify) => {
           const normalizedMessagesForLLM = normalizeChatMessages(
             messages as ChatMessage[],
           );
+          const providerPreparedMessages = prepareMessagesForProvider({
+            messages: normalizedMessagesForLLM,
+            provider,
+          });
 
           // Stream with AI SDK
           // Build streamText config conditionally
           // Cast to UIMessage[] - ChatMessage is structurally compatible at runtime
           const modelMessages = await convertToModelMessages(
-            normalizedMessagesForLLM as unknown as Omit<UIMessage, "id">[],
+            providerPreparedMessages as unknown as Omit<UIMessage, "id">[],
           );
 
           // Perplexity does NOT support tool calling - it has built-in web search instead
@@ -1696,6 +1701,81 @@ async function persistNewMessages(
   }
 }
 
+function prepareMessagesForProvider(params: {
+  messages: ChatMessage[];
+  provider: SupportedProvider;
+}): ChatMessage[] {
+  const { messages, provider } = params;
+
+  if (provider !== "anthropic") {
+    return messages;
+  }
+
+  return messages.map((message) => {
+    if (!message.parts?.length) {
+      return message;
+    }
+
+    let changed = false;
+    const parts = message.parts.map((part) => {
+      const normalizedPart = normalizeAnthropicFilePart(part);
+      if (normalizedPart !== part) {
+        changed = true;
+      }
+      return normalizedPart;
+    });
+
+    return changed
+      ? {
+          ...message,
+          parts,
+        }
+      : message;
+  });
+}
+
+function normalizeAnthropicFilePart(part: ChatMessagePart): ChatMessagePart {
+  if (
+    part.type !== "file" ||
+    typeof part.mediaType !== "string" ||
+    !isAnthropicCsvMimeType(part.mediaType)
+  ) {
+    return part;
+  }
+
+  return {
+    ...part,
+    mediaType: "text/plain",
+    url: normalizeDataUrlMediaType({
+      url: typeof part.url === "string" ? part.url : undefined,
+      fromMediaType: part.mediaType,
+      toMediaType: "text/plain",
+    }),
+  };
+}
+
+function isAnthropicCsvMimeType(mediaType: string): boolean {
+  return (
+    mediaType === "text/csv" ||
+    mediaType === "application/csv" ||
+    mediaType === "application/vnd.ms-excel"
+  );
+}
+
+function normalizeDataUrlMediaType(params: {
+  url: string | undefined;
+  fromMediaType: string;
+  toMediaType: string;
+}): string | undefined {
+  const { url, fromMediaType, toMediaType } = params;
+
+  if (!url?.startsWith(`data:${fromMediaType};`)) {
+    return url;
+  }
+
+  return url.replace(`data:${fromMediaType};`, `data:${toMediaType};`);
+}
+
 /**
  * Listens for HTTP connection close and checks the distributed cache to determine
  * whether the close was caused by the stop button (abort) or by navigating away (ignore).
@@ -1794,5 +1874,9 @@ async function validateChatApiKeyAccess(
     throw new ApiError(403, "You do not have access to this API key");
   }
 }
+
+export const __test = {
+  prepareMessagesForProvider,
+};
 
 export default chatRoutes;
