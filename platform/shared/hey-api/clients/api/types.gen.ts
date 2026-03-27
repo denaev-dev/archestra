@@ -1260,6 +1260,42 @@ export type AnthropicMessagesRequestInput = {
             };
             cache_control?: unknown;
         } | {
+            type: 'document';
+            source: {
+                type: 'base64';
+                media_type: 'application/pdf';
+                data: string;
+            } | {
+                type: 'text';
+                media_type: 'text/plain';
+                data: string;
+            } | {
+                type: 'url';
+                url: string;
+            } | {
+                type: 'content';
+                content: string | Array<{
+                    text: string;
+                    type: 'text';
+                    cache_control?: unknown;
+                    citations?: Array<unknown> | unknown;
+                } | {
+                    type: 'image';
+                    source: {
+                        type: 'base64';
+                        media_type: string;
+                        data: string;
+                    };
+                    cache_control?: unknown;
+                }>;
+            };
+            title?: string | unknown;
+            context?: string | unknown;
+            citations?: {
+                enabled: boolean;
+            } | unknown;
+            cache_control?: unknown;
+        } | {
             id: string;
             input: unknown;
             name: string;
@@ -1281,6 +1317,42 @@ export type AnthropicMessagesRequestInput = {
                     media_type: string;
                     data: string;
                 };
+                cache_control?: unknown;
+            } | {
+                type: 'document';
+                source: {
+                    type: 'base64';
+                    media_type: 'application/pdf';
+                    data: string;
+                } | {
+                    type: 'text';
+                    media_type: 'text/plain';
+                    data: string;
+                } | {
+                    type: 'url';
+                    url: string;
+                } | {
+                    type: 'content';
+                    content: string | Array<{
+                        text: string;
+                        type: 'text';
+                        cache_control?: unknown;
+                        citations?: Array<unknown> | unknown;
+                    } | {
+                        type: 'image';
+                        source: {
+                            type: 'base64';
+                            media_type: string;
+                            data: string;
+                        };
+                        cache_control?: unknown;
+                    }>;
+                };
+                title?: string | unknown;
+                context?: string | unknown;
+                citations?: {
+                    enabled: boolean;
+                } | unknown;
                 cache_control?: unknown;
             }>;
             is_error?: boolean;
@@ -6426,6 +6498,42 @@ export type AnthropicMessagesRequest = {
             };
             cache_control?: unknown;
         } | {
+            type: 'document';
+            source: {
+                type: 'base64';
+                media_type: 'application/pdf';
+                data: string;
+            } | {
+                type: 'text';
+                media_type: 'text/plain';
+                data: string;
+            } | {
+                type: 'url';
+                url: string;
+            } | {
+                type: 'content';
+                content: string | Array<{
+                    text: string;
+                    type: 'text';
+                    cache_control?: unknown;
+                    citations?: Array<unknown> | unknown;
+                } | {
+                    type: 'image';
+                    source: {
+                        type: 'base64';
+                        media_type: string;
+                        data: string;
+                    };
+                    cache_control?: unknown;
+                }>;
+            };
+            title?: string | unknown;
+            context?: string | unknown;
+            citations?: {
+                enabled: boolean;
+            } | unknown;
+            cache_control?: unknown;
+        } | {
             id: string;
             input: unknown;
             name: string;
@@ -6447,6 +6555,42 @@ export type AnthropicMessagesRequest = {
                     media_type: string;
                     data: string;
                 };
+                cache_control?: unknown;
+            } | {
+                type: 'document';
+                source: {
+                    type: 'base64';
+                    media_type: 'application/pdf';
+                    data: string;
+                } | {
+                    type: 'text';
+                    media_type: 'text/plain';
+                    data: string;
+                } | {
+                    type: 'url';
+                    url: string;
+                } | {
+                    type: 'content';
+                    content: string | Array<{
+                        text: string;
+                        type: 'text';
+                        cache_control?: unknown;
+                        citations?: Array<unknown> | unknown;
+                    } | {
+                        type: 'image';
+                        source: {
+                            type: 'base64';
+                            media_type: string;
+                            data: string;
+                        };
+                        cache_control?: unknown;
+                    }>;
+                };
+                title?: string | unknown;
+                context?: string | unknown;
+                citations?: {
+                    enabled: boolean;
+                } | unknown;
                 cache_control?: unknown;
             }>;
             is_error?: boolean;
