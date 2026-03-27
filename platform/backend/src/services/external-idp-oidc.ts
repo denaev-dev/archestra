@@ -5,6 +5,7 @@ import logger from "@/logging";
 
 export interface ExternalIdentityProviderConfig {
   id: string;
+  providerId: string;
   issuer: string;
   oidcConfig: ExternalIdentityProviderOidcConfig | null;
 }
@@ -20,6 +21,7 @@ export async function findExternalIdentityProviderById(
   const [provider] = await db
     .select({
       id: dbSchema.identityProvidersTable.id,
+      providerId: dbSchema.identityProvidersTable.providerId,
       issuer: dbSchema.identityProvidersTable.issuer,
       oidcConfig: dbSchema.identityProvidersTable.oidcConfig,
     })
@@ -32,6 +34,7 @@ export async function findExternalIdentityProviderById(
 
   return {
     id: provider.id,
+    providerId: provider.providerId,
     issuer: provider.issuer,
     oidcConfig: parseJsonField<ExternalIdentityProviderOidcConfig>(
       provider.oidcConfig,

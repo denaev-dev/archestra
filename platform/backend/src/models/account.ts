@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import db, { schema, type Transaction } from "@/database";
 import logger from "@/logging";
 
@@ -39,6 +39,37 @@ class AccountModel {
       "AccountModel.getAllByUserId: completed",
     );
     return accounts;
+  }
+
+  /**
+   * Get the most recently updated SSO account for a user and provider.
+   * Used when session-authenticated requests need to recover the original
+   * enterprise IdP JWT for downstream propagation.
+   */
+  static async getLatestSsoAccountByUserIdAndProviderId(
+    userId: string,
+    providerId: string,
+  ) {
+    logger.debug(
+      { userId, providerId },
+      "AccountModel.getLatestSsoAccountByUserIdAndProviderId: fetching account",
+    );
+    const [account] = await db
+      .select()
+      .from(schema.accountsTable)
+      .where(
+        and(
+          eq(schema.accountsTable.userId, userId),
+          eq(schema.accountsTable.providerId, providerId),
+        ),
+      )
+      .orderBy(desc(schema.accountsTable.updatedAt))
+      .limit(1);
+    logger.debug(
+      { userId, providerId, found: !!account },
+      "AccountModel.getLatestSsoAccountByUserIdAndProviderId: completed",
+    );
+    return account;
   }
 
   /**

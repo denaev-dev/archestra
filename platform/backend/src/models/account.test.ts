@@ -1,3 +1,5 @@
+import { eq } from "drizzle-orm";
+import db, { schema } from "@/database";
 import { describe, expect, test } from "@/test";
 import AccountModel from "./account";
 
@@ -66,6 +68,59 @@ describe("AccountModel", () => {
       const user = await makeUser();
       const accounts = await AccountModel.getAllByUserId(user.id);
       expect(accounts).toEqual([]);
+    });
+  });
+
+  describe("getLatestSsoAccountByUserIdAndProviderId", () => {
+    test("returns the most recently updated account for the provider", async ({
+      makeUser,
+      makeAccount,
+    }) => {
+      const user = await makeUser();
+      const older = await makeAccount(user.id, {
+        providerId: "okta",
+        idToken: "older-id-token",
+      });
+      const latest = await makeAccount(user.id, {
+        providerId: "okta",
+        idToken: "latest-id-token",
+      });
+      await db
+        .update(schema.accountsTable)
+        .set({ updatedAt: new Date("2026-01-01T00:00:00.000Z") })
+        .where(eq(schema.accountsTable.id, older.id));
+      await db
+        .update(schema.accountsTable)
+        .set({ updatedAt: new Date("2026-01-01T00:00:01.000Z") })
+        .where(eq(schema.accountsTable.id, latest.id));
+      await makeAccount(user.id, {
+        providerId: "github",
+        idToken: "other-provider-token",
+      });
+
+      const found = await AccountModel.getLatestSsoAccountByUserIdAndProviderId(
+        user.id,
+        "okta",
+      );
+
+      expect(found?.id).toBe(latest.id);
+      expect(found?.providerId).toBe("okta");
+      expect(found?.idToken).toBe("latest-id-token");
+    });
+
+    test("returns undefined when the user has no account for the provider", async ({
+      makeUser,
+      makeAccount,
+    }) => {
+      const user = await makeUser();
+      await makeAccount(user.id, { providerId: "github" });
+
+      const found = await AccountModel.getLatestSsoAccountByUserIdAndProviderId(
+        user.id,
+        "okta",
+      );
+
+      expect(found).toBeUndefined();
     });
   });
 });

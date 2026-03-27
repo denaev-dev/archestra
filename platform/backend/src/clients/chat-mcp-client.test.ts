@@ -1,4 +1,5 @@
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import {
   getArchestraToolFullName,
   TOOL_QUERY_KNOWLEDGE_SOURCES_FULL_NAME,
@@ -10,6 +11,7 @@ import { beforeEach, vi } from "vitest";
 import { archestraMcpBranding } from "@/archestra-mcp-server";
 import { TeamTokenModel } from "@/models";
 import ToolModel from "@/models/tool";
+import { resolveSessionExternalIdpToken } from "@/services/session-external-idp-token";
 import { describe, expect, test } from "@/test";
 import * as chatClient from "./chat-mcp-client";
 import { mcpToolToModelOutput } from "./chat-mcp-client";
@@ -48,6 +50,14 @@ vi.mock("@/features/browser-stream/services/browser-stream.feature", () => ({
     isEnabled: vi.fn().mockReturnValue(false),
   },
 }));
+
+vi.mock("@/services/session-external-idp-token", () => ({
+  resolveSessionExternalIdpToken: vi.fn(),
+}));
+
+beforeEach(() => {
+  vi.mocked(resolveSessionExternalIdpToken).mockResolvedValue(null);
+});
 
 describe("isBrowserMcpTool", () => {
   test("returns true for tools containing 'playwright'", () => {
@@ -940,6 +950,42 @@ describe("fetchToolUiResource", () => {
     });
 
     expect(result).toBeNull();
+  });
+});
+
+describe("getChatMcpClient", () => {
+  test("prefers a session-derived external IdP token over internal gateway tokens", async () => {
+    mockConnect.mockReset();
+    mockConnect.mockResolvedValue(undefined);
+    mockClose.mockReset();
+    vi.mocked(resolveSessionExternalIdpToken).mockResolvedValue({
+      identityProviderId: crypto.randomUUID(),
+      providerId: "okta-chat",
+      rawToken: "external-idp-jwt",
+    });
+
+    const teamTokenSpy = vi.spyOn(TeamTokenModel, "findAll");
+
+    const agentId = crypto.randomUUID();
+    const userId = crypto.randomUUID();
+    const organizationId = crypto.randomUUID();
+
+    const client = await chatClient.getChatMcpClient(
+      agentId,
+      userId,
+      organizationId,
+      false,
+      undefined,
+      "internal-fallback-token",
+    );
+
+    expect(client).not.toBeNull();
+    expect(teamTokenSpy).not.toHaveBeenCalled();
+
+    const [, options] = vi.mocked(StreamableHTTPClientTransport).mock
+      .calls[0] as [URL, { requestInit?: RequestInit }];
+    const headers = new Headers(options.requestInit?.headers);
+    expect(headers.get("Authorization")).toBe("Bearer external-idp-jwt");
   });
 });
 
