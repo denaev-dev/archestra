@@ -46,7 +46,7 @@ import { useAppName } from "@/lib/hooks/use-app-name";
 import {
   type ModelWithApiKeys,
   useModelsWithApiKeys,
-  useSyncChatModels,
+  useSyncLlmModels,
   useUpdateModel,
 } from "@/lib/llm-models.query";
 import { useLlmProviderApiKeys } from "@/lib/llm-provider-api-keys.query";
@@ -56,7 +56,7 @@ import { INPUT_MODALITY_OPTIONS, OUTPUT_MODALITY_OPTIONS } from "./modalities";
 export default function ModelsPage() {
   const { data: models = [], isPending, refetch } = useModelsWithApiKeys();
   const { data: apiKeys = [] } = useLlmProviderApiKeys();
-  const syncModelsMutation = useSyncChatModels();
+  const syncModelsMutation = useSyncLlmModels();
   const updateModel = useUpdateModel();
   const [isRefreshingModels, setIsRefreshingModels] = useState(false);
   const [search, setSearch] = useState("");

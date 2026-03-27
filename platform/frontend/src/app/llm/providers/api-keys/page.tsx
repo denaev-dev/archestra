@@ -1,6 +1,10 @@
 "use client";
 
-import { E2eTestId, formatSecretStorageType } from "@shared";
+import {
+  E2eTestId,
+  formatSecretStorageType,
+  type ResourceVisibilityScope,
+} from "@shared";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   AlertTriangle,
@@ -53,7 +57,6 @@ import { useFeature } from "@/lib/config/config.query";
 import { getFrontendDocsUrl } from "@/lib/docs/docs";
 import { useDataTableQueryParams } from "@/lib/hooks/use-data-table-query-params";
 import {
-  type LlmProviderApiKeyScope,
   useDeleteLlmProviderApiKey,
   useLlmProviderApiKeys,
   useUpdateLlmProviderApiKey,
@@ -61,10 +64,10 @@ import {
 import { useOrganization } from "@/lib/organization.query";
 import { useSetProviderAction } from "../layout";
 
-const SCOPE_ICONS: Record<LlmProviderApiKeyScope, React.ReactNode> = {
+const SCOPE_ICONS: Record<ResourceVisibilityScope, React.ReactNode> = {
   personal: <User className="h-3 w-3" />,
   team: <Users className="h-3 w-3" />,
-  org_wide: <Building2 className="h-3 w-3" />,
+  org: <Building2 className="h-3 w-3" />,
 };
 
 const DEFAULT_FORM_VALUES: LlmProviderApiKeyFormValues = {
@@ -294,7 +297,7 @@ export default function ApiKeysPage() {
             {row.original.isSystem ? (
               <Server className="h-3 w-3" />
             ) : (
-              SCOPE_ICONS[row.original.scope as LlmProviderApiKeyScope]
+              SCOPE_ICONS[row.original.scope as ResourceVisibilityScope]
             )}
             <span>
               {row.original.isSystem
@@ -368,7 +371,7 @@ export default function ApiKeysPage() {
                   label: "Edit",
                   permissions: {
                     llmProviderApiKey: ["update"],
-                    ...(row.original.scope === "org_wide"
+                    ...(row.original.scope === "org"
                       ? { team: ["admin"] }
                       : {}),
                   },
@@ -383,7 +386,7 @@ export default function ApiKeysPage() {
                   variant: "destructive",
                   permissions: {
                     llmProviderApiKey: ["delete"],
-                    ...(row.original.scope === "org_wide"
+                    ...(row.original.scope === "org"
                       ? { team: ["admin"] }
                       : {}),
                   },

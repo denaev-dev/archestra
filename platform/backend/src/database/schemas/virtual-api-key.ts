@@ -6,7 +6,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import type { VirtualApiKeyScope } from "@/types";
+import type { ResourceVisibilityScope } from "@/types";
 import llmProviderApiKeysTable from "./llm-provider-api-key";
 import secretsTable from "./secret";
 import usersTable from "./user";
@@ -25,7 +25,10 @@ const virtualApiKeysTable = pgTable(
       .references(() => secretsTable.id, { onDelete: "cascade" }),
     /** First 14 chars of token (archestra_xxxx) for display */
     tokenStart: varchar("token_start", { length: 16 }).notNull(),
-    scope: text("scope").$type<VirtualApiKeyScope>().notNull().default("org"),
+    scope: text("scope")
+      .$type<ResourceVisibilityScope>()
+      .notNull()
+      .default("org"),
     authorId: text("author_id").references(() => usersTable.id, {
       onDelete: "set null",
     }),

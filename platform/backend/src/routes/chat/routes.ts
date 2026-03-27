@@ -40,10 +40,10 @@ import { extractAndIngestDocuments } from "@/knowledge-base";
 import logger from "@/logging";
 import {
   AgentModel,
-  ChatApiKeyModel,
   ConversationEnabledToolModel,
   ConversationModel,
   ConversationShareModel,
+  LlmProviderApiKeyModel,
   MessageModel,
   TeamModel,
 } from "@/models";
@@ -2047,7 +2047,7 @@ async function validateChatApiKeyAccess(
   userId: string,
   organizationId: string,
 ): Promise<void> {
-  const apiKey = await ChatApiKeyModel.findById(chatApiKeyId);
+  const apiKey = await LlmProviderApiKeyModel.findById(chatApiKeyId);
   if (!apiKey || apiKey.organizationId !== organizationId) {
     throw new ApiError(404, "Chat API key not found");
   }
@@ -2055,7 +2055,7 @@ async function validateChatApiKeyAccess(
   // Verify user has access to the API key based on scope
   const userTeamIds = await TeamModel.getUserTeamIds(userId);
   const canAccessKey =
-    apiKey.scope === "org_wide" ||
+    apiKey.scope === "org" ||
     (apiKey.scope === "personal" && apiKey.userId === userId) ||
     (apiKey.scope === "team" &&
       apiKey.teamId &&

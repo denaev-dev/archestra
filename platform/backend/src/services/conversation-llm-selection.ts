@@ -1,6 +1,10 @@
 import { isSupportedProvider, type SupportedProvider } from "@shared";
 import { detectProviderFromModel } from "@/clients/llm-client";
-import { ApiKeyModelModel, ChatApiKeyModel, OrganizationModel } from "@/models";
+import {
+  ApiKeyModelModel,
+  LlmProviderApiKeyModel,
+  OrganizationModel,
+} from "@/models";
 import { resolveSmartDefaultLlmForChat } from "@/utils/llm-resolution";
 
 // === Types ===
@@ -54,7 +58,7 @@ async function resolveAgentSelection(
   agent: AgentLlmConfig,
 ): Promise<ConversationLlmSelection | null> {
   if (agent.llmApiKeyId) {
-    const apiKey = await ChatApiKeyModel.findById(agent.llmApiKeyId);
+    const apiKey = await LlmProviderApiKeyModel.findById(agent.llmApiKeyId);
     if (apiKey) {
       const provider = isSupportedProvider(apiKey.provider)
         ? apiKey.provider
@@ -99,7 +103,7 @@ async function resolveOrganizationSelection(
   }
 
   const apiKey = organization.defaultLlmApiKeyId
-    ? await ChatApiKeyModel.findById(organization.defaultLlmApiKeyId)
+    ? await LlmProviderApiKeyModel.findById(organization.defaultLlmApiKeyId)
     : null;
 
   return {

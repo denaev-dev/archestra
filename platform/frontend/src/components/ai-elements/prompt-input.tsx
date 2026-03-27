@@ -1,5 +1,6 @@
 "use client";
 
+import { getMediaType } from "@shared";
 import type { ChatStatus, FileUIPart } from "ai";
 import {
   CornerDownLeftIcon,
@@ -88,50 +89,6 @@ export type AttachmentsContext = {
   openFileDialog: () => void;
   fileInputRef: RefObject<HTMLInputElement | null>;
 };
-
-/**
- * Get MIME type from file, with fallback to extension-based detection.
- * Some browsers don't set file.type for certain file formats.
- */
-function getMediaType(file: File): string {
-  if (file.type) {
-    return file.type;
-  }
-
-  // Fallback: detect from extension
-  const lastDotIndex = file.name.lastIndexOf(".");
-  const ext =
-    lastDotIndex > 0 && lastDotIndex < file.name.length - 1
-      ? file.name.slice(lastDotIndex + 1).toLowerCase()
-      : undefined;
-  const extensionMap: Record<string, string> = {
-    // Images
-    jpg: "image/jpeg",
-    jpeg: "image/jpeg",
-    png: "image/png",
-    gif: "image/gif",
-    webp: "image/webp",
-    svg: "image/svg+xml",
-    bmp: "image/bmp",
-    ico: "image/x-icon",
-    // Videos
-    mp4: "video/mp4",
-    webm: "video/webm",
-    mov: "video/quicktime",
-    avi: "video/x-msvideo",
-    // Documents
-    pdf: "application/pdf",
-    // Text
-    csv: "text/csv",
-    txt: "text/plain",
-    json: "application/json",
-    xml: "application/xml",
-  };
-
-  return ext
-    ? extensionMap[ext] || "application/octet-stream"
-    : "application/octet-stream";
-}
 
 export type TextInputContext = {
   value: string;

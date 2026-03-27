@@ -207,16 +207,27 @@ export { PROVIDER_CONFIG };
 export const LLM_PROVIDER_API_KEY_PLACEHOLDER = "••••••••••••••••";
 
 interface LlmProviderApiKeyFormProps {
+  /** Layout mode for the form container. */
   mode?: "full" | "compact";
+  /** Whether to show the provider console/help link below the credential input. */
   showConsoleLink?: boolean;
+  /** Existing key being edited; omitted for create flows. */
   existingKey?: LlmProviderApiKeyResponse;
+  /** Visible sibling keys used for primary-key defaults and conflicts. */
   existingKeys?: LlmProviderApiKeyResponse[];
+  /** Parent-owned React Hook Form instance. */
   form: UseFormReturn<LlmProviderApiKeyFormValues>;
+  /** Disables interactive controls while a mutation is pending. */
   isPending?: boolean;
+  /** Whether Gemini direct API keys are disabled in favor of Vertex AI. */
   geminiVertexAiEnabled?: boolean;
+  /** Whether Bedrock IAM auth is enabled, making direct API key entry optional. */
   bedrockIamAuthEnabled?: boolean;
+  /** Prevent changing the selected provider. */
   disableProvider?: boolean;
+  /** Optional allowlist for provider selection. */
   allowedProviders?: CreateLlmProviderApiKeyBody["provider"][];
+  /** Hide scope and primary-key controls when the parent fixes those values. */
   hideScopeAndPrimary?: boolean;
 }
 
@@ -320,7 +331,7 @@ export function LlmProviderApiKeyForm({
             : undefined,
       },
       {
-        value: "org_wide",
+        value: "org",
         label: "Organization",
         description: "Available to everyone in the organization",
         icon: Building2,
@@ -351,6 +362,15 @@ export function LlmProviderApiKeyForm({
       form.setValue("provider", firstAllowedProvider);
     }
   }, [allowedProviderSet, form, provider]);
+
+  useEffect(() => {
+    if (scope === "team") {
+      return;
+    }
+
+    form.setValue("vaultSecretPath", null);
+    form.setValue("vaultSecretKey", null);
+  }, [form, scope]);
 
   const vaultSecretSelector =
     scope === "team" ? (

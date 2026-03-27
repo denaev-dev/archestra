@@ -11,7 +11,7 @@ const DEFAULT_FORM_VALUES: LlmProviderApiKeyFormValues = {
   provider: "anthropic",
   apiKey: null,
   baseUrl: null,
-  scope: "org_wide",
+  scope: "org",
   teamId: null,
   vaultSecretPath: null,
   vaultSecretKey: null,

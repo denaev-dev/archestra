@@ -15,20 +15,20 @@ import { handleApiError } from "@/lib/utils";
 
 const { getLlmModels, getModelsWithApiKeys, updateModel, syncLlmModels } =
   archestraApiSdk;
-type ChatModelsQuery = NonNullable<archestraApiTypes.GetLlmModelsData["query"]>;
-type ChatModelsParams = Partial<ChatModelsQuery>;
+type LlmModelsQuery = NonNullable<archestraApiTypes.GetLlmModelsData["query"]>;
+type LlmModelsParams = Partial<LlmModelsQuery>;
 
-export type ChatModel = archestraApiTypes.GetLlmModelsResponses["200"][number];
-export type ModelCapabilities = NonNullable<ChatModel["capabilities"]>;
+export type LlmModel = archestraApiTypes.GetLlmModelsResponses["200"][number];
+export type ModelCapabilities = NonNullable<LlmModel["capabilities"]>;
 export type ModelWithApiKeys =
   archestraApiTypes.GetModelsWithApiKeysResponses["200"][number];
 export type LinkedApiKey = ModelWithApiKeys["apiKeys"][number];
 
-export function useChatModels(params?: ChatModelsParams) {
+export function useLlmModels(params?: LlmModelsParams) {
   const apiKeyId = params?.apiKeyId;
   return useQuery({
-    queryKey: ["chat-models", apiKeyId ?? null],
-    queryFn: async (): Promise<ChatModel[]> => {
+    queryKey: ["llm-models", apiKeyId ?? null],
+    queryFn: async (): Promise<LlmModel[]> => {
       const { data, error } = await getLlmModels({
         query: apiKeyId ? { apiKeyId } : undefined,
       });
@@ -42,11 +42,11 @@ export function useChatModels(params?: ChatModelsParams) {
   });
 }
 
-export function useModelsByProvider(params?: ChatModelsParams) {
-  const query = useChatModels(params);
+export function useLlmModelsByProvider(params?: LlmModelsParams) {
+  const query = useLlmModels(params);
 
   const modelsByProvider = useMemo(() => {
-    if (!query.data) return {} as Record<SupportedProvider, ChatModel[]>;
+    if (!query.data) return {} as Record<SupportedProvider, LlmModel[]>;
     return query.data.reduce(
       (acc, model) => {
         if (!acc[model.provider]) {
@@ -55,7 +55,7 @@ export function useModelsByProvider(params?: ChatModelsParams) {
         acc[model.provider].push(model);
         return acc;
       },
-      {} as Record<SupportedProvider, ChatModel[]>,
+      {} as Record<SupportedProvider, LlmModel[]>,
     );
   }, [query.data]);
 
@@ -100,7 +100,7 @@ export function useUpdateModel() {
     onSuccess: () => {
       toast.success("Model updated");
       queryClient.invalidateQueries({ queryKey: ["models-with-api-keys"] });
-      queryClient.invalidateQueries({ queryKey: ["chat-models"] });
+      queryClient.invalidateQueries({ queryKey: ["llm-models"] });
     },
     onError: () => {
       toast.error("Failed to update model");
@@ -108,7 +108,7 @@ export function useUpdateModel() {
   });
 }
 
-export function useSyncChatModels() {
+export function useSyncLlmModels() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => {
@@ -122,7 +122,7 @@ export function useSyncChatModels() {
     onSuccess: (data) => {
       if (!data) return;
       toast.success("Models synced");
-      queryClient.invalidateQueries({ queryKey: ["chat-models"] });
+      queryClient.invalidateQueries({ queryKey: ["llm-models"] });
       queryClient.invalidateQueries({ queryKey: ["models-with-api-keys"] });
     },
   });

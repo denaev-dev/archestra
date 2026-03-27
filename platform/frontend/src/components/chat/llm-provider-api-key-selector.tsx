@@ -5,6 +5,7 @@ import {
   getChatApiKeySelectorOptionTestId,
   getChatApiKeySelectorProviderGroupTestId,
   providerDisplayNames,
+  type ResourceVisibilityScope,
   type SupportedProvider,
 } from "@shared";
 import { Building2, CheckIcon, Key, User, Users } from "lucide-react";
@@ -27,7 +28,6 @@ import {
 import { useUpdateConversation } from "@/lib/chat/chat.query";
 import {
   type LlmProviderApiKey,
-  type LlmProviderApiKeyScope,
   useAvailableLlmProviderApiKeys,
 } from "@/lib/llm-provider-api-keys.query";
 
@@ -52,10 +52,10 @@ interface LlmProviderApiKeySelectorProps {
   agentLlmApiKeyId?: string | null;
 }
 
-const SCOPE_ICONS: Record<LlmProviderApiKeyScope, React.ReactNode> = {
+const SCOPE_ICONS: Record<ResourceVisibilityScope, React.ReactNode> = {
   personal: <User className="h-3 w-3" />,
   team: <Users className="h-3 w-3" />,
-  org_wide: <Building2 className="h-3 w-3" />,
+  org: <Building2 className="h-3 w-3" />,
 };
 
 // Note: This stores the API key's database ID (UUID), NOT the actual API key secret.
@@ -123,12 +123,12 @@ export function LlmProviderApiKeySelector({
     });
   }, [keysByProvider, currentProvider]);
 
-  // Group keys by scope (personal, team, org_wide) for auto-selection priority
+  // Group keys by scope (personal, team, org) for auto-selection priority
   const keysByScope = useMemo(() => {
-    const grouped: Record<LlmProviderApiKeyScope, LlmProviderApiKey[]> = {
+    const grouped: Record<ResourceVisibilityScope, LlmProviderApiKey[]> = {
       personal: [],
       team: [],
-      org_wide: [],
+      org: [],
     };
 
     for (const key of availableKeys) {
@@ -181,10 +181,10 @@ export function LlmProviderApiKeySelector({
       ? (keysByProvider[currentProvider] ?? [])
       : [];
 
-    // Priority: personal > team > org_wide (within current provider)
+    // Priority: personal > team > org (within current provider)
     const personalKeys = providerKeys.filter((k) => k.scope === "personal");
     const teamKeys = providerKeys.filter((k) => k.scope === "team");
-    const orgWideKeys = providerKeys.filter((k) => k.scope === "org_wide");
+    const orgWideKeys = providerKeys.filter((k) => k.scope === "org");
 
     const keyToSelect =
       personalKeys[0] ||
@@ -193,7 +193,7 @@ export function LlmProviderApiKeySelector({
       // Fall back to any key if no provider-specific key found
       keysByScope.personal[0] ||
       keysByScope.team[0] ||
-      keysByScope.org_wide[0];
+      keysByScope.org[0];
 
     const keyToSelectValid =
       keyToSelect && availableKeys.some((k) => k.id === keyToSelect.id);

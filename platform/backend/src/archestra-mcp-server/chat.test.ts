@@ -6,8 +6,8 @@ import {
 } from "@shared";
 import { vi } from "vitest";
 import {
-  ChatApiKeyModel,
   ConversationModel,
+  LlmProviderApiKeyModel,
   OrganizationModel,
 } from "@/models";
 import { beforeEach, describe, expect, test } from "@/test";
@@ -42,12 +42,14 @@ describe("chat tool execution", () => {
           provider: "openai",
         },
       );
-      vi.spyOn(ChatApiKeyModel, "findById").mockImplementation(async (id) => {
-        if (id === orgWideApiKey.id) {
-          return orgWideApiKey;
-        }
-        return null;
-      });
+      vi.spyOn(LlmProviderApiKeyModel, "findById").mockImplementation(
+        async (id) => {
+          if (id === orgWideApiKey.id) {
+            return orgWideApiKey;
+          }
+          return null;
+        },
+      );
       testAgent = await makeAgent({
         name: "Test Agent",
         agentType: "agent",
@@ -184,12 +186,14 @@ describe("chat tool execution", () => {
         provider: "anthropic",
       },
     );
-    vi.spyOn(ChatApiKeyModel, "findById").mockImplementation(async (id) => {
-      if (id === targetApiKey.id) {
-        return targetApiKey;
-      }
-      return null;
-    });
+    vi.spyOn(LlmProviderApiKeyModel, "findById").mockImplementation(
+      async (id) => {
+        if (id === targetApiKey.id) {
+          return targetApiKey;
+        }
+        return null;
+      },
+    );
 
     const targetAgent = await makeAgent({
       name: "Swap Target Agent",
@@ -312,12 +316,14 @@ describe("chat tool execution", () => {
         provider: "openai",
       },
     );
-    vi.spyOn(ChatApiKeyModel, "findById").mockImplementation(async (id) => {
-      if (id === defaultApiKey.id) {
-        return defaultApiKey;
-      }
-      return null;
-    });
+    vi.spyOn(LlmProviderApiKeyModel, "findById").mockImplementation(
+      async (id) => {
+        if (id === defaultApiKey.id) {
+          return defaultApiKey;
+        }
+        return null;
+      },
+    );
 
     const defaultAgent = await makeAgent({
       name: "Default Router Agent",
@@ -393,10 +399,12 @@ describe("chat tool execution", () => {
     const apiKey = await makeLlmProviderApiKey(memberOrg.id, secret.id, {
       provider: "openai",
     });
-    vi.spyOn(ChatApiKeyModel, "findById").mockImplementation(async (id) => {
-      if (id === apiKey.id) return apiKey;
-      return null;
-    });
+    vi.spyOn(LlmProviderApiKeyModel, "findById").mockImplementation(
+      async (id) => {
+        if (id === apiKey.id) return apiKey;
+        return null;
+      },
+    );
 
     const teamA = await makeTeam(memberOrg.id, memberUser.id, {
       name: "Team A",

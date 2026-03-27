@@ -1,6 +1,7 @@
 import {
   archestraApiSdk,
   type archestraApiTypes,
+  type ResourceVisibilityScope,
   type SupportedProvider,
 } from "@shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -9,11 +10,9 @@ import { handleApiError, toApiError } from "@/lib/utils";
 
 export type { SupportedProvider };
 
-export type LlmProviderApiKeyScope =
-  archestraApiTypes.GetLlmProviderApiKeysResponses["200"][number]["scope"];
-
 export type LlmProviderApiKey =
   archestraApiTypes.GetLlmProviderApiKeysResponses["200"][number];
+export type { ResourceVisibilityScope };
 
 type LlmProviderApiKeysQuery = NonNullable<
   archestraApiTypes.GetLlmProviderApiKeysData["query"]
@@ -112,7 +111,7 @@ export function useCreateLlmProviderApiKey() {
       queryClient.invalidateQueries({
         queryKey: ["available-llm-provider-api-keys"],
       });
-      queryClient.invalidateQueries({ queryKey: ["chat-models"] });
+      queryClient.invalidateQueries({ queryKey: ["llm-models"] });
       queryClient.invalidateQueries({ queryKey: ["models-with-api-keys"] });
     },
   });
@@ -175,7 +174,7 @@ export function useDeleteLlmProviderApiKey() {
       queryClient.invalidateQueries({
         queryKey: ["available-llm-provider-api-keys"],
       });
-      queryClient.invalidateQueries({ queryKey: ["chat-models"] });
+      queryClient.invalidateQueries({ queryKey: ["llm-models"] });
       queryClient.invalidateQueries({ queryKey: ["models-with-api-keys"] });
     },
   });

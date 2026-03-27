@@ -128,7 +128,7 @@ import { useFeature } from "@/lib/config/config.query";
 import { useAppName } from "@/lib/hooks/use-app-name";
 import { useConnectors } from "@/lib/knowledge/connector.query";
 import { useKnowledgeBases } from "@/lib/knowledge/knowledge-base.query";
-import { useModelsByProvider } from "@/lib/llm-models.query";
+import { useLlmModelsByProvider } from "@/lib/llm-models.query";
 import { useAvailableLlmProviderApiKeys } from "@/lib/llm-provider-api-keys.query";
 import { cn } from "@/lib/utils";
 import {
@@ -539,7 +539,7 @@ export function AgentDialog({
   const { data: availableApiKeys = [] } = useAvailableLlmProviderApiKeys({
     includeKeyId: agentLlmApiKeyId ?? undefined,
   });
-  const { modelsByProvider } = useModelsByProvider();
+  const { modelsByProvider } = useLlmModelsByProvider();
 
   // Fetch fresh agent data when dialog opens
   const { data: freshAgent, refetch: refetchAgent } = useProfile(agent?.id);
@@ -759,8 +759,8 @@ export function AgentDialog({
     // Only auto-select when the provider actually changed (not when user cleared the key)
     if (lastAutoSelectedProviderRef.current === currentLlmProvider) return;
 
-    // Auto-select best key for this provider (personal > team > org_wide)
-    const scopePriority = { personal: 0, team: 1, org_wide: 2 } as const;
+    // Auto-select best key for this provider (personal > team > org)
+    const scopePriority = { personal: 0, team: 1, org: 2 } as const;
     const providerKeys = availableApiKeys
       .filter((k) => k.provider === currentLlmProvider)
       .sort(
@@ -1614,7 +1614,7 @@ export function AgentDialog({
                   <div className="space-y-2">
                     <h3 className="text-sm font-semibold">LLM Configuration</h3>
                     <p className="text-sm text-muted-foreground">
-                      {selectedApiKey && selectedApiKey.scope !== "org_wide"
+                      {selectedApiKey && selectedApiKey.scope !== "org"
                         ? "Selected key will be available to everyone who has access to this agent."
                         : null}
                     </p>
@@ -1703,7 +1703,7 @@ export function AgentDialog({
                                           {apiKey.scope === "team" && (
                                             <Users className="h-3 w-3 shrink-0" />
                                           )}
-                                          {apiKey.scope === "org_wide" && (
+                                          {apiKey.scope === "org" && (
                                             <Building2 className="h-3 w-3 shrink-0" />
                                           )}
                                           <span className="truncate">

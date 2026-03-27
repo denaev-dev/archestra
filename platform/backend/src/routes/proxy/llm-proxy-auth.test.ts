@@ -149,8 +149,8 @@ describe("validateVirtualApiKey", () => {
     });
 
     // Update the chat API key with a baseUrl
-    const { ChatApiKeyModel } = await import("@/models");
-    await ChatApiKeyModel.update(chatApiKey.id, {
+    const { LlmProviderApiKeyModel } = await import("@/models");
+    await LlmProviderApiKeyModel.update(chatApiKey.id, {
       baseUrl: "https://custom-openai.example.com/v1",
     });
 
@@ -199,10 +199,10 @@ describe("validateVirtualApiKey", () => {
   test("returns undefined apiKey for system key (no secret) without throwing", async ({
     makeOrganization,
   }) => {
-    const { ChatApiKeyModel } = await import("@/models");
+    const { LlmProviderApiKeyModel } = await import("@/models");
     const org = await makeOrganization();
 
-    const systemKey = await ChatApiKeyModel.createSystemKey({
+    const systemKey = await LlmProviderApiKeyModel.createSystemKey({
       organizationId: org.id,
       name: "Vertex AI",
       provider: "gemini",

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   getAcceptedFileTypes,
+  getMediaType,
   getSupportedFileTypesDescription,
   supportsFileUploads,
 } from "./chat";
@@ -43,5 +44,28 @@ describe("chat file upload helpers", () => {
     expect(
       getSupportedFileTypesDescription(["text", "image", "pdf", "audio"]),
     ).toBe("text files, CSVs, images, PDFs, audio");
+  });
+
+  test("uses explicit file media types when present", () => {
+    expect(getMediaType({ name: "notes.txt", type: "text/markdown" })).toBe(
+      "text/markdown",
+    );
+  });
+
+  test("falls back to extension-based media type detection", () => {
+    expect(getMediaType({ name: "report.pdf", type: "" })).toBe(
+      "application/pdf",
+    );
+    expect(getMediaType({ name: "table.csv", type: "" })).toBe("text/csv");
+    expect(getMediaType({ name: "readme.txt", type: "" })).toBe("text/plain");
+  });
+
+  test("defaults unknown extensions to application/octet-stream", () => {
+    expect(getMediaType({ name: "archive.bin", type: "" })).toBe(
+      "application/octet-stream",
+    );
+    expect(getMediaType({ name: "no-extension", type: "" })).toBe(
+      "application/octet-stream",
+    );
   });
 });

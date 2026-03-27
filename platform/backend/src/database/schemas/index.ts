@@ -32,10 +32,7 @@ export { default as labelKeysTable } from "./label-key";
 export { default as labelValuesTable } from "./label-value";
 export { default as limitsTable } from "./limit";
 export { default as limitModelUsageTable } from "./limit-model-usage";
-export {
-  type ChatApiKeyScope,
-  default as llmProviderApiKeysTable,
-} from "./llm-provider-api-key";
+export { default as llmProviderApiKeysTable } from "./llm-provider-api-key";
 export { default as mcpCatalogLabelsTable } from "./mcp-catalog-label";
 export { default as mcpCatalogTeamsTable } from "./mcp-catalog-team";
 export { default as mcpHttpSessionsTable } from "./mcp-http-session";

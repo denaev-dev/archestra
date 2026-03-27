@@ -24,13 +24,13 @@ import {
 import { metrics } from "@/observability";
 import {
   type AgentScope,
-  AgentScopeFilterSchema,
   ApiError,
   BuiltInAgentConfigSchema,
   constructResponseSchema,
   createSortingQuerySchema,
   DeleteObjectResponseSchema,
   InsertAgentSchema,
+  ResourceVisibilityScopeFilterSchema,
   SelectAgentSchema,
   UpdateAgentSchemaBase,
   UuidIdSchema,
@@ -64,7 +64,7 @@ const agentRoutes: FastifyPluginAsyncZod = async (fastify) => {
               .describe(
                 "Filter by multiple agent types (comma-separated). Takes precedence over agentType if both provided.",
               ),
-            scope: AgentScopeFilterSchema.optional().describe(
+            scope: ResourceVisibilityScopeFilterSchema.optional().describe(
               "Filter by scope: personal, team, org, or built_in.",
             ),
             teamIds: z
@@ -216,7 +216,7 @@ const agentRoutes: FastifyPluginAsyncZod = async (fastify) => {
             .describe(
               "Exclude built-in agents from the results. Defaults to false.",
             ),
-          scope: AgentScopeFilterSchema.optional().describe(
+          scope: ResourceVisibilityScopeFilterSchema.optional().describe(
             "Filter by scope: personal, team, org, or built_in.",
           ),
         }),

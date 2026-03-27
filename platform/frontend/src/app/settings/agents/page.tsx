@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select";
 import { useOrgScopedAgents } from "@/lib/agent.query";
 import { useAppName } from "@/lib/hooks/use-app-name";
-import { useChatModels } from "@/lib/llm-models.query";
+import { useLlmModels } from "@/lib/llm-models.query";
 import { useAvailableLlmProviderApiKeys } from "@/lib/llm-provider-api-keys.query";
 import { useArchestraMcpIdentity } from "@/lib/mcp/archestra-mcp-server";
 import {
@@ -80,7 +80,7 @@ export default function AgentSettingsPage() {
     fileUploads: "enabled" as FileUploadsEnabled,
   });
 
-  const { data: allModels, isPending: modelsLoading } = useChatModels({
+  const { data: allModels, isPending: modelsLoading } = useLlmModels({
     apiKeyId: selectedApiKeyId || undefined,
   });
 

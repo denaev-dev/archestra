@@ -9,7 +9,11 @@ import { isVertexAiEnabled } from "@/clients/gemini-client";
 import { resolveProviderApiKey } from "@/clients/llm-client";
 import config, { getProviderEnvApiKey } from "@/config";
 import logger from "@/logging";
-import { ApiKeyModelModel, ChatApiKeyModel, OrganizationModel } from "@/models";
+import {
+  ApiKeyModelModel,
+  LlmProviderApiKeyModel,
+  OrganizationModel,
+} from "@/models";
 
 /**
  * Resolve the best available LLM provider, API key, model, and base URL
@@ -49,7 +53,7 @@ export async function resolveSmartDefaultLlm(params: {
     }
 
     // Fallback: check system keys (e.g., Vertex AI using ADC without an API key)
-    const systemKey = await ChatApiKeyModel.findSystemKey(provider);
+    const systemKey = await LlmProviderApiKeyModel.findSystemKey(provider);
     if (systemKey) {
       const bestModel = await ApiKeyModelModel.getBestModel(systemKey.id);
       if (bestModel) {

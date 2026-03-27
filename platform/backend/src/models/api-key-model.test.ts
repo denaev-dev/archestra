@@ -216,8 +216,8 @@ describe("ApiKeyModelModel", () => {
       expect(result).toHaveLength(1);
 
       // Delete the API key (cascade deletes api_key_models entries)
-      const { ChatApiKeyModel } = await import("@/models");
-      await ChatApiKeyModel.delete(apiKey.id);
+      const { LlmProviderApiKeyModel } = await import("@/models");
+      await LlmProviderApiKeyModel.delete(apiKey.id);
 
       // Model should no longer appear since it has no linked API keys
       result = await ApiKeyModelModel.getAllModelsWithApiKeys();

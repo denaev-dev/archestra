@@ -147,7 +147,7 @@ export default function VirtualKeysPage() {
         header: "Accessible to",
         cell: ({ row }) => (
           <ResourceVisibilityBadge
-            scope={row.original.scope}
+            scope={row.original.scope as VirtualKeyScope | undefined}
             teams={row.original.teams}
             authorId={row.original.authorId}
             authorName={row.original.authorName}

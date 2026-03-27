@@ -7,13 +7,17 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { userHasPermission } from "@/auth";
 import config from "@/config";
-import { ChatApiKeyModel, TeamModel, VirtualApiKeyModel } from "@/models";
+import {
+  LlmProviderApiKeyModel,
+  TeamModel,
+  VirtualApiKeyModel,
+} from "@/models";
 import {
   ApiError,
   constructResponseSchema,
+  type ResourceVisibilityScope,
+  ResourceVisibilityScopeSchema,
   SelectVirtualApiKeySchema,
-  type VirtualApiKeyScope,
-  VirtualApiKeyScopeSchema,
   VirtualApiKeyWithParentInfoSchema,
   VirtualApiKeyWithValueSchema,
 } from "@/types";
@@ -25,7 +29,7 @@ const UpdateVirtualApiKeyResponseSchema = VirtualApiKeyWithValueSchema.omit({
 const CreateOrUpdateVirtualApiKeyBodySchema = z.object({
   name: z.string().min(1, "Name is required").max(256),
   expiresAt: z.coerce.date().nullable().optional(),
-  scope: VirtualApiKeyScopeSchema.default("org"),
+  scope: ResourceVisibilityScopeSchema.default("org"),
   teams: z.array(z.string()).default([]),
 });
 
@@ -83,7 +87,9 @@ const virtualApiKeysRoutes: FastifyPluginAsyncZod = async (fastify) => {
       },
     },
     async ({ params, organizationId, user }, reply) => {
-      const chatApiKey = await ChatApiKeyModel.findById(params.chatApiKeyId);
+      const chatApiKey = await LlmProviderApiKeyModel.findById(
+        params.chatApiKeyId,
+      );
       if (!chatApiKey || chatApiKey.organizationId !== organizationId) {
         throw new ApiError(404, "LLM provider API key not found");
       }
@@ -119,7 +125,9 @@ const virtualApiKeysRoutes: FastifyPluginAsyncZod = async (fastify) => {
       },
     },
     async ({ params, body, organizationId, user }, reply) => {
-      const chatApiKey = await ChatApiKeyModel.findById(params.chatApiKeyId);
+      const chatApiKey = await LlmProviderApiKeyModel.findById(
+        params.chatApiKeyId,
+      );
       if (!chatApiKey || chatApiKey.organizationId !== organizationId) {
         throw new ApiError(404, "LLM provider API key not found");
       }
@@ -277,7 +285,7 @@ const virtualApiKeysRoutes: FastifyPluginAsyncZod = async (fastify) => {
 export default virtualApiKeysRoutes;
 
 async function validateVirtualKeyScope(params: {
-  scope: VirtualApiKeyScope;
+  scope: ResourceVisibilityScope;
   teamIds: string[];
   userId: string;
   organizationId: string;
@@ -331,7 +339,7 @@ async function validateVirtualKeyScope(params: {
 
 async function requireVirtualKeyModifyPermission(params: {
   virtualKey: {
-    scope: VirtualApiKeyScope;
+    scope: ResourceVisibilityScope;
     authorId: string | null;
     teamIds: string[];
   };

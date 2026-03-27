@@ -54,7 +54,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useFeature } from "@/lib/config/config.query";
-import { useChatModels } from "@/lib/llm-models.query";
+import { useLlmModels } from "@/lib/llm-models.query";
 import {
   useAvailableLlmProviderApiKeys,
   useCreateLlmProviderApiKey,
@@ -72,7 +72,7 @@ const DEFAULT_FORM_VALUES: LlmProviderApiKeyFormValues = {
   provider: "openai",
   apiKey: null,
   baseUrl: null,
-  scope: "org_wide",
+  scope: "org",
   teamId: null,
   vaultSecretPath: null,
   vaultSecretKey: null,
@@ -372,7 +372,7 @@ function RerankerModelSelector({
   pulse?: boolean;
 }) {
   const { data: apiKeys } = useAvailableLlmProviderApiKeys();
-  const { data: allModels, isPending: modelsLoading } = useChatModels();
+  const { data: allModels, isPending: modelsLoading } = useLlmModels();
 
   const selectedProvider = useMemo(() => {
     if (!selectedKeyId || !apiKeys) return null;

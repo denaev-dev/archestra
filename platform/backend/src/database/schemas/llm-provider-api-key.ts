@@ -9,12 +9,10 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import type { ResourceVisibilityScope } from "@/types";
 import secretsTable from "./secret";
 import { team } from "./team";
 import usersTable from "./user";
-
-export type LlmProviderApiKeyScope = "personal" | "team" | "org_wide";
-export type ChatApiKeyScope = LlmProviderApiKeyScope;
 
 const llmProviderApiKeysTable = pgTable(
   "chat_api_keys",
@@ -28,7 +26,7 @@ const llmProviderApiKeysTable = pgTable(
     }),
     // Visibility scope for this LLM provider API key.
     scope: text("scope")
-      .$type<LlmProviderApiKeyScope>()
+      .$type<ResourceVisibilityScope>()
       .notNull()
       .default("personal"),
     userId: text("user_id").references(() => usersTable.id, {
@@ -68,9 +66,9 @@ const llmProviderApiKeysTable = pgTable(
     uniqueIndex("chat_api_keys_primary_team_unique")
       .on(table.organizationId, table.provider, table.scope, table.teamId)
       .where(sql`${table.isPrimary} = true AND ${table.scope} = 'team'`),
-    uniqueIndex("chat_api_keys_primary_org_wide_unique")
+    uniqueIndex("chat_api_keys_primary_org_unique")
       .on(table.organizationId, table.provider, table.scope)
-      .where(sql`${table.isPrimary} = true AND ${table.scope} = 'org_wide'`),
+      .where(sql`${table.isPrimary} = true AND ${table.scope} = 'org'`),
   ],
 );
 

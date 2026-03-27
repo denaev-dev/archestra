@@ -136,7 +136,7 @@ vi.mock("@/lib/agent.query", () => ({
 }));
 
 vi.mock("@/lib/llm-models.query", () => ({
-  useChatModels: () => ({
+  useLlmModels: () => ({
     data: [
       {
         id: "gemini-2.5-pro",
@@ -202,9 +202,9 @@ beforeEach(() => {
   mockApiKeys = [
     {
       id: "key-1",
-      name: "gemini - org_wide",
+      name: "gemini - org",
       provider: "vertex_ai",
-      scope: "org_wide",
+      scope: "org",
     },
   ];
   mockAgents = [];

@@ -3,7 +3,7 @@ import { isBedrockIamAuthEnabled } from "@/clients/bedrock-credentials";
 import { isVertexAiEnabled } from "@/clients/gemini-client";
 import { modelsDevClient } from "@/clients/models-dev-client";
 import logger from "@/logging";
-import { ApiKeyModelModel, ChatApiKeyModel, ModelModel } from "@/models";
+import { ApiKeyModelModel, LlmProviderApiKeyModel, ModelModel } from "@/models";
 import { fetchBedrockModelsViaIam } from "@/routes/chat/model-fetchers/bedrock";
 import { fetchGeminiModelsViaVertexAi } from "@/routes/chat/model-fetchers/gemini";
 import { buildModelsToUpsert } from "@/services/model-sync";
@@ -92,7 +92,7 @@ class SystemKeyManager {
     const { provider, name, isEnabled, customFetch } = providerConfig;
     const enabled = isEnabled();
 
-    const existingKey = await ChatApiKeyModel.findSystemKey(provider);
+    const existingKey = await LlmProviderApiKeyModel.findSystemKey(provider);
 
     if (enabled) {
       if (existingKey) {
@@ -109,7 +109,7 @@ class SystemKeyManager {
       } else {
         // Create new system key
         logger.info({ provider, organizationId }, "Creating system API key");
-        const newKey = await ChatApiKeyModel.createSystemKey({
+        const newKey = await LlmProviderApiKeyModel.createSystemKey({
           organizationId,
           name,
           provider,
@@ -123,7 +123,7 @@ class SystemKeyManager {
           { provider, apiKeyId: existingKey.id },
           "Deleting system API key (provider disabled)",
         );
-        await ChatApiKeyModel.deleteSystemKey(provider);
+        await LlmProviderApiKeyModel.deleteSystemKey(provider);
       }
       // else: Provider disabled and no key exists, nothing to do
     }

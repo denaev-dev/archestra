@@ -12,8 +12,8 @@ import db, { schema } from "@/database";
 import {
   AgentModel,
   AgentToolModel,
-  ChatApiKeyModel,
   InternalMcpCatalogModel,
+  LlmProviderApiKeyModel,
   SecretModel,
   SessionModel,
   TeamModel,
@@ -27,7 +27,6 @@ import type {
   ConnectorRun,
   InsertAccount,
   InsertAgent,
-  InsertChatApiKey,
   InsertConnectorRun,
   InsertConversation,
   InsertInteraction,
@@ -35,6 +34,7 @@ import type {
   InsertInvitation,
   InsertKnowledgeBase,
   InsertKnowledgeBaseConnector,
+  InsertLlmProviderApiKey,
   InsertMcpServer,
   InsertMember,
   InsertOrganization,
@@ -692,16 +692,19 @@ async function makeLlmProviderApiKey(
   organizationId: string,
   secretId: string,
   overrides: Partial<
-    Pick<InsertChatApiKey, "name" | "provider" | "scope" | "userId" | "teamId">
+    Pick<
+      InsertLlmProviderApiKey,
+      "name" | "provider" | "scope" | "userId" | "teamId"
+    >
   > = {},
 ) {
-  return await ChatApiKeyModel.create({
+  return await LlmProviderApiKeyModel.create({
     organizationId,
     secretId,
     name:
       overrides.name ?? `Test API Key ${crypto.randomUUID().substring(0, 8)}`,
     provider: overrides.provider ?? "anthropic",
-    scope: overrides.scope ?? "org_wide",
+    scope: overrides.scope ?? "org",
     userId: overrides.userId ?? null,
     teamId: overrides.teamId ?? null,
   });

@@ -109,7 +109,7 @@ import {
 import { useConfig } from "@/lib/config/config.query";
 import { useDialogs } from "@/lib/hooks/use-dialog";
 import { useIsMobile } from "@/lib/hooks/use-mobile";
-import { useChatModels, useModelsByProvider } from "@/lib/llm-models.query";
+import { useLlmModels, useLlmModelsByProvider } from "@/lib/llm-models.query";
 import {
   type SupportedProvider,
   useLlmProviderApiKeys,
@@ -211,7 +211,7 @@ export default function ChatPage() {
 
   // Fetch profiles and models for initial chat (no conversation)
   const { modelsByProvider, isPending: isModelsLoading } =
-    useModelsByProvider();
+    useLlmModelsByProvider();
   const { data: chatApiKeys = [], isLoading: isLoadingApiKeys } =
     useLlmProviderApiKeys({ enabled: hasChatAccess });
   const { data: organization, isPending: isOrgLoading } = useOrganization();
@@ -422,7 +422,7 @@ export default function ChatPage() {
   const chatSession = useChatSession(conversationId);
 
   const { isLoading: isLoadingFeatures } = useConfig();
-  const { data: chatModels = [] } = useChatModels();
+  const { data: chatModels = [] } = useLlmModels();
   // Check if user has any API keys (including system keys for keyless providers
   // like Vertex AI Gemini, vLLM, or Ollama which don't require secrets)
   const hasAnyApiKey = chatApiKeys.length > 0;

@@ -1,7 +1,7 @@
 import { MODEL_MARKER_PATTERNS, type SupportedProvider } from "@shared";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import db, { schema } from "@/database";
-import type { ChatApiKey, Model } from "@/types";
+import type { LlmProviderApiKey, Model } from "@/types";
 
 /**
  * Model class for the api_key_models join table.
@@ -58,7 +58,9 @@ class ApiKeyModelModel {
   /**
    * Get all API keys linked to a specific model.
    */
-  static async getApiKeysForModel(modelId: string): Promise<ChatApiKey[]> {
+  static async getApiKeysForModel(
+    modelId: string,
+  ): Promise<LlmProviderApiKey[]> {
     const results = await db
       .select({
         apiKey: schema.llmProviderApiKeysTable,

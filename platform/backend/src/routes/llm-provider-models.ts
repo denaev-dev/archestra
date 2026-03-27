@@ -9,7 +9,7 @@ import { modelsDevClient } from "@/clients/models-dev-client";
 import logger from "@/logging";
 import {
   ApiKeyModelModel,
-  ChatApiKeyModel,
+  LlmProviderApiKeyModel,
   ModelModel,
   TeamModel,
 } from "@/models";
@@ -57,7 +57,7 @@ const llmModelsRoutes: FastifyPluginAsyncZod = async (fastify) => {
       modelsDevClient.syncIfNeeded();
 
       const userTeamIds = await TeamModel.getUserTeamIds(user.id);
-      const apiKeys = await ChatApiKeyModel.getAvailableKeysForUser(
+      const apiKeys = await LlmProviderApiKeyModel.getAvailableKeysForUser(
         organizationId,
         user.id,
         userTeamIds,
@@ -248,7 +248,7 @@ export async function syncModelsForVisibleApiKeys(params: {
 }): Promise<void> {
   const { organizationId, userId } = params;
   const userTeamIds = await TeamModel.getUserTeamIds(userId);
-  const apiKeys = await ChatApiKeyModel.getAvailableKeysForUser(
+  const apiKeys = await LlmProviderApiKeyModel.getAvailableKeysForUser(
     organizationId,
     userId,
     userTeamIds,

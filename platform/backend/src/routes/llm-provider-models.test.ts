@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 import ApiKeyModelModel from "@/models/api-key-model";
-import ChatApiKeyModel from "@/models/chat-api-key";
+import LlmProviderApiKeyModel from "@/models/llm-provider-api-key";
 import ModelModel from "@/models/model";
 import { getSecretValueForLlmProviderApiKey } from "@/secrets-manager";
 import type { FastifyInstanceWithZod } from "@/server";
@@ -149,7 +149,7 @@ describe("chat model routes", () => {
     makeSecret,
   }) => {
     const secret = await makeSecret({ secret: { apiKey: "test-key" } });
-    const openAiKey = await ChatApiKeyModel.create({
+    const openAiKey = await LlmProviderApiKeyModel.create({
       organizationId,
       secretId: secret.id,
       name: "OpenAI Key",
@@ -158,7 +158,7 @@ describe("chat model routes", () => {
       userId: user.id,
       baseUrl: "https://proxy.example.com/v1",
     });
-    const vllmKey = await ChatApiKeyModel.create({
+    const vllmKey = await LlmProviderApiKeyModel.create({
       organizationId,
       secretId: null,
       name: "vLLM Key",
@@ -196,7 +196,7 @@ describe("chat model routes", () => {
     makeSecret,
   }) => {
     const secret = await makeSecret({ secret: { apiKey: "test-key" } });
-    await ChatApiKeyModel.create({
+    await LlmProviderApiKeyModel.create({
       organizationId,
       secretId: secret.id,
       name: "OpenAI Key",
@@ -205,7 +205,7 @@ describe("chat model routes", () => {
       userId: user.id,
     });
     const availableKeysSpy = vi.spyOn(
-      ChatApiKeyModel,
+      LlmProviderApiKeyModel,
       "getAvailableKeysForUser",
     );
     const syncSpy = vi

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ResourceVisibilityScope } from "@shared";
 import { Globe, User, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -18,7 +19,7 @@ export function ResourceVisibilityBadge({
   authorName,
   currentUserId,
 }: {
-  scope: string | undefined;
+  scope: ResourceVisibilityScope | undefined;
   teams: TeamInfo[] | undefined;
   authorId: string | null | undefined;
   authorName: string | null | undefined;

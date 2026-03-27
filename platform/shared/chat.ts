@@ -68,8 +68,11 @@ export type ModelInputModality = z.infer<typeof ModelInputModalitySchema>;
 export type ModelOutputModality = z.infer<typeof ModelOutputModalitySchema>;
 export type SupportedChatUploadMimeType =
   | "application/csv"
+  | "application/json"
+  | "application/octet-stream"
   | "application/pdf"
   | "application/vnd.ms-excel"
+  | "application/xml"
   | "audio/flac"
   | "audio/mpeg"
   | "audio/mp3"
@@ -77,10 +80,12 @@ export type SupportedChatUploadMimeType =
   | "audio/wav"
   | "audio/webm"
   | "image/gif"
+  | "image/bmp"
   | "image/jpeg"
   | "image/png"
   | "image/svg+xml"
   | "image/webp"
+  | "image/x-icon"
   | "text/csv"
   | "text/plain"
   | "video/avi"
@@ -139,6 +144,51 @@ const MODALITY_TO_FILE_TYPE_DESCRIPTION: Record<ModelInputModality, string> = {
   video: "video",
   pdf: "PDFs",
 };
+
+type FileLikeWithMediaType = {
+  name: string;
+  type: string;
+};
+
+/**
+ * Get MIME type from a file-like object, with fallback to extension-based
+ * detection for browsers/environments that leave `type` blank.
+ */
+export function getMediaType(file: FileLikeWithMediaType): string {
+  if (file.type) {
+    return file.type;
+  }
+
+  const lastDotIndex = file.name.lastIndexOf(".");
+  const ext =
+    lastDotIndex > 0 && lastDotIndex < file.name.length - 1
+      ? file.name.slice(lastDotIndex + 1).toLowerCase()
+      : undefined;
+
+  const extensionMap: Record<string, SupportedChatUploadMimeType> = {
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    gif: "image/gif",
+    webp: "image/webp",
+    svg: "image/svg+xml",
+    bmp: "image/bmp",
+    ico: "image/x-icon",
+    mp4: "video/mp4",
+    webm: "video/webm",
+    mov: "video/quicktime",
+    avi: "video/avi",
+    pdf: "application/pdf",
+    csv: "text/csv",
+    txt: "text/plain",
+    json: "application/json",
+    xml: "application/xml",
+  };
+
+  return ext
+    ? extensionMap[ext] || "application/octet-stream"
+    : "application/octet-stream";
+}
 
 /**
  * Converts an array of input modalities to a comma-separated string of MIME types

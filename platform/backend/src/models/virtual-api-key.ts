@@ -7,9 +7,9 @@ import { createPaginatedResult } from "@/database/utils/pagination";
 import logger from "@/logging";
 import { secretManager } from "@/secrets-manager";
 import type {
-  ChatApiKey,
+  LlmProviderApiKey,
+  ResourceVisibilityScope,
   SelectVirtualApiKey,
-  VirtualApiKeyScope,
   VirtualApiKeyWithParentInfo,
 } from "@/types";
 
@@ -28,7 +28,7 @@ type VirtualApiKeyAccessContext = {
   id: string;
   chatApiKeyId: string;
   organizationId: string;
-  scope: VirtualApiKeyScope;
+  scope: ResourceVisibilityScope;
   authorId: string | null;
   teamIds: string[];
 };
@@ -42,7 +42,7 @@ class VirtualApiKeyModel {
     chatApiKeyId: string;
     name: string;
     expiresAt?: Date | null;
-    scope?: VirtualApiKeyScope;
+    scope?: ResourceVisibilityScope;
     authorId?: string | null;
     teamIds?: string[];
   }): Promise<{
@@ -118,7 +118,7 @@ class VirtualApiKeyModel {
     id: string;
     name: string;
     expiresAt?: Date | null;
-    scope: VirtualApiKeyScope;
+    scope: ResourceVisibilityScope;
     authorId: string;
     teamIds: string[];
   }): Promise<SelectVirtualApiKey | null> {
@@ -424,7 +424,7 @@ class VirtualApiKeyModel {
    */
   static async validateToken(tokenValue: string): Promise<{
     virtualKey: SelectVirtualApiKey;
-    chatApiKey: ChatApiKey;
+    chatApiKey: LlmProviderApiKey;
   } | null> {
     const tokenStart = getTokenStart(tokenValue);
     const candidates = await db
@@ -667,7 +667,7 @@ function constantTimeEqual(a: string, b: string): boolean {
 async function syncVirtualApiKeyTeams(params: {
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0];
   virtualApiKeyId: string;
-  scope: VirtualApiKeyScope;
+  scope: ResourceVisibilityScope;
   teamIds: string[];
 }) {
   const { tx, virtualApiKeyId, scope, teamIds } = params;

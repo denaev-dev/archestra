@@ -1,13 +1,7 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 import { schema } from "@/database";
-import {
-  type ResourceVisibilityScope,
-  ResourceVisibilityScopeSchema,
-} from "./visibility";
-
-export const VirtualApiKeyScopeSchema = ResourceVisibilityScopeSchema;
-export type VirtualApiKeyScope = ResourceVisibilityScope;
+import { ResourceVisibilityScopeSchema } from "./visibility";
 
 const VirtualApiKeyTeamSchema = z.object({
   id: z.string(),
@@ -16,15 +10,21 @@ const VirtualApiKeyTeamSchema = z.object({
 
 export const SelectVirtualApiKeySchema = createSelectSchema(
   schema.virtualApiKeysTable,
-);
+).extend({
+  scope: ResourceVisibilityScopeSchema,
+});
 
 export const InsertVirtualApiKeySchema = createInsertSchema(
   schema.virtualApiKeysTable,
-).omit({
-  id: true,
-  createdAt: true,
-  lastUsedAt: true,
-});
+)
+  .omit({
+    id: true,
+    createdAt: true,
+    lastUsedAt: true,
+  })
+  .extend({
+    scope: ResourceVisibilityScopeSchema.optional(),
+  });
 
 /** Schema for virtual key response at creation time (includes full token value) */
 export const VirtualApiKeyWithValueSchema = SelectVirtualApiKeySchema.extend({

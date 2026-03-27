@@ -93,7 +93,7 @@ vi.mock("@/lib/llm-provider-api-keys.query", () => ({
 }));
 
 vi.mock("@/lib/llm-models.query", () => ({
-  useChatModels: () => ({
+  useLlmModels: () => ({
     data: [
       { id: "gpt-4o", provider: "openai", displayName: "GPT-4o" },
       {
@@ -189,7 +189,7 @@ describe("KnowledgeSettingsPage", () => {
           id: "key-1",
           name: "OpenAI Key",
           provider: "openai",
-          scope: "org_wide",
+          scope: "org",
         },
       ];
       renderPage();
@@ -213,7 +213,7 @@ describe("KnowledgeSettingsPage", () => {
           id: "key-1",
           name: "OpenAI Key",
           provider: "openai",
-          scope: "org_wide",
+          scope: "org",
         },
       ];
       renderPage();
@@ -238,7 +238,7 @@ describe("KnowledgeSettingsPage", () => {
           id: "key-1",
           name: "OpenAI Key",
           provider: "openai",
-          scope: "org_wide",
+          scope: "org",
         },
       ];
       renderPage();
@@ -279,7 +279,7 @@ describe("KnowledgeSettingsPage", () => {
           id: "key-1",
           name: "OpenAI Key",
           provider: "openai",
-          scope: "org_wide",
+          scope: "org",
         },
       ];
       renderPage();
@@ -301,7 +301,7 @@ describe("KnowledgeSettingsPage", () => {
           id: "key-1",
           name: "OpenAI Key",
           provider: "openai",
-          scope: "org_wide",
+          scope: "org",
         },
       ];
       renderPage();
@@ -327,7 +327,7 @@ describe("KnowledgeSettingsPage", () => {
           id: "key-1",
           name: "OpenAI Key",
           provider: "openai",
-          scope: "org_wide",
+          scope: "org",
         },
       ];
       renderPage();
@@ -355,7 +355,7 @@ describe("KnowledgeSettingsPage", () => {
           id: "key-1",
           name: "OpenAI Key",
           provider: "openai",
-          scope: "org_wide",
+          scope: "org",
         },
       ];
       renderPage();
@@ -379,7 +379,7 @@ describe("KnowledgeSettingsPage", () => {
           id: "key-1",
           name: "OpenAI Key",
           provider: "openai",
-          scope: "org_wide",
+          scope: "org",
         },
       ];
       renderPage();
@@ -455,7 +455,7 @@ describe("KnowledgeSettingsPage", () => {
           id: "key-1",
           name: "OpenAI Key",
           provider: "openai",
-          scope: "org_wide",
+          scope: "org",
         },
       ];
       renderPage();
@@ -479,7 +479,7 @@ describe("KnowledgeSettingsPage", () => {
           id: "key-1",
           name: "OpenAI Key",
           provider: "openai",
-          scope: "org_wide",
+          scope: "org",
         },
       ];
       renderPage();
@@ -506,7 +506,7 @@ describe("KnowledgeSettingsPage", () => {
           id: "key-1",
           name: "OpenAI Key",
           provider: "openai",
-          scope: "org_wide",
+          scope: "org",
         },
       ];
       renderPage();
@@ -542,7 +542,7 @@ describe("KnowledgeSettingsPage", () => {
           id: "key-1",
           name: "OpenAI Key",
           provider: "openai",
-          scope: "org_wide",
+          scope: "org",
         },
       ];
       renderPage();

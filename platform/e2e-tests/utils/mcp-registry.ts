@@ -76,7 +76,7 @@ export async function installMcpServer(page: Page): Promise<void> {
   await page.waitForLoadState("domcontentloaded");
 }
 
-async function selectTeamCredentialType(
+async function _selectTeamCredentialType(
   page: Page,
   teamName: string,
 ): Promise<void> {

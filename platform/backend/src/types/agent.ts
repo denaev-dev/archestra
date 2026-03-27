@@ -17,8 +17,6 @@ import { AgentLabelWithDetailsSchema } from "./label";
 import { SelectToolSchema } from "./tool";
 import {
   type ResourceVisibilityScope,
-  type ResourceVisibilityScopeFilter,
-  ResourceVisibilityScopeFilterSchema,
   ResourceVisibilityScopeSchema,
 } from "./visibility";
 
@@ -39,10 +37,6 @@ export type AgentType = z.infer<typeof AgentTypeSchema>;
 
 export const AgentScopeSchema = ResourceVisibilityScopeSchema;
 export type AgentScope = ResourceVisibilityScope;
-
-/** Scope filter for API queries — includes "built_in" as a virtual scope for filtering */
-export const AgentScopeFilterSchema = ResourceVisibilityScopeFilterSchema;
-export type AgentScopeFilter = ResourceVisibilityScopeFilter;
 
 // Built-in agent config — discriminated union by name
 // Policy Configuration Subagent config
