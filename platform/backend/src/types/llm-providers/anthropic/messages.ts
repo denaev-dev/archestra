@@ -71,7 +71,7 @@ const DocumentBlockParamSchema = z
     cache_control: z.any().nullable().optional(),
   })
   .describe(
-    'Anthropic Messages API request document content block. This models a user `content` item with `type: "document"` and the currently-supported inline sources we accept here: URL PDFs, base64 PDFs, and inline plain-text documents. API reference: https://platform.claude.com/docs/api/messages#body-messages-content',
+    'Anthropic Messages API request document content block. This models a user `content` item with `type: "document"` and the currently-supported inline sources we accept here: URL PDFs, base64 PDFs, and inline plain-text documents. API reference: https://platform.claude.com/docs/en/api/messages',
   );
 
 // const SearchResultBlockParamSchema = z.any();
