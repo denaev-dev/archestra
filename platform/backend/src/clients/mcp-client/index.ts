@@ -55,6 +55,7 @@ import type {
 import { deriveAuthMethod } from "@/utils/auth-method";
 import { previewToolResultContent } from "@/utils/tool-result-preview";
 import { K8sAttachTransport } from "./k8s-attach-transport";
+import { StdioTransport } from "./stdio-transport";
 
 export class McpServerNotReadyError extends Error {
   constructor(message: string) {
@@ -1234,29 +1235,43 @@ class McpClient {
         throw new Error("Stdio transport is only supported for local servers");
       }
 
-      // Stdio transport - use K8s attach!
-      // Use getOrLoadDeployment to handle multi-replica scenarios where the deployment
-      // may have been created by a different replica
-      const k8sDeployment =
-        await McpServerRuntimeManager.getOrLoadDeployment(targetMcpServerId);
-      if (!k8sDeployment) {
-        throw new McpServerNotReadyError(
-          "MCP server is not running yet. Start or restart it, then try inspecting it again.",
-        );
+      // If K8s runtime is enabled, use K8s attach
+      if (McpServerRuntimeManager.isEnabled) {
+        // Stdio transport - use K8s attach!
+        // Use getOrLoadDeployment to handle multi-replica scenarios where the deployment
+        // may have been created by a different replica
+        const k8sDeployment =
+          await McpServerRuntimeManager.getOrLoadDeployment(targetMcpServerId);
+        if (!k8sDeployment) {
+          throw new McpServerNotReadyError(
+            "MCP server is not running yet. Start or restart it, then try inspecting it again.",
+          );
+        }
+
+        const podName = await k8sDeployment.getRunningPodName();
+        if (!podName) {
+          throw new McpServerNotReadyError(
+            "MCP server is not running yet. Start or restart it, then try inspecting it again.",
+          );
+        }
+
+        return new K8sAttachTransport({
+          k8sAttach: k8sDeployment.k8sAttachClient,
+          namespace: k8sDeployment.k8sNamespace,
+          podName: podName,
+          containerName: "mcp-server",
+        });
       }
 
-      const podName = await k8sDeployment.getRunningPodName();
-      if (!podName) {
-        throw new McpServerNotReadyError(
-          "MCP server is not running yet. Start or restart it, then try inspecting it again.",
-        );
+      // Standalone mode: use real StdioTransport
+      if (!catalogItem.localConfig?.command) {
+        throw new Error("Local server missing command for stdio transport");
       }
 
-      return new K8sAttachTransport({
-        k8sAttach: k8sDeployment.k8sAttachClient,
-        namespace: k8sDeployment.k8sNamespace,
-        podName: podName,
-        containerName: "mcp-server",
+      return new StdioTransport({
+        command: catalogItem.localConfig.command,
+        args: catalogItem.localConfig.arguments,
+        env: secrets as Record<string, string>,
       });
     }
 

@@ -15,7 +15,7 @@ import {
 } from "@/models";
 import { secretManager } from "@/secrets-manager";
 import { beforeEach, describe, expect, test } from "@/test";
-import mcpClient from "./mcp-client";
+import mcpClient from "./index";
 
 // Mock the MCP SDK
 const mockCallTool = vi.fn();
